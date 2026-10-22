@@ -746,6 +746,7 @@ const ScoreService = (() => {
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
     const reviewedSubmissionsMap = new Map(); // targetEventId -> { eventId, label, awardedPoints, reviewedAt }
+    const hqArrivals = new Map(); // groupId -> { groupId, place, points, ts }
     let groupVisibilityMode = "hide"; // "hide" (standaard verborgen tot leiding onthult), "show" (leiding onthult aan iedereen)
     let debriefingModeActive = false;
     const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
@@ -760,6 +761,7 @@ const ScoreService = (() => {
         groupRevealedSteps.clear();
         bonusSolves.length = 0;
         reviewedSubmissionsMap.clear();
+        hqArrivals.clear();
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
         debriefedPlayersMap.clear();
@@ -846,19 +848,29 @@ const ScoreService = (() => {
       } else if (ev.type === "set_disabled" && Array.isArray(ev.disabledIds)) {
         disabledPlayers.clear();
         ev.disabledIds.forEach((id) => disabledPlayers.add(id));
-      } else if (ev.type === "photo" && ev.playerId && ev.photoUrl) {
+      } else if (ev.type === "photo" && ev.playerId) {
         photosMap.set(ev.eventId, {
           eventId: ev.eventId,
           mediaType: ev.mediaType || "image",
           playerId: ev.playerId,
           locationId: ev.locationId || "",
           locationName: ev.locationName || "",
-          photoUrl: ev.photoUrl,
+          photoUrl: ev.photoUrl || "",
           caption: ev.caption || "",
           ts: ev.ts
         });
       } else if (ev.type === "delete_photo" && ev.targetEventId) {
         photosMap.delete(ev.targetEventId);
+      } else if (ev.type === "hq_arrival" && ev.groupId) {
+        const normG = normalizeGroupId(ev.groupId);
+        if (normG) {
+          hqArrivals.set(normG, {
+            groupId: normG,
+            place: Number(ev.place) || 1,
+            points: Number(ev.points) || 0,
+            ts: ev.ts || Date.now()
+          });
+        }
       } else if (ev.type === "post_message" && ev.text) {
         messagesMap.set(ev.eventId, {
           eventId: ev.eventId,
@@ -1223,7 +1235,9 @@ const ScoreService = (() => {
       debriefingActive: debriefingModeActive,
       debriefedCount: enabledPlayerScores.filter((p) => p.debriefed).length,
       debriefedPlayersMap,
-      reviewedSubmissionsMap
+      reviewedSubmissionsMap,
+      hqArrivals: Array.from(hqArrivals.values()).sort((a, b) => a.place - b.place),
+      hqArrivalsMap: hqArrivals
     };
   }
 
@@ -1842,8 +1856,16 @@ const ScoreService = (() => {
           }
         }
       } catch (e) {
-        console.warn("Cloud media-upload waarschuwing, gebruikt lokale dataUrl:", e);
+        console.warn("Cloud media-upload waarschuwing:", e);
       }
+    }
+
+    // Veiligheidscontrole: als video niet als externe URL kon worden geüpload (bv. bestand te groot voor ntfy / mobiele data),
+    // stop dan GEEN gigantische base64 data-URL in het JSON event, want ntfy wijst events > 64KB af!
+    let finalCaption = (caption || "").trim();
+    if (isVideo && (!finalPhotoUrl || finalPhotoUrl.startsWith("data:"))) {
+      finalPhotoUrl = "";
+      finalCaption = `[VIDEO OP TOESTEL AGENT] ${finalCaption}`.trim();
     }
 
     return publishEvent({
@@ -1853,7 +1875,7 @@ const ScoreService = (() => {
       locationId: locationId || "",
       locationName: locationName || "",
       photoUrl: finalPhotoUrl,
-      caption: (caption || "").trim()
+      caption: finalCaption
     });
   }
 
@@ -2038,6 +2060,38 @@ const ScoreService = (() => {
   }
 
   /**
+   * Registreer de officiële fysieke aankomst van een groep op HQ.
+   * Kent automatisch de aankomstpunten toe (1e: +100, 2e: +75, 3e: +50, 4e: +30, 5e: +15),
+   * stuurt een live broadcast naar alle veldagenten en slaat de ranking vast.
+   */
+  async function registerHqArrival({ groupId, place, points }) {
+    const pts = Number(points) || 0;
+    const rank = Number(place) || 1;
+    const rankLabel = rank === 1 ? "1e PLEK 🥇" : rank === 2 ? "2e PLEK 🥈" : rank === 3 ? "3e PLEK 🥉" : `${rank}e PLEK`;
+    const normG = normalizeGroupId(groupId);
+    const reason = `Aankomst HQ (${rankLabel}: +${pts} PT)`;
+
+    await addGroupBonusPoints(normG, pts, reason);
+    await postBoardMessage({
+      targetType: "all",
+      category: "alert",
+      locationId: "hq",
+      locationName: "Hoofdkwartier (Kapucijnenstraat 7)",
+      text: `🏁 GROEP AANKOMST OP HQ // ${rankLabel}!\nTeam ${normG.toUpperCase()} is zojuist binnengekomen op HQ en verdient +${pts} aankomstpunten!`
+    });
+
+    await publishEvent({
+      type: "hq_arrival",
+      groupId: normG,
+      place: rank,
+      points: pts,
+      ts: Date.now()
+    });
+
+    return computeScoreState();
+  }
+
+  /**
    * Plaats een nieuw bericht (tip of geheime opdracht voor extra punten) op het Message Board
    * van alle spelers, één team, of één specifieke speler.
    */
@@ -2200,6 +2254,7 @@ const ScoreService = (() => {
     unlockAllLocationsForGroup,
     recallGroupToHQ,
     awardSubmissionPoints,
+    registerHqArrival,
     FINAL_RECALL_TEXT,
     addBonusPoints,
     addGroupBonusPoints,

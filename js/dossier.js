@@ -825,6 +825,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!photoInput.files || !photoInput.files[0]) return;
       const file = photoInput.files[0];
 
+      if (file.size > 15 * 1024 * 1024) {
+        photoStatus.innerHTML = `⚠️ Bestand is te zwaar (${(file.size / 1048576).toFixed(1)}MB, mobiele limiet is 15MB).<br>Film korter (10-15s) of toon de video straks fysiek op HQ!`;
+        return;
+      }
+
       photoSubmit.disabled = true;
       photoSubmit.textContent = "Uploaden...";
       photoStatus.textContent = `Bewijs wordt verstuurd naar HQ...`;
@@ -2302,6 +2307,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         if (!photoInput.files || !photoInput.files[0]) return;
         const file = photoInput.files[0];
+
+        if (file.size > 15 * 1024 * 1024) {
+          photoStatus.innerHTML = `⚠️ Bestand is te zwaar (${(file.size / 1048576).toFixed(1)}MB, mobiele limiet is 15MB).<br>Film korter (10-15s) of toon de video straks fysiek op HQ!`;
+          return;
+        }
 
         photoSubmit.disabled = true;
         photoSubmit.textContent = "Uploaden...";

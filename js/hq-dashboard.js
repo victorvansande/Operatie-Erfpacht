@@ -334,12 +334,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 4. Render KPI's & Top Controls
+  let lastUnreviewedCount = -1;
+
+  function playTacticalSubmissionChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      // Tweeledige militaire radar-chime
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(587.33, now); // D5
+      osc1.frequency.setValueAtTime(880, now + 0.12); // A5
+      gain1.gain.setValueAtTime(0.14, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.46);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(1174.66, now + 0.18); // D6
+      gain2.gain.setValueAtTime(0.12, now + 0.18);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.18);
+      osc2.stop(now + 0.66);
+    } catch (_) {}
+  }
+
   function renderKPIs(state) {
     const groups = state.adminGroupsList || [];
     const reviewed = getReviewedMap();
     const unreviewedCount = (state.allPhotos || []).filter(
       (ph) => !reviewed[ph.eventId]
     ).length;
+
+    // Speel een tactische audio-notificatie af als er een nieuwe inzending binnenkomt
+    if (lastUnreviewedCount >= 0 && unreviewedCount > lastUnreviewedCount) {
+      playTacticalSubmissionChime();
+    }
+    lastUnreviewedCount = unreviewedCount;
+
+    // Pas de browservenster titel aan zodat Victor het ziet als hij op een ander tabblad/scherm staat
+    if (unreviewedCount > 0) {
+      document.title = `(${unreviewedCount}) 🚨 NIEUWE INZENDING - HQ CONTROL`;
+    } else {
+      document.title = "HQ CONTROL PANEL // Operatie Erfpacht";
+    }
 
     let totalUnlockedFolders = 0;
     let totalCompletedFolders = 0;
@@ -800,6 +847,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <button type="button" class="gm-chip-btn" data-team-bonus="25" data-reason="Goed bewijsmateriaal">+25 Bewijs OK</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Bonusopdracht volbracht">⭐ +50 Bonus</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Snack voor Vicce meegebracht">🍔 +50 Snack Vicce</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="100" data-reason="SMS SOS naar Vicce ontvangen">📱 +100 SOS SMS</button>
             <button type="button" class="gm-chip-btn" data-team-bonus="100" data-reason="Beste materiaal / Topuitvoering">🏆 +100 Topmateriaal</button>
             <button type="button" class="gm-chip-btn chip-danger" data-team-bonus="-25" data-reason="Strafpunten HQ">-25 Straf</button>
             <div style="display:flex; gap:0.25rem; margin-left:auto;">
@@ -1816,6 +1864,101 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // 9. Finale HQ Podium & Aankomst Registratie
+  const hqArrivalContainer = document.getElementById("gm-hq-arrival-list");
+  const hqArrivalCounter = document.getElementById("gm-hq-arrival-counter");
+  const ARRIVAL_POINTS_TABLE = [100, 75, 50, 30, 15];
+  const PODIUM_MEDALS = ["🥇 1e PLEK", "🥈 2e PLEK", "🥉 3e PLEK", "4e PLEK", "5e PLEK"];
+
+  function renderHqArrivals(state) {
+    if (!hqArrivalContainer) return;
+    const groups = state.adminGroupsList || state.groupsList || [];
+    const arrivalsMap = state.hqArrivalsMap || new Map();
+    const arrivalsList = state.hqArrivals || [];
+
+    if (hqArrivalCounter) {
+      hqArrivalCounter.textContent = `${arrivalsList.length} / ${groups.length || 5} Teams Binnen`;
+    }
+
+    if (groups.length === 0) {
+      hqArrivalContainer.innerHTML = `<span style="color:#64748b; font-size:0.75rem;">Nog geen groepen geactiveerd.</span>`;
+      return;
+    }
+
+    const nextPlace = arrivalsList.length + 1;
+    const nextPoints = nextPlace <= ARRIVAL_POINTS_TABLE.length ? ARRIVAL_POINTS_TABLE[nextPlace - 1] : 10;
+    const nextMedal = nextPlace <= PODIUM_MEDALS.length ? PODIUM_MEDALS[nextPlace - 1] : `${nextPlace}e Plek`;
+
+    hqArrivalContainer.innerHTML = groups
+      .map((g) => {
+        const arr = arrivalsMap.get(g.id);
+        if (arr) {
+          const medal =
+            arr.place <= PODIUM_MEDALS.length
+              ? PODIUM_MEDALS[arr.place - 1]
+              : `${arr.place}e Plek`;
+          const timeStr = arr.ts
+            ? new Date(arr.ts).toLocaleTimeString("nl-BE", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+              })
+            : "";
+          return `
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; border-radius: 8px; padding: 0.55rem 0.85rem; display: flex; align-items: center; gap: 0.65rem; font-family: var(--font-mono); font-size: 0.76rem;">
+              <span style="font-size: 1.25rem;">🏁</span>
+              <div>
+                <strong style="color: #6ee7b7; font-size: 0.84rem;">${escapeHtml(g.naam)}</strong>
+                <div style="color: #cbd5e1; font-size: 0.7rem; margin-top: 0.1rem;">
+                  ${medal} (+${arr.points} PT) om ${timeStr} ✓
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <button
+            type="button"
+            class="btn-gm-arrival"
+            data-group-id="${g.id}"
+            data-group-name="${escapeHtml(g.naam)}"
+            data-place="${nextPlace}"
+            data-points="${nextPoints}"
+            style="background: rgba(14, 20, 28, 0.95); border: 1.5px solid ${g.kleur || "#38bdf8"}; border-radius: 8px; padding: 0.55rem 0.85rem; display: flex; align-items: center; gap: 0.55rem; cursor: pointer; color: #fff; font-family: var(--font-mono); text-align: left; transition: all 0.15s ease;"
+          >
+            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${g.kleur || "#38bdf8"};"></span>
+            <div>
+              <div style="font-weight: 800; font-size: 0.82rem; color: #fff;">${escapeHtml(g.naam)} Aangekomen</div>
+              <div style="font-size: 0.68rem; color: #f59e0b; margin-top: 0.1rem;">
+                Registreer ${nextMedal} (+${nextPoints} PT) &rarr;
+              </div>
+            </div>
+          </button>
+        `;
+      })
+      .join("");
+
+    hqArrivalContainer.querySelectorAll(".btn-gm-arrival").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const gid = btn.getAttribute("data-group-id");
+        const gname = btn.getAttribute("data-group-name");
+        const place = Number(btn.getAttribute("data-place")) || 1;
+        const points = Number(btn.getAttribute("data-points")) || 10;
+
+        if (
+          window.confirm(
+            `Bevestig dat ${gname} zojuist is binnengekomen op HQ?\nDit kent +${points} aankomstpunten toe (Plek #${place}) en stuurt een live broadcast!`
+          )
+        ) {
+          btn.disabled = true;
+          await ScoreService.registerHqArrival({ groupId: gid, place, points });
+          showToast(`🏁 ${gname} geregistreerd als aankomst #${place} (+${points} PT)!`);
+        }
+      });
+    });
+  }
+
   // Start Realtime Synchronisatie & GPS Radar Tracking
   ScoreService.startRealtimeSync();
   updateBroadcastPlaceholder();
@@ -1828,6 +1971,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderUploadsStream(state);
     renderLocationOccupancy(state);
     updateBroadcastGroupsOptions(state);
+    renderHqArrivals(state);
     renderDebriefStatus(state);
   });
 
