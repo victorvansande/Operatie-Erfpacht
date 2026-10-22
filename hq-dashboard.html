@@ -74,6 +74,75 @@
       color: var(--accent);
     }
 
+    /* Unified HQ Buttons */
+    .gm-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      white-space: nowrap;
+      height: 38px;
+      padding: 0 0.95rem;
+      box-sizing: border-box;
+      line-height: 1;
+    }
+    .gm-btn:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+    .gm-btn-primary {
+      background: var(--accent);
+      color: #04130d;
+      border-color: var(--accent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .gm-btn-secondary {
+      background: rgba(15, 23, 42, 0.85);
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+    .gm-btn-secondary:hover {
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .gm-btn-warning {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: var(--amber);
+      color: #fde047;
+    }
+    .gm-btn-warning:hover {
+      background: var(--amber);
+      color: #000;
+    }
+    .gm-btn-danger {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: var(--danger);
+      color: #fca5a5;
+    }
+    .gm-btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .gm-btn-success {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: #10b981;
+      color: #6ee7b7;
+    }
+    .gm-btn-success:hover {
+      background: #10b981;
+      color: #000;
+    }
+
     /* Snel-beheer balk (Fase 1 & Fase 2 controls) */
     .gm-quick-controls {
       background: rgba(14, 20, 28, 0.85);
@@ -88,10 +157,48 @@
       gap: 0.85rem;
     }
 
+    /* Broadcast Form Layout */
+    .gm-broadcast-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .gm-broadcast-select {
+      margin-bottom: 0;
+      width: auto;
+      min-width: 175px;
+      height: 38px;
+      padding: 0 0.75rem;
+      font-size: 0.8rem;
+      background: #0b111a;
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    .gm-broadcast-input {
+      margin-bottom: 0;
+      flex: 1;
+      min-width: 200px;
+      height: 38px;
+      padding: 0 0.85rem;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    .gm-broadcast-submit {
+      height: 38px;
+      padding: 0 1.15rem;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
     /* Groepen Command Matrix */
     .gm-groups-matrix {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(410px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
       gap: 1.15rem;
       margin-bottom: 1.75rem;
     }
@@ -185,20 +292,27 @@
     }
 
     .gm-step-unlock-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid #334155;
-      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid #475569;
+      color: #cbd5e1;
       font-family: var(--font-mono);
-      font-size: 0.64rem;
-      padding: 0.18rem 0.42rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      height: 24px;
+      padding: 0 0.55rem;
       border-radius: 4px;
       cursor: pointer;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
     }
 
     .gm-step-unlock-btn:hover {
       border-color: var(--accent);
       color: #ffffff;
+      background: rgba(16, 185, 129, 0.2);
     }
 
     .gm-bonus-bar {
@@ -214,7 +328,8 @@
     .gm-bonus-btns {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.38rem;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .gm-chip-btn {
@@ -222,12 +337,18 @@
       border: 1px solid rgba(16, 185, 129, 0.45);
       color: #6ee7b7;
       font-family: var(--font-mono);
-      font-size: 0.71rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 0.35rem 0.6rem;
+      height: 30px;
+      padding: 0 0.65rem;
       border-radius: 5px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.15s ease;
+      white-space: nowrap;
+      box-sizing: border-box;
     }
 
     .gm-chip-btn:hover {
@@ -374,12 +495,34 @@
       }
     }
 
-    @media (max-width: 560px) {
+    @media (max-width: 768px) {
+      .gm-route-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
       .gm-container {
         padding: 0.85rem 0.85rem 3rem;
       }
-      .gm-route-steps {
-        grid-template-columns: 1fr;
+      .gm-header-bar {
+        padding: 1rem;
+      }
+      .gm-broadcast-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .gm-broadcast-select,
+      .gm-broadcast-input,
+      .gm-broadcast-submit {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+      .gm-quick-controls .gm-btn {
+        width: 100%;
+      }
+      #gm-attendance-chips {
+        grid-template-columns: 1fr !important;
       }
     }
   </style>
@@ -417,14 +560,22 @@
         </p>
       </div>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center;">
-        <a href="beamer.html" target="_blank" class="back-link" style="border-color: #f59e0b; color: #fde047; background: rgba(245, 158, 11, 0.14); font-weight: 800;">📽️ Beamer Modus // War Room</a>
-        <button type="button" id="gm-play-audio-briefing-btn" class="back-link" style="border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.12); cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
-          <span class="intel-blink-red"></span>🎙️ <span id="gm-audio-btn-txt">Speel Audio-Briefing (01:27)</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+        <a href="beamer.html" target="_blank" class="gm-btn gm-btn-warning">
+          📽️ Beamer Modus
+        </a>
+        <button type="button" id="gm-play-audio-briefing-btn" class="gm-btn gm-btn-danger">
+          <span class="intel-blink-red"></span>🎙️ <span id="gm-audio-btn-txt">Audio-Briefing</span>
         </button>
-        <a href="spelers/vicce.html" class="back-link" style="border-color: var(--accent); color: var(--accent);">📂 Dossier Vicce HQ</a>
-        <a href="spelers/lander.html" class="back-link" style="border-color: #10b981; color: #6ee7b7; background: rgba(16,185,129,0.12);">📂 Dossier Lander (Tester Unlocked)</a>
-        <a href="index.html" class="back-link">🏠 Spelersportaal</a>
+        <a href="spelers/vicce.html" class="gm-btn gm-btn-secondary" style="border-color: var(--accent); color: var(--accent);">
+          📂 Dossier Vicce HQ
+        </a>
+        <a href="spelers/lander.html" class="gm-btn gm-btn-secondary" style="border-color: #10b981; color: #6ee7b7;">
+          🧪 Dossier Lander
+        </a>
+        <a href="index.html" class="gm-btn gm-btn-secondary">
+          🏠 Spelersportaal
+        </a>
         <audio id="gm-briefing-audio" preload="none" src="audio/SIGINT-REC-1636-ENCRYPTED.mp3"></audio>
       </div>
     </header>
@@ -463,16 +614,16 @@
           ⚡ FASE 1: SPELLEIDING SNELTOETSEN
         </span>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-          <button type="button" id="gm-btn-random-groups" class="btn btn-secondary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
-            🎲 Verdeel Aanwezigen in Groepen (4p)
+          <button type="button" id="gm-btn-random-groups" class="gm-btn gm-btn-secondary">
+            🎲 Verdeel Aanwezigen (4p)
           </button>
-          <button type="button" id="gm-btn-toggle-reveal" class="btn btn-primary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
-            👁️ Onthul Groepen Nu aan Iedereen
+          <button type="button" id="gm-btn-toggle-reveal" class="gm-btn gm-btn-primary">
+            🚀 Onthul Groepen Nu aan Iedereen
           </button>
-          <button type="button" id="gm-btn-toggle-attendance" class="btn btn-secondary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
+          <button type="button" id="gm-btn-toggle-attendance" class="gm-btn gm-btn-secondary">
             📋 Aanwezigheid &amp; PINs
           </button>
-          <button type="button" id="gm-btn-reset-game" class="btn btn-danger" style="padding: 0.5rem 0.85rem; font-size: 0.76rem; background: rgba(239, 68, 68, 0.18); border-color: var(--danger); color: #fca5a5; font-weight: 700;">
+          <button type="button" id="gm-btn-reset-game" class="gm-btn gm-btn-danger">
             ⚠ Spel Resetten
           </button>
         </div>
@@ -483,11 +634,10 @@
         <div style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8; font-weight: 700; margin-bottom: 0.45rem;">
           📢 ZEND COMMUNICATIE / TIP NAAR VELDAGENTEN:
         </div>
-        <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.5rem;" autocomplete="off">
+        <form id="gm-broadcast-form" class="gm-broadcast-form" autocomplete="off">
           <select
             id="gm-broadcast-target"
-            class="admin-input"
-            style="margin-bottom: 0; width: auto; min-width: 170px; font-size: 0.8rem; padding: 0.5rem 0.75rem; background: #0b111a; border-color: var(--accent); color: var(--accent); font-weight: 700;"
+            class="admin-input gm-broadcast-select"
           >
             <option value="all">🌐 Iedereen (Broadcast)</option>
             <optgroup label="Groepen / Teams" id="gm-broadcast-target-groups">
@@ -501,12 +651,11 @@
           <input
             type="text"
             id="gm-broadcast-input"
-            class="admin-input"
+            class="admin-input gm-broadcast-input"
             placeholder="Typ bericht (verschijnt direct als popup bij ontvanger)..."
-            style="margin-bottom: 0; flex: 1; min-width: 220px; font-size: 0.82rem; padding: 0.5rem 0.85rem;"
             required
           />
-          <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.15rem; font-size: 0.8rem; font-weight: 700; white-space: nowrap;">
+          <button type="submit" class="gm-btn gm-btn-primary gm-broadcast-submit">
             ⚡ Zend Bericht
           </button>
         </form>
@@ -530,7 +679,7 @@
             Voortgang: 0 / 25 veldagenten afgemeld &amp; verzegeld
           </div>
         </div>
-        <button type="button" id="gm-btn-toggle-debrief" class="btn" style="background: rgba(245, 158, 11, 0.2); border: 1.5px solid var(--amber); color: #fde047; font-weight: 800; font-size: 0.85rem; padding: 0.6rem 1.25rem; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); cursor: pointer;">
+        <button type="button" id="gm-btn-toggle-debrief" class="gm-btn gm-btn-warning" style="height: 42px; font-size: 0.85rem; padding: 0 1.35rem; box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);">
           🚨 Activeer Einde Spel &amp; Debriefing
         </button>
       </div>
@@ -540,19 +689,19 @@
     <section id="gm-attendance-drawer" class="gm-panel-card" style="margin-bottom: 1.4rem; border: 1.5px solid rgba(56, 189, 248, 0.35);">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; margin-bottom: 0.85rem; border-bottom: 1px dashed rgba(148, 163, 184, 0.2); padding-bottom: 0.65rem;">
         <div>
-          <div class="live-toast-tag">&gt;_ AANWEZIGHEID &amp; INACTIEVE SPELERS (26 AGENTEN)</div>
+          <div class="live-toast-tag">&gt;_ AANWEZIGHEID &amp; INACTIEVE SPELERS (25 AGENTEN)</div>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0;">
             Duid hieronder direct aan wie er afwezig is. Klik bij een speler op <strong>[ ❌ Zet Inactief ]</strong> om iemand uit te sluiten. Inactieve spelers worden automatisch overgeslagen bij de groepsverdeling en kunnen niet inloggen.
           </p>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <span id="gm-attendance-counts-badge" style="font-family: var(--font-mono); font-size: 0.75rem; background: rgba(15, 23, 42, 0.9); padding: 0.3rem 0.65rem; border-radius: 5px; border: 1px solid var(--border-color); color: #e2e8f0;">
-            🟢 26 Aanwezig | 🔴 0 Inactief
+            🟢 25 Aanwezig | 🔴 0 Inactief
           </span>
-          <button type="button" id="gm-enable-all-players-btn" class="btn btn-secondary" style="font-size: 0.72rem; padding: 0.35rem 0.75rem;">
+          <button type="button" id="gm-enable-all-players-btn" class="gm-btn gm-btn-secondary" style="height: 32px; font-size: 0.74rem;">
             ✅ Zet Iedereen op Aanwezig
           </button>
-          <button type="button" id="gm-collapse-attendance-btn" class="text-btn" style="font-size: 0.72rem; color: var(--accent);">
+          <button type="button" id="gm-collapse-attendance-btn" class="gm-btn gm-btn-secondary" style="height: 32px; font-size: 0.74rem; color: var(--accent);">
             Inklappen / Uitklappen
           </button>
         </div>

@@ -559,21 +559,23 @@ document.addEventListener("DOMContentLoaded", () => {
           <span style="font-family: var(--font-mono); font-size: 0.9rem; font-weight: 900; color: #fde047; letter-spacing: 0.08em;">${p.code || "----"}</span>
         </div>
         <div>${statusBadge}</div>
-        <div style="display: flex; gap: 0.4rem; margin-top: 0.2rem; flex-wrap: wrap;">
-          <button type="button" class="btn-toggle-active" style="flex: 1; min-width: 95px; padding: 0.32rem 0.5rem; font-size: 0.72rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid ${isOff ? "var(--accent)" : "rgba(239, 68, 68, 0.6)"}; background: ${isOff ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.18)"}; color: ${isOff ? "#6ee7b7" : "#fca5a5"}; transition: all 0.15s ease;">
+        <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
+          <button type="button" class="btn-toggle-active" style="width: 100%; height: 28px; padding: 0 0.5rem; font-size: 0.72rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid ${isOff ? "var(--accent)" : "rgba(239, 68, 68, 0.6)"}; background: ${isOff ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.18)"}; color: ${isOff ? "#6ee7b7" : "#fca5a5"}; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;">
             ${isOff ? "✅ Zet Aanwezig" : "❌ Zet Inactief"}
           </button>
-          <button type="button" class="btn-msg-p" title="Stuur directe HQ-notificatie popup naar ${p.naam}" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; transition: all 0.15s ease;">
-            💬 Bericht
-          </button>
-          <button type="button" class="btn-pts-p" title="Ken bonuspunten toe aan ${p.naam}" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--amber); background: rgba(245, 158, 11, 0.15); color: var(--amber); transition: all 0.15s ease;">
-            ⭐ +PT
-          </button>
-          ${
-            !isOff && !isUnlocked
-              ? `<button type="button" class="force-unlock-p-btn" title="Ontgrendel speler direct handmatig" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--accent); background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">⚡ Login</button>`
-              : ""
-          }
+          <div style="display: flex; gap: 0.35rem; width: 100%;">
+            <button type="button" class="btn-msg-p" title="Stuur directe HQ-notificatie popup naar ${p.naam}" style="flex: 1; height: 26px; padding: 0 0.35rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;">
+              💬 Bericht
+            </button>
+            <button type="button" class="btn-pts-p" title="Ken bonuspunten toe aan ${p.naam}" style="flex: 1; height: 26px; padding: 0 0.35rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--amber); background: rgba(245, 158, 11, 0.15); color: var(--amber); transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;">
+              ⭐ +PT
+            </button>
+            ${
+              !isOff && !isUnlocked
+                ? `<button type="button" class="force-unlock-p-btn" title="Ontgrendel speler direct handmatig" style="flex: 1; height: 26px; padding: 0 0.35rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--accent); background: rgba(16, 185, 129, 0.2); color: #6ee7b7; display: flex; align-items: center; justify-content: center;">⚡ Login</button>`
+                : ""
+            }
+          </div>
         </div>
       `;
 

@@ -661,18 +661,28 @@ body::after {
 }
 
 .text-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
   font-family: var(--font-mono);
   font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 0.25rem 0;
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
 }
 
 .text-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent);
   color: var(--accent);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
 }
 
 .player-score-pill {
@@ -2448,12 +2458,42 @@ a,
     padding: 0.95rem;
   }
 
-  .loc-code-form .btn,
+  .loc-code-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .loc-code-form .loc-code-input,
+  .loc-code-form .btn {
+    width: 100% !important;
+  }
+
+  .photo-upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    align-items: stretch;
+  }
+
   .photo-upload-form .btn,
-  .photo-upload-form .file-input-label {
-    width: 100%;
+  .photo-upload-form .file-input-label,
+  .photo-upload-form .loc-photo-caption {
+    width: 100% !important;
+    min-width: 0 !important;
     justify-content: center;
     text-align: center;
+    box-sizing: border-box;
+  }
+
+  .photo-upload-form .loc-photo-filename {
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    font-size: 0.74rem;
   }
 
   .photos-grid {
@@ -4104,6 +4144,43 @@ a,
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 0.15rem;
+}
+
+@media (max-width: 540px) {
+  .cinematic-debrief-card {
+    padding: 1.35rem 1rem;
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
+  .debrief-stamp-seal {
+    position: static;
+    display: inline-block;
+    margin: 0 auto 0.75rem;
+    transform: rotate(-6deg);
+  }
+  .debrief-title {
+    font-size: 1.35rem;
+  }
+  .debrief-sub-agent {
+    font-size: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+  .debrief-letter-body {
+    padding: 0.85rem 0.95rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .debrief-stats-grid {
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .debrief-stat-val {
+    font-size: 1rem;
+  }
+  .debrief-stat-lbl {
+    font-size: 0.58rem;
+  }
 }
 
 
