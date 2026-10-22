@@ -1070,12 +1070,14 @@ const ScoreService = (() => {
       allPlayers: allPlayerScores,
       enabledPlayers: enabledPlayerScores,
       disabledSet: disabledPlayers,
+      groups: adminGroupsList,
       groupsList,
       adminGroupsList,
       groupsRevealed,
       groupVisibilityMode,
       groupCustomNames,
-      hasGroups: groupsList.length > 0,
+      hasGroups: adminGroupsList.length > 0 && adminGroupsList.some(g => g.leden && g.leden.length > 0),
+      hasAssignedGroups: adminGroupsList.some(g => g.leden && g.leden.length > 0),
       allPhotos,
       allMessages,
       bonusSolves: bonusSolves.sort((a, b) => (b.ts || 0) - (a.ts || 0)),
@@ -1219,6 +1221,27 @@ const ScoreService = (() => {
     document.head.appendChild(s);
   }
 
+  const pendingOutboxEvents = [];
+
+  function flushOutbox() {
+    if (!mqttClient || !mqttClient.connected) return;
+    let sentAny = false;
+    while (pendingOutboxEvents.length > 0) {
+      const item = pendingOutboxEvents.shift();
+      try {
+        mqttClient.publish(TOPIC_EVENTS, JSON.stringify(item), { qos: 1 });
+        sentAny = true;
+      } catch (err) {
+        console.warn("Outbox flush fout:", err);
+        pendingOutboxEvents.unshift(item);
+        break;
+      }
+    }
+    if (sentAny || eventsMap.size > 0) {
+      publishCurrentStateSnapshot();
+    }
+  }
+
   function connectMqtt() {
     if (typeof window === "undefined") return;
     if (typeof window.mqtt === "undefined") {
@@ -1227,6 +1250,7 @@ const ScoreService = (() => {
     }
     if (mqttClient && mqttClient.connected) {
       updateSyncStatus("connected");
+      flushOutbox();
       return;
     }
     if (isConnecting) return;
@@ -1251,6 +1275,7 @@ const ScoreService = (() => {
         mqttClient.subscribe([TOPIC_EVENTS, TOPIC_STATE, TOPIC_REQ], { qos: 1 }, (err) => {
           if (!err) {
             broadcastStateRequest();
+            flushOutbox();
             if (eventsMap.size > 0) {
               publishCurrentStateSnapshot();
             }
@@ -1325,14 +1350,30 @@ const ScoreService = (() => {
       return;
     }
 
-    // Achtergrond heartbeat / polling backup
+    // Achtergrond heartbeat / polling backup (elke 6s voor 100% zekere live sync op 4G)
     if (!pollInterval) {
       pollInterval = setInterval(() => {
         if (!mqttClient || !mqttClient.connected) {
           connectMqtt();
-          fetchCloudHistory();
         }
-      }, 8000);
+        fetchCloudHistory();
+      }, 6000);
+    }
+
+    // Luister ook naar tab focus / wake om direct verbinding te herstellen
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", () => {
+        connectMqtt();
+        fetchCloudHistory();
+        flushOutbox();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          connectMqtt();
+          fetchCloudHistory();
+          flushOutbox();
+        }
+      });
     }
   }
 
@@ -1346,14 +1387,10 @@ const ScoreService = (() => {
     ingestRawEvent(ev);
     notifyListeners();
 
-    // 1. Live broadcast via MQTT WebSockets (0ms wachttijd voor alle 4G toestellen!)
+    // 1. Live broadcast via MQTT WebSockets (met outbox wachtrij voor als 4G even hapert)
+    pendingOutboxEvents.push(ev);
     if (mqttClient && mqttClient.connected) {
-      try {
-        mqttClient.publish(TOPIC_EVENTS, JSON.stringify(ev), { qos: 1 });
-        publishCurrentStateSnapshot();
-      } catch (err) {
-        console.warn("Realtime broadcast waarschuwing:", err);
-      }
+      flushOutbox();
     } else {
       connectMqtt();
     }

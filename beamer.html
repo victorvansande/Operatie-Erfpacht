@@ -6,18 +6,19 @@
   <title>WAR ROOM // BEAMER PROJECTOR HUD — Operatie Erfpacht</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800;900&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
     :root {
-      --hud-bg: #070a10;
-      --hud-panel: rgba(13, 19, 31, 0.88);
+      --hud-bg: #060910;
+      --hud-panel: rgba(11, 16, 28, 0.94);
       --hud-border: rgba(56, 189, 248, 0.28);
       --hud-cyan: #38bdf8;
       --hud-green: #10b981;
       --hud-amber: #f59e0b;
       --hud-red: #ef4444;
+      --laser-red: #ff2a3d;
       --hud-text: #f1f5f9;
       --hud-muted: #94a3b8;
     }
@@ -46,10 +47,10 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.24) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
       background-size: 100% 3px, 6px 100%;
       z-index: 999;
-      opacity: 0.65;
+      opacity: 0.6;
     }
 
     .beamer-vignette {
@@ -60,12 +61,12 @@
       z-index: 998;
     }
 
-    /* 1. TOP COMMAND BAR (Met Grote Aftelklok) */
+    /* 1. TOP COMMAND BAR (Met Grote Prominente Rode Aftelklok) */
     .war-topbar {
-      height: 78px;
-      background: rgba(10, 15, 26, 0.96);
+      height: 88px;
+      background: rgba(8, 12, 22, 0.98);
       border-bottom: 2px solid var(--hud-cyan);
-      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.2);
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(56, 189, 248, 0.25);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -81,9 +82,9 @@
     }
 
     .war-seal-svg {
-      width: 46px;
-      height: 46px;
-      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+      width: 50px;
+      height: 50px;
+      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.55));
     }
 
     .war-title-block h1 {
@@ -106,59 +107,77 @@
       margin-top: 2px;
     }
 
-    /* DE GROTE AFTELKLOK IN HET MIDDEN */
+    /* DE PROMINENTE RODE AFTELKLOK IN HET MIDDEN */
     .war-clock-center {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1.5px solid rgba(56, 189, 248, 0.4);
-      border-radius: 8px;
-      padding: 0.25rem 1.75rem;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15), inset 0 0 12px rgba(56, 189, 248, 0.1);
+      background: rgba(30, 8, 12, 0.94);
+      border: 2px solid var(--hud-red);
+      border-radius: 10px;
+      padding: 0.35rem 2rem;
+      box-shadow: 0 0 35px rgba(239, 68, 68, 0.5), inset 0 0 18px rgba(239, 68, 68, 0.28);
       cursor: pointer;
       transition: all 0.2s ease;
+      position: relative;
     }
 
     .war-clock-center:hover {
-      border-color: var(--hud-amber);
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+      border-color: #ff4d5d;
+      box-shadow: 0 0 45px rgba(255, 42, 61, 0.7), inset 0 0 25px rgba(255, 42, 61, 0.35);
+      transform: scale(1.01);
     }
 
     .war-clock-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: var(--hud-amber);
-      letter-spacing: 0.15em;
+      font-size: 0.68rem;
+      font-weight: 900;
+      color: #fca5a5;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
 
+    .red-beacon-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--laser-red);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--laser-red);
+      animation: beaconBlink 1s infinite;
+    }
+
+    @keyframes beaconBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    /* GROTE RODE CIJFERS */
     .war-countdown-display {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 2.35rem;
+      font-size: 3rem;
       font-weight: 900;
-      color: #ffffff;
-      letter-spacing: 0.06em;
-      line-height: 1;
-      text-shadow: 0 0 15px rgba(56, 189, 248, 0.6), 0 0 30px rgba(56, 189, 248, 0.3);
+      color: var(--laser-red);
+      letter-spacing: 0.08em;
+      line-height: 1.05;
+      text-shadow: 0 0 20px rgba(255, 42, 61, 0.95), 0 0 45px rgba(255, 42, 61, 0.6), 0 0 70px rgba(239, 68, 68, 0.4);
     }
 
     .war-countdown-sub {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.62rem;
-      color: var(--hud-muted);
+      color: #f87171;
+      opacity: 0.85;
       margin-top: 1px;
     }
 
     .war-topbar-right {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.85rem;
     }
 
     .war-telemetry-badge {
@@ -220,14 +239,21 @@
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
     }
 
+    .war-btn.active-sound {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--hud-green);
+      color: #6ee7b7;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+
     /* 2. HOOFDGRID (3 KOLOMMEN HUD) */
     .war-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: 310px 1fr 340px;
+      grid-template-columns: 330px 1fr 380px;
       gap: 0.85rem;
       padding: 0.85rem 1rem 0.5rem;
-      height: calc(100vh - 78px - 38px);
+      height: calc(100vh - 88px - 38px);
       min-height: 0;
     }
 
@@ -281,6 +307,7 @@
       letter-spacing: 0.06em;
       color: #ffffff;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
 
     .hud-panel-title {
@@ -294,12 +321,12 @@
     }
 
     .hud-panel-body {
-      padding: 0.85rem;
+      padding: 0.75rem;
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.65rem;
     }
 
     /* LINKER KOLOM: BRIEFING & PREMISE */
@@ -308,30 +335,31 @@
       border: 1px solid rgba(245, 158, 11, 0.4);
       border-left: 4px solid var(--hud-amber);
       border-radius: 6px;
-      padding: 0.85rem;
+      padding: 0.7rem 0.75rem;
+      flex-shrink: 0;
     }
 
     .premise-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 800;
       color: var(--hud-amber);
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.25rem;
     }
 
     .premise-heading {
-      font-size: 0.98rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: #ffffff;
-      line-height: 1.25;
-      margin-bottom: 0.45rem;
+      line-height: 1.2;
+      margin-bottom: 0.35rem;
     }
 
     .premise-text {
-      font-size: 0.8rem;
-      line-height: 1.45;
+      font-size: 0.75rem;
+      line-height: 1.4;
       color: #cbd5e1;
     }
 
@@ -339,63 +367,47 @@
       color: #fde047;
     }
 
-    .directives-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      margin-top: 0.55rem;
-      padding-top: 0.55rem;
-      border-top: 1px dashed rgba(245, 158, 11, 0.3);
-      font-size: 0.75rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .directives-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.4rem;
-      color: #e2e8f0;
-    }
-
-    .directives-list li span {
-      color: var(--hud-amber);
-      font-weight: 800;
-    }
-
     /* AANWEZIGHEIDS COUNTER CARD */
     .agent-status-card {
       background: rgba(15, 23, 42, 0.75);
       border: 1px solid rgba(56, 189, 248, 0.25);
       border-radius: 6px;
-      padding: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .agent-status-card.all-unlocked {
+      border-color: var(--hud-amber);
+      background: rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
     }
 
     .agent-status-kpi {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
     }
 
     .agent-kpi-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.7rem;
+      font-size: 1.45rem;
       font-weight: 900;
       color: var(--hud-cyan);
     }
 
     .agent-kpi-sub {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: var(--hud-muted);
     }
 
     .agent-progress-bar {
-      height: 6px;
+      height: 5px;
       background: #1e293b;
       border-radius: 3px;
       overflow: hidden;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .agent-progress-fill {
@@ -409,15 +421,15 @@
     .agent-chips-mini {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.25rem;
-      max-height: 120px;
+      gap: 0.2rem;
+      max-height: 65px;
       overflow-y: auto;
     }
 
     .chip-mini {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-      padding: 0.15rem 0.35rem;
+      font-size: 0.58rem;
+      padding: 0.1rem 0.3rem;
       border-radius: 3px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.1);
@@ -428,6 +440,137 @@
       border-color: rgba(16, 185, 129, 0.5);
       color: #6ee7b7;
       font-weight: 700;
+    }
+
+    /* CYBER TERMINAL & CCTV WEBCAM WIDGET */
+    .hud-terminal-card {
+      background: #040811;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 200px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(16, 185, 129, 0.08);
+    }
+
+    .terminal-cctv-header {
+      background: rgba(10, 20, 20, 0.95);
+      padding: 0.3rem 0.6rem;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.25);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+    }
+
+    .cctv-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #ef4444;
+      font-weight: 800;
+    }
+
+    .cctv-rec-dot {
+      width: 7px;
+      height: 7px;
+      background: #ef4444;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #ef4444;
+      animation: beaconBlink 1.2s infinite;
+    }
+
+    .cctv-fps {
+      color: var(--hud-green);
+      font-size: 0.58rem;
+    }
+
+    .cctv-img-wrapper {
+      position: relative;
+      height: 105px;
+      background: #000;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .cctv-cam-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: contrast(115%) brightness(90%) hue-rotate(5deg);
+      opacity: 0.88;
+    }
+
+    .cctv-scanline {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(16, 185, 129, 0.05) 50%, rgba(0, 0, 0, 0.4) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+
+    .cctv-time-stamp {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: #38bdf8;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 0.1rem 0.3rem;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .terminal-console-header {
+      background: rgba(12, 24, 20, 0.95);
+      padding: 0.25rem 0.6rem;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--hud-green);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .terminal-body {
+      flex: 1;
+      padding: 0.45rem 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      line-height: 1.45;
+      color: #34d399;
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      text-shadow: 0 0 4px rgba(52, 211, 153, 0.5);
+      position: relative;
+    }
+
+    .terminal-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .terminal-line.cyan { color: #38bdf8; }
+    .terminal-line.amber { color: #f59e0b; }
+    .terminal-line.red { color: #f87171; }
+    .terminal-line.dim { color: #059669; opacity: 0.7; }
+
+    .terminal-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 12px;
+      background: #34d399;
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: beaconBlink 0.8s infinite;
     }
 
     /* MIDDELSTE KOLOM: RADAR SATELLIET KAART */
@@ -494,16 +637,208 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.68rem;
       color: var(--hud-cyan);
-      background: rgba(8, 14, 24, 0.85);
+      background: rgba(8, 14, 24, 0.88);
       border: 1px solid rgba(56, 189, 248, 0.35);
       padding: 0.35rem 0.65rem;
       border-radius: 4px;
       pointer-events: none;
     }
 
+    /* ROTATING LOCATION SPOTLIGHT HUD OVERLAY (OP DE KAART) */
+    .map-spotlight-card {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      z-index: 510;
+      width: 290px;
+      background: rgba(8, 14, 26, 0.94);
+      border: 1.5px solid var(--hud-cyan);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      font-family: 'Space Grotesk', sans-serif;
+      transition: all 0.35s ease;
+      animation: spotlightIn 0.4s ease-out;
+    }
+
+    @keyframes spotlightIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spotlight-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+
+    .spotlight-radar-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--hud-amber);
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .spotlight-pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--hud-amber);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--hud-amber);
+      animation: beaconBlink 0.9s infinite;
+    }
+
+    .spotlight-timer-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--hud-cyan);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+    }
+
+    .spotlight-title {
+      font-size: 0.98rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+    }
+
+    .spotlight-address {
+      font-size: 0.75rem;
+      color: #93c5fd;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .spotlight-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--hud-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0.35rem;
+    }
+
+    .spotlight-team-tag {
+      color: var(--hud-green);
+      font-weight: 800;
+    }
+
+    /* GROTE OPVALLENDE MAP MARKERS (Leaflet DivIcon) */
+    .hud-map-pin {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .hud-pin-beacon {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.25);
+      border: 1.5px solid var(--hud-cyan);
+      box-shadow: 0 0 15px var(--hud-cyan);
+      animation: pinBeaconPulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    @keyframes pinBeaconPulse {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .hud-pin-core {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid var(--hud-cyan);
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--hud-cyan), inset 0 0 6px var(--hud-cyan);
+      z-index: 2;
+      transition: all 0.25s ease;
+    }
+
+    .hud-map-pin.is-active .hud-pin-core {
+      background: var(--hud-amber);
+      border-color: #ffffff;
+      color: #000000;
+      transform: scale(1.2);
+      box-shadow: 0 0 25px var(--hud-amber), 0 0 10px #ffffff;
+    }
+
+    .hud-map-pin.is-active .hud-pin-beacon {
+      border-color: var(--hud-amber);
+      background: rgba(245, 158, 11, 0.4);
+      animation-duration: 1.2s;
+    }
+
+    .hud-pin-label {
+      position: absolute;
+      top: 34px;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+      background: rgba(5, 10, 20, 0.92);
+      border: 1px solid var(--hud-cyan);
+      color: #ffffff;
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .hud-map-pin.is-active .hud-pin-label {
+      border-color: var(--hud-amber);
+      color: #fde047;
+      font-weight: 900;
+      transform: scale(1.05);
+    }
+
+    /* HQ MARKER SPECIAAL (Laser Rood) */
+    .hud-hq-core {
+      background: #7f1d1d !important;
+      border-color: var(--laser-red) !important;
+      box-shadow: 0 0 16px var(--laser-red) !important;
+      color: #ffffff !important;
+    }
+
+    .hud-hq-beacon {
+      border-color: var(--laser-red) !important;
+      background: rgba(255, 42, 61, 0.3) !important;
+    }
+
     /* 6 SECTOREN ONDERBALK */
     .sectors-bar {
-      height: 68px;
+      height: 72px;
       background: rgba(13, 19, 31, 0.95);
       border: 1px solid rgba(56, 189, 248, 0.3);
       border-radius: 8px;
@@ -523,7 +858,15 @@
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
+      cursor: pointer;
       transition: all 0.2s ease;
+    }
+
+    .sector-item.is-spotlight {
+      border-color: var(--hud-amber);
+      background: rgba(245, 158, 11, 0.15);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+      transform: translateY(-2px);
     }
 
     .sector-item.active {
@@ -551,7 +894,41 @@
       gap: 0.25rem;
     }
 
-    /* RECHTER KOLOM: GROEPEN OVERZICHT */
+    /* RECHTER KOLOM: LEADERBOARD TABS & WEERGAVE */
+    .hud-tabs {
+      display: flex;
+      gap: 0.35rem;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 0.35rem 0.65rem;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .hud-tab-btn {
+      flex: 1;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      color: var(--hud-muted);
+      padding: 0.35rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+    }
+
+    .hud-tab-btn.active {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--hud-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+
+    /* LOCKED PANEL */
     .groups-placeholder-locked {
       background: rgba(239, 68, 68, 0.08);
       border: 2px dashed rgba(239, 68, 68, 0.4);
@@ -577,8 +954,8 @@
     }
 
     .locked-title {
-      font-size: 1rem;
-      font-weight: 800;
+      font-size: 0.98rem;
+      font-weight: 900;
       color: #f87171;
       letter-spacing: 0.06em;
       margin-bottom: 0.4rem;
@@ -588,14 +965,14 @@
       font-size: 0.78rem;
       color: var(--hud-muted);
       line-height: 1.4;
-      max-width: 250px;
+      max-width: 270px;
     }
 
-    /* GROEPEN LIJST EENS ONTHULD */
+    /* GROEPEN LIVE KAARTEN */
     .groups-live-list {
       display: flex;
       flex-direction: column;
-      gap: 0.65rem;
+      gap: 0.55rem;
       overflow-y: auto;
       height: 100%;
       padding-right: 0.2rem;
@@ -605,11 +982,26 @@
       background: rgba(15, 23, 42, 0.88);
       border: 1.5px solid var(--grp-color, var(--hud-cyan));
       border-radius: 6px;
-      padding: 0.65rem 0.8rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.03);
+      padding: 0.6rem 0.75rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.3rem;
+      position: relative;
+    }
+
+    .group-war-card.rank-1 {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+    }
+    .group-war-card.rank-2 {
+      border-color: #cbd5e1;
+      background: rgba(203, 213, 225, 0.08);
+    }
+    .group-war-card.rank-3 {
+      border-color: #d97706;
+      background: rgba(217, 119, 6, 0.08);
     }
 
     .group-war-header {
@@ -627,6 +1019,15 @@
       gap: 0.4rem;
     }
 
+    .group-rank-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.1);
+    }
+
     .group-color-dot {
       width: 10px;
       height: 10px;
@@ -637,7 +1038,7 @@
 
     .group-war-score {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       font-weight: 900;
       color: var(--hud-amber);
     }
@@ -652,11 +1053,89 @@
     }
 
     .group-war-members {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--hud-muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* INDIVIDUELE AGENTEN LEADERBOARD LIST */
+    .player-leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      overflow-y: auto;
+      height: 100%;
+      padding-right: 0.2rem;
+    }
+
+    .player-lb-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.65rem;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      font-size: 0.78rem;
+      transition: all 0.15s ease;
+    }
+
+    .player-lb-row.top-1 {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.16);
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+    }
+    .player-lb-row.top-2 {
+      border-color: #cbd5e1;
+      background: rgba(203, 213, 225, 0.12);
+    }
+    .player-lb-row.top-3 {
+      border-color: #d97706;
+      background: rgba(217, 119, 6, 0.12);
+    }
+
+    .player-lb-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .player-lb-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      font-weight: 900;
+      width: 22px;
+      text-align: center;
+      color: var(--hud-muted);
+    }
+    .player-lb-row.top-1 .player-lb-rank { color: #f59e0b; }
+    .player-lb-row.top-2 .player-lb-rank { color: #cbd5e1; }
+    .player-lb-row.top-3 .player-lb-rank { color: #d97706; }
+
+    .player-lb-name {
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-lb-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--hud-muted);
+    }
+
+    .player-lb-points {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.86rem;
+      font-weight: 900;
+      color: var(--hud-amber);
+      flex-shrink: 0;
+      margin-left: 0.5rem;
     }
 
     /* 3. ONDERBALK: SCROLLING TICKER */
@@ -712,7 +1191,7 @@
 
     .clock-modal-box {
       background: #0f172a;
-      border: 2px solid var(--hud-amber);
+      border: 2px solid var(--laser-red);
       border-radius: 12px;
       padding: 1.5rem;
       width: 90%;
@@ -742,10 +1221,11 @@
       </div>
     </div>
 
-    <!-- DE GROTE AFTELKLOK IN HET MIDDEN -->
-    <div class="war-clock-center" id="war-clock-btn" title="Klik om de timer aan te passen">
+    <!-- DE GROTE RODE AFTELKLOK IN HET MIDDEN -->
+    <div class="war-clock-center" id="war-clock-btn" title="Klik om de doeltijd aan te passen">
       <div class="war-clock-label">
-        <span>⏱️</span> <span id="clock-mode-label">T-MINUS // MISSIESTART</span>
+        <span class="red-beacon-dot"></span>
+        <span id="clock-mode-label">T-MINUS // MISSIESTART</span>
       </div>
       <div class="war-countdown-display" id="war-countdown-digits">00:00:00</div>
       <div class="war-countdown-sub" id="war-target-sub">Doeltijd: Zaterdag 19:00 (Klik om te wijzigen)</div>
@@ -761,7 +1241,11 @@
         <div class="war-clock-time" id="war-live-clock">--:--:--</div>
       </div>
 
-      <button type="button" class="war-btn" id="btn-fullscreen" title="Volledig Scherm (F11)">
+      <button type="button" class="war-btn active-sound" id="btn-audio-toggle" title="24-Stijl Afteltik Geluid aan/uit zetten">
+        🔊 Geluid: AAN
+      </button>
+
+      <button type="button" class="war-btn" id="btn-fullscreen" title="Volledig Scherm (F11 of F)">
         ⛶ Fullscreen
       </button>
       <a href="hq-dashboard.html" class="war-btn" style="text-decoration: none;">
@@ -773,7 +1257,7 @@
   <!-- 2. HOOFDGRID (3 KOLOMMEN HUD) -->
   <main class="war-grid">
 
-    <!-- LINKER KOLOM: PREMISE & RECRUITMENT STATUS -->
+    <!-- LINKER KOLOM: PREMISE, AGENTS & LIVE HACKER TERMINAL -->
     <aside class="hud-panel">
       <div class="hud-panel-header">
         <div class="hud-panel-title">
@@ -788,20 +1272,13 @@
           <div class="premise-tag">CRISIS HERENTALS // DREIGINGSNIVEAU ROOD</div>
           <div class="premise-heading">SAMENZWERING ROND DE ERFPACHT</div>
           <p class="premise-text">
-            Het stadsbestuur van Herentals wil de erfpacht van KSA afnemen en het lokaal verpachten aan een louche projectontwikkelaar.
-            <strong>26 Veldagenten</strong> zijn geactiveerd om in <strong>6 geheime sectoren</strong> bewijzen en codewoorden veilig te stellen voordat de erfpacht definitief vervalt!
+            Het stadsbestuur wil de erfpacht van KSA afnemen voor een projectontwikkelaar.
+            <strong>26 Veldagenten</strong> zijn geactiveerd om in <strong>6 sectoren</strong> bewijzen en codewoorden veilig te stellen!
           </p>
-
-          <ul class="directives-list">
-            <li><span>[01]</span> ONDERCOVER DRESSCODE: PET + ZONNEBRIL</li>
-            <li><span>[02]</span> KRAAK DE CODES BIJ DE 6 MONUMENTEN</li>
-            <li><span>[03]</span> UPLOAD FOTO- EN VIDEOBEWIJS NAAR HQ</li>
-            <li><span>[04]</span> OVERTUIG DE STAD EN RED DE KSA</li>
-          </ul>
         </div>
 
         <!-- Aanwezigheid & Dossier Unlock Progress -->
-        <div class="agent-status-card">
+        <div class="agent-status-card" id="war-agent-status-box">
           <div class="agent-status-kpi">
             <span class="agent-kpi-sub">Geactiveerde Agenten:</span>
             <span class="agent-kpi-val" id="war-agents-count">0 / 26</span>
@@ -809,7 +1286,7 @@
           <div class="agent-progress-bar">
             <div class="agent-progress-fill" id="war-agents-progress"></div>
           </div>
-          <div style="font-size: 0.68rem; color: var(--hud-muted); margin-bottom: 0.4rem; font-family: 'JetBrains Mono', monospace;">
+          <div style="font-size: 0.65rem; color: var(--hud-muted); margin-bottom: 0.35rem; font-family: 'JetBrains Mono', monospace;">
             STATUS: <span id="war-login-summary" style="color: var(--hud-amber);">Wachten op logins via gsm...</span>
           </div>
 
@@ -818,12 +1295,28 @@
           </div>
         </div>
 
-        <!-- Commandocentrale Adres -->
-        <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.6rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
-          <div style="color: var(--hud-cyan); font-weight: 800; margin-bottom: 0.2rem;">📍 HOOFDKWARTIER COMMANDOPOST</div>
-          <div style="color: #ffffff;">Kapucijnenstraat 7, 2200 Herentals</div>
-          <div style="color: var(--hud-muted); font-size: 0.65rem; margin-top: 0.2rem;">Coördinaten: 51.1764° N, 4.8361° E</div>
+        <!-- LIVE CYBER TERMINAL & CCTV WEBCAM -->
+        <div class="hud-terminal-card">
+          <div class="terminal-cctv-header">
+            <div class="cctv-badge">
+              <span class="cctv-rec-dot"></span> REC ● CAM-01 // COMMAND CELL
+            </div>
+            <span class="cctv-fps">30 FPS // ENCRYPTED</span>
+          </div>
+          <div class="cctv-img-wrapper">
+            <img src="img/hq-webcam.jpg" alt="HQ Surveillance" class="cctv-cam-img" onerror="this.src='img/hq-webcam.png'" />
+            <div class="cctv-scanline"></div>
+            <div class="cctv-time-stamp" id="cctv-time-stamp">HERENTALS 19:00:00 UTC+2</div>
+          </div>
+          <div class="terminal-console-header">
+            <span>CYBERCOM // SIGINT REALTIME DECRYPTOR</span>
+            <span style="color:var(--hud-green);">ONLINE</span>
+          </div>
+          <div class="terminal-body" id="hud-terminal-body">
+            <!-- Wordt live gevuld met typende spy telemetry -->
+          </div>
         </div>
+
       </div>
     </aside>
 
@@ -833,6 +1326,23 @@
         <div class="map-corner-data">
           <span>SATELLITE RADAR VIEW // HERENTALS SECTOR 2200</span><br>
           <span style="color: #64748b;">SURVEILLANCE MODE: REALTIME TARGET TRACKING</span>
+        </div>
+
+        <!-- Rotating Location Spotlight Popup HUD -->
+        <div class="map-spotlight-card" id="map-spotlight-card">
+          <div class="spotlight-badge">
+            <div class="spotlight-radar-tag">
+              <span class="spotlight-pulse-dot"></span>
+              <span id="spotlight-sector-tag">SECTOR 01 // TARGET SPOTLIGHT</span>
+            </div>
+            <span class="spotlight-timer-pill" id="spotlight-timer-pill">AUTO 5S</span>
+          </div>
+          <div class="spotlight-title" id="spotlight-name">ZANDPOORT (HISTORISCHE POORT)</div>
+          <div class="spotlight-address" id="spotlight-address">📍 Zandstraat / Olympiadelaan, 2200 Herentals</div>
+          <div class="spotlight-meta">
+            <div id="spotlight-coords">Coördinaten: 51.1764° N, 4.8361° E</div>
+            <div class="spotlight-team-tag" id="spotlight-team">STARTLOCATIE VOOR: TEAM ALPHA</div>
+          </div>
         </div>
 
         <!-- Radar Sweep -->
@@ -850,17 +1360,32 @@
       </div>
     </section>
 
-    <!-- RECHTER KOLOM: GROEPEN OVERZICHT (LIVE GESYNCT) -->
+    <!-- RECHTER KOLOM: LEADERBOARD & GROEPEN (LIVE GESYNCT) -->
     <aside class="hud-panel">
       <div class="hud-panel-header">
         <div class="hud-panel-title">
-          <span>👥</span> VELDGROEPEN &amp; TEAMS
+          <span>🏆</span> <span id="war-right-panel-title">LEADERBOARD &amp; GROEPEN</span>
         </div>
-        <span id="war-groups-state-badge" style="color: var(--hud-amber); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;">VERBORGEN</span>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <button type="button" id="btn-toggle-cycle" class="war-btn" style="padding: 0.15rem 0.45rem; font-size: 0.62rem; font-family: 'JetBrains Mono', monospace;" title="Automatisch wisselen tussen Teams en Individueel">
+            🔄 AUTO (12s)
+          </button>
+          <span id="war-groups-state-badge" style="color: var(--hud-amber); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;">VERSLEUTELD</span>
+        </div>
+      </div>
+
+      <!-- TABS: TEAMS vs AGENTEN (Zichtbaar zodra alle leden hun code gebruikt hebben) -->
+      <div class="hud-tabs" id="war-hud-tabs" style="display: none;">
+        <button type="button" class="hud-tab-btn active" id="tab-teams-btn" onclick="setLeaderboardTab('teams')">
+          🏆 Teams Stand (6)
+        </button>
+        <button type="button" class="hud-tab-btn" id="tab-players-btn" onclick="setLeaderboardTab('players')">
+          🎖️ Individueel (26)
+        </button>
       </div>
 
       <div class="hud-panel-body" id="war-groups-body">
-        <!-- Wordt live gevuld of toont 'Versleuteld' indien groepen nog niet onthuld zijn -->
+        <!-- Wordt live gevuld of toont groepsindeling / 'Versleuteld' -->
       </div>
     </aside>
 
@@ -875,6 +1400,7 @@
       <span>[ALERT] DRESSCODE VOORSCHRIFT: PET EN ZONNEBRIL VERPLICHT BIJ INFILTRATIE //</span>
       <span>[HQ] GAMEMASTER VICCE MONITORT LIVE ALLE BEWIJSSTUKKEN UIT HERENTALS //</span>
       <span>[STATUS] 6 HISTORISCHE MONUMENTEN BESCHERMD MET BEVEILIGINGSCODES //</span>
+      <span>[AUDIO] 24 DIGITAL COUNTDOWN PULSE SYNCHRONIZED //</span>
       <span>[SYSTEM] OPERATIE ERFPACHT COMMAND CENTER INITIALIZED //</span>
       <span>[SIGINT] 4G MULTI-BROKER MQTT ENCRYPTION ONLINE //</span>
       <span>[ALERT] DRESSCODE VOORSCHRIFT: PET EN ZONNEBRIL VERPLICHT BIJ INFILTRATIE //</span>
@@ -887,7 +1413,9 @@
   <div id="clock-settings-modal" onclick="closeClockModal(event)">
     <div class="clock-modal-box" onclick="event.stopPropagation()">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">
-        <h3 style="color:var(--hud-amber); font-size:1.1rem;">⏱️ Aftelklok Instellingen</h3>
+        <h3 style="color:var(--laser-red); font-size:1.1rem; display:flex; align-items:center; gap:0.4rem;">
+          <span class="red-beacon-dot"></span> Aftelklok Instellen
+        </h3>
         <button type="button" onclick="closeClockModal()" style="background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer;">&times;</button>
       </div>
 
@@ -913,7 +1441,7 @@
         </div>
 
         <div style="margin-top:0.5rem; display:flex; justify-content:flex-end;">
-          <button type="button" class="war-btn" style="background:var(--hud-amber); color:#000; font-weight:800;" onclick="closeClockModal()">Sluiten</button>
+          <button type="button" class="war-btn" style="background:var(--laser-red); color:#fff; font-weight:800; border-color:var(--laser-red);" onclick="closeClockModal()">Sluiten</button>
         </div>
       </div>
     </div>
@@ -928,7 +1456,63 @@
     // BEAMER / WAR ROOM PROJECTOR CONTROLLER
     // =========================================================================
 
-    // 1. Aftelklok Logica
+    // 1. Web Audio API "24" Series Countdown Beep Engine
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleSound() {
+      initAudio();
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById("btn-audio-toggle");
+      if (btn) {
+        btn.textContent = soundEnabled ? "🔊 Geluid: AAN" : "🔇 Geluid: UIT";
+        btn.classList.toggle("active-sound", soundEnabled);
+      }
+      if (soundEnabled) {
+        play24Beep(false);
+      }
+    }
+
+    function play24Beep(isMinute = false) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        // Serie 24 countdown piep: 880Hz (A5), subtiele dubbele/hogere pitch op de minuut (1760Hz)
+        osc.type = "sine";
+        const freq = isMinute ? 1760 : 880;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        const now = audioCtx.currentTime;
+        // Subtiel, niet te oorverdovend (volume ~0.15)
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (_) {}
+    }
+
+    // 2. Prominente Rode Aftelklok Logica
     let targetTime = null;
     const STORAGE_TARGET_KEY = "jb_beamer_target_time";
 
@@ -956,21 +1540,28 @@
       const now = new Date();
       const diffMs = targetTime.getTime() - now.getTime();
 
+      let isMinuteMark = false;
+
       if (diffMs > 0) {
-        label.textContent = "⏱️ T-MINUS // AFTELKLOK MISSIESTART";
+        label.textContent = "T-MINUS // MISSIESTART";
         const totalSec = Math.floor(diffMs / 1000);
+        isMinuteMark = (totalSec % 60) === 0;
         const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
         const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
         const secs = String(totalSec % 60).padStart(2, "0");
         display.textContent = `${hrs}:${mins}:${secs}`;
       } else {
-        label.textContent = "🚀 MISSIE BEZIG // VERSTREKEN TIJD";
+        label.textContent = "MISSIE BEZIG // VERSTREKEN TIJD";
         const elapsedSec = Math.floor(Math.abs(diffMs) / 1000);
+        isMinuteMark = (elapsedSec % 60) === 0;
         const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
         const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, "0");
         const secs = String(elapsedSec % 60).padStart(2, "0");
         display.textContent = `+${hrs}:${mins}:${secs}`;
       }
+
+      // Speel de subtiele 24 countdown piep per seconde
+      play24Beep(isMinuteMark);
 
       if (sub && targetTime) {
         const timeStr = targetTime.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
@@ -978,10 +1569,14 @@
         sub.textContent = `Doeltijd: ${dateStr} ${timeStr} (Klik om te wijzigen)`;
       }
 
-      // Live realtime klok in topbar
+      // Live realtime klok in topbar & CCTV
       const clockEl = document.getElementById("war-live-clock");
       if (clockEl) {
         clockEl.textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      }
+      const cctvClock = document.getElementById("cctv-time-stamp");
+      if (cctvClock) {
+        cctvClock.textContent = `HERENTALS ${now.toLocaleTimeString("nl-BE")} UTC+2`;
       }
     }
 
@@ -1005,6 +1600,7 @@
     }
 
     function openClockModal() {
+      initAudio();
       document.getElementById("clock-settings-modal").style.display = "flex";
     }
 
@@ -1012,8 +1608,9 @@
       document.getElementById("clock-settings-modal").style.display = "none";
     }
 
-    // 2. Fullscreen Toggle
+    // 3. Fullscreen Toggle
     function toggleFullscreen() {
+      initAudio();
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
       } else {
@@ -1021,9 +1618,69 @@
       }
     }
 
-    // 3. Tactische Leaflet Kaart
+    // 4. Fake Cybercom Hacker Code Terminal (Continu Typende Spy Telemetrie)
+    const TERMINAL_LOGS = [
+      { text: "root@cybercom:~$ ./sigint_scan.sh --carrier=proximus,orange,telenet", cls: "cyan" },
+      { text: "[SIGINT] Scanning 26 registered agent IMEI transceivers...", cls: "" },
+      { text: "[RADIO] Intercepting 433.920 MHz encrypted burst transmission...", cls: "dim" },
+      { text: "[DECRYPT] AES-256 handshake OK with GM-NODE: Vicce (Kapucijnenstraat 7)", cls: "cyan" },
+      { text: "[GPS] Triangulating Sector 01 (Zandpoort) lat=51.1764, lng=4.8361 [LOCK]", cls: "" },
+      { text: "[GPS] Triangulating Sector 02 (Begijnhof) lat=51.1782, lng=4.8355 [LOCK]", cls: "" },
+      { text: "[ALERT] Corrupt city council erfpacht memo intercepted: DOCKET #2026-B", cls: "red" },
+      { text: "[DUMP] 0x7FFF8B10: 45 52 46 50 41 43 48 54 20 4B 53 41 [ERFPACHT KSA]", cls: "dim" },
+      { text: "[SIGINT] Monitoring 6 monument security sensors... Status: NORMAL", cls: "" },
+      { text: "[MQTT] Multi-Broker cluster WebSocket sync: broker.emqx.io (0ms ping)", cls: "cyan" },
+      { text: "[NET] Carrier NAT traversal active: 4G/5G persistent keepalive OK", cls: "" },
+      { text: "[RADAR] Target spotlight cycling enabled across 6 historical sectors", cls: "amber" },
+      { text: "[DIRECTIVE] Rule 01: All agents must wear cap + sunglasses at monuments", cls: "amber" },
+      { text: "[AUTH] Dossier security tokens armed for 26 covert operatives", cls: "" },
+      { text: "[TRACE] Packet payload: {\"cmd\":\"sync_state\",\"sector\":\"2200\"}", cls: "dim" },
+      { text: "[SIGINT] Radio silence maintained. Awaiting agent field check-ins...", cls: "" }
+    ];
+
+    let terminalLines = [];
+    let termIndex = 0;
+
+    function initHackerTerminal() {
+      const container = document.getElementById("hud-terminal-body");
+      if (!container) return;
+
+      // Start met de eerste paar regels
+      terminalLines = TERMINAL_LOGS.slice(0, 5);
+      renderTerminal();
+
+      // Voeg elke 1.8 seconden een nieuwe telemetrieregel toe
+      setInterval(() => {
+        termIndex = (termIndex + 1) % TERMINAL_LOGS.length;
+        const line = TERMINAL_LOGS[termIndex];
+        terminalLines.push(line);
+        if (terminalLines.length > 7) {
+          terminalLines.shift();
+        }
+        renderTerminal();
+      }, 1800);
+    }
+
+    function renderTerminal() {
+      const container = document.getElementById("hud-terminal-body");
+      if (!container) return;
+
+      container.innerHTML = terminalLines.map((l, idx) => {
+        const isLast = idx === terminalLines.length - 1;
+        return `
+          <div class="terminal-line ${l.cls}">
+            ${l.text}${isLast ? '<span class="terminal-cursor"></span>' : ''}
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 5. Tactische Leaflet Kaart & Rotating Spotlight Engine
     let warMap = null;
     let markersMap = new Map();
+    let spotlightIndex = 0;
+    let spotlightTimer = null;
+    let allTargetLocations = [];
 
     function initWarMap() {
       if (typeof L === "undefined" || !document.getElementById("war-map")) return;
@@ -1043,62 +1700,153 @@
       const hq = SPEL_CONFIG.headquarters;
       const bounds = [];
 
-      // HQ Marker
-      if (hq && hq.lat && hq.lng) {
-        bounds.push([hq.lat, hq.lng]);
-        const hqIcon = L.divIcon({
-          className: "",
-          html: `
-            <div class="hq-pin">
-              <span class="hq-pin-ring"></span>
-              <span class="hq-pin-diamond"><span class="hq-pin-label">HQ</span></span>
-            </div>
-          `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
-        });
-        L.marker([hq.lat, hq.lng], { icon: hqIcon })
-          .addTo(warMap)
-          .bindPopup(`<strong style="color:#ef4444;">HOOFDKWARTIER</strong><br>${hq.adres}`);
-      }
+      allTargetLocations = [];
 
-      // 6 Locatie Markers
+      // 6 Monument Locaties toevoegen
       locaties.forEach((loc, idx) => {
         if (loc.lat && loc.lng) {
           bounds.push([loc.lat, loc.lng]);
+          allTargetLocations.push({
+            id: loc.id,
+            sectorNr: String(idx + 1).padStart(2, "0"),
+            naam: loc.naam,
+            adres: loc.adres || `Sector ${idx + 1}, Herentals`,
+            lat: loc.lat,
+            lng: loc.lng,
+            isHQ: false
+          });
+
+          // Grote opvallende HUD Map Pin
           const icon = L.divIcon({
             className: "",
             html: `
-              <div class="radar-pin" id="marker-pin-${loc.id}">
-                <span class="radar-pin-pulse" style="animation-delay: ${idx * 0.3}s;"></span>
-                <span class="radar-pin-core"></span>
+              <div class="hud-map-pin" id="hud-pin-${loc.id}">
+                <div class="hud-pin-beacon"></div>
+                <div class="hud-pin-core">${idx + 1}</div>
+                <div class="hud-pin-label">${idx + 1}. ${loc.naam.toUpperCase()}</div>
               </div>
             `,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            iconSize: [44, 44],
+            iconAnchor: [22, 22]
           });
+
           const m = L.marker([loc.lat, loc.lng], { icon })
             .addTo(warMap)
-            .bindPopup(`<strong style="color:#38bdf8;">${loc.naam}</strong><br>${loc.adres || ""}`);
-          markersMap.set(loc.id, m);
+            .bindPopup(`<strong style="color:#38bdf8; font-size:0.95rem;">SECTOR ${idx + 1}: ${loc.naam}</strong><br><span style="color:#94a3b8;">${loc.adres || ""}</span>`);
+
+          m.on("click", () => setSpotlightLocation(idx));
+          markersMap.set(loc.id, { marker: m, data: loc, idx });
         }
       });
 
-      if (bounds.length > 0) {
-        warMap.fitBounds(bounds, { padding: [40, 40] });
+      // HQ Toevoegen aan doelen
+      if (hq && hq.lat && hq.lng) {
+        bounds.push([hq.lat, hq.lng]);
+        allTargetLocations.push({
+          id: "hq",
+          sectorNr: "HQ",
+          naam: "HOOFDKWARTIER COMMANDOPOST",
+          adres: hq.adres || "Kapucijnenstraat 7, 2200 Herentals",
+          lat: hq.lat,
+          lng: hq.lng,
+          isHQ: true
+        });
+
+        const hqIcon = L.divIcon({
+          className: "",
+          html: `
+            <div class="hud-map-pin" id="hud-pin-hq">
+              <div class="hud-pin-beacon hud-hq-beacon"></div>
+              <div class="hud-pin-core hud-hq-core">HQ</div>
+              <div class="hud-pin-label" style="border-color:var(--laser-red); color:#fca5a5;">COMMANDOPOST HQ</div>
+            </div>
+          `,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        });
+
+        const hqMarker = L.marker([hq.lat, hq.lng], { icon: hqIcon })
+          .addTo(warMap)
+          .bindPopup(`<strong style="color:#ef4444; font-size:0.95rem;">HOOFDKWARTIER COMMANDOPOST</strong><br><span style="color:#94a3b8;">${hq.adres}</span>`);
+
+        hqMarker.on("click", () => setSpotlightLocation(allTargetLocations.length - 1));
+        markersMap.set("hq", { marker: hqMarker, data: hq, idx: allTargetLocations.length - 1 });
       }
+
+      if (bounds.length > 0) {
+        warMap.fitBounds(bounds, { padding: [50, 50] });
+      }
+
+      startSpotlightRotation();
     }
 
-    // 4. Render Sectoren Balk onder de kaart
+    // Rotating Location Spotlight: toont elke 5 seconden een ander monument met adres en team
+    function setSpotlightLocation(index) {
+      if (!allTargetLocations || allTargetLocations.length === 0) return;
+      spotlightIndex = index % allTargetLocations.length;
+      const target = allTargetLocations[spotlightIndex];
+
+      const tagEl = document.getElementById("spotlight-sector-tag");
+      const nameEl = document.getElementById("spotlight-name");
+      const addrEl = document.getElementById("spotlight-address");
+      const coordsEl = document.getElementById("spotlight-coords");
+      const teamEl = document.getElementById("spotlight-team");
+      const cardEl = document.getElementById("map-spotlight-card");
+
+      if (tagEl) tagEl.textContent = target.isHQ ? "COMMANDO POST // HQ TRACKING" : `SECTOR ${target.sectorNr} // TARGET SPOTLIGHT`;
+      if (nameEl) nameEl.textContent = target.naam;
+      if (addrEl) addrEl.textContent = `📍 ${target.adres}`;
+      if (coordsEl) coordsEl.textContent = `Coördinaten: ${target.lat.toFixed(4)}° N, ${target.lng.toFixed(4)}° E`;
+
+      // Zoek of er een team start op deze locatie
+      let assignedTeamName = "Gereed voor infiltratie";
+      if (latestState && latestState.groups) {
+        const matchingGroup = latestState.groups.find(g => {
+          if (!g.orderedLocations || g.orderedLocations.length === 0) return false;
+          return g.orderedLocations[0].id === target.id;
+        });
+        if (matchingGroup) {
+          assignedTeamName = `STARTLOCATIE VOOR: ${matchingGroup.naam.toUpperCase()}`;
+        }
+      }
+      if (teamEl) {
+        teamEl.textContent = target.isHQ ? "COMMANDANT: GAMEMASTER VICCE" : assignedTeamName;
+      }
+
+      // Herstart animatie van spotlight kaart
+      if (cardEl) {
+        cardEl.style.animation = "none";
+        cardEl.offsetHeight; // trigger reflow
+        cardEl.style.animation = "spotlightIn 0.4s ease-out";
+      }
+
+      // Update visuele pinnen op kaart
+      document.querySelectorAll(".hud-map-pin").forEach(el => el.classList.remove("is-active"));
+      const activePin = document.getElementById(`hud-pin-${target.id}`);
+      if (activePin) activePin.classList.add("is-active");
+
+      // Update sectoren onderbalk highlight
+      document.querySelectorAll(".sector-item").forEach(el => el.classList.remove("is-spotlight"));
+      const barItem = document.getElementById(`sector-item-${target.id}`);
+      if (barItem) barItem.classList.add("is-spotlight");
+    }
+
+    function startSpotlightRotation() {
+      if (spotlightTimer) clearInterval(spotlightTimer);
+      setSpotlightLocation(0);
+      spotlightTimer = setInterval(() => {
+        setSpotlightLocation(spotlightIndex + 1);
+      }, 5500);
+    }
+
+    // 6. Render Sectoren Balk onder de kaart
     function renderSectorsBar(state) {
       const bar = document.getElementById("war-sectors-bar");
       if (!bar) return;
 
       const locaties = SPEL_CONFIG.locaties || [];
-      bar.innerHTML = locaties.map((loc) => {
-        // Hoeveel groepen hebben deze al voltooid?
+      bar.innerHTML = locaties.map((loc, idx) => {
         let completedCount = 0;
-        let activeCount = 0;
         if (state && state.groups) {
           state.groups.forEach((g) => {
             if (g.unlockedLocations && g.unlockedLocations.has(loc.id)) {
@@ -1109,36 +1857,42 @@
 
         const isDone = completedCount > 0;
         return `
-          <div class="sector-item ${isDone ? "active" : ""}">
-            <div class="sector-name">${loc.naam}</div>
+          <div class="sector-item ${isDone ? "active" : ""}" id="sector-item-${loc.id}" onclick="setSpotlightLocation(${idx})">
+            <div class="sector-name">${idx + 1}. ${loc.naam}</div>
             <div class="sector-status">
               <span>${isDone ? "🟢" : "🔒"}</span>
-              <span>${completedCount} team(s)</span>
+              <span>${completedCount > 0 ? `${completedCount} team(s)` : "Gereed"}</span>
             </div>
           </div>
         `;
       }).join("");
     }
 
-    // 5. Render Agenten Aanwezigheid & Chips
+    // 7. Render Agenten Aanwezigheid & Chips
     function renderAgentsStatus(state) {
       if (!state) return;
       const countEl = document.getElementById("war-agents-count");
       const progEl = document.getElementById("war-agents-progress");
       const summaryEl = document.getElementById("war-login-summary");
       const chipsEl = document.getElementById("war-agent-chips");
+      const boxEl = document.getElementById("war-agent-status-box");
 
       const all = state.allPlayers || [];
       const total = state.totalCount || 26;
       const unlocked = state.unlockedCount || 0;
+      const allDone = unlocked >= total && total > 0;
 
       if (countEl) countEl.textContent = `${unlocked} / ${total}`;
       if (progEl) progEl.style.width = `${Math.min(100, Math.round((unlocked / (total || 1)) * 100))}%`;
 
+      if (boxEl) {
+        boxEl.classList.toggle("all-unlocked", allDone);
+      }
+
       if (summaryEl) {
-        if (unlocked === total && total > 0) {
-          summaryEl.textContent = "✓ ALLE AGENTEN INGELOGD & ACTIEF!";
-          summaryEl.style.color = "var(--hud-green)";
+        if (allDone) {
+          summaryEl.textContent = "✓ ALLE 26 AGENTEN ACTIEF // LEADERBOARD ONLINE!";
+          summaryEl.style.color = "var(--hud-amber)";
         } else {
           summaryEl.textContent = `Nog ${total - unlocked} agent(en) moeten inloggen...`;
           summaryEl.style.color = "var(--hud-amber)";
@@ -1153,76 +1907,196 @@
       }
     }
 
-    // 6. Render Groepen Overzicht (eens verdeeld / onthuld)
-    function renderGroupsOverview(state) {
+    // 8. LEADERBOARD & GROEPEN TABS SYSTEM (Auto-Cycle elke 12s)
+    let currentTab = "teams"; // "teams" | "players"
+    let autoCycleEnabled = true;
+    let autoCycleTimer = null;
+    let latestState = null;
+
+    function setLeaderboardTab(tab) {
+      currentTab = tab;
+      const teamsBtn = document.getElementById("tab-teams-btn");
+      const playersBtn = document.getElementById("tab-players-btn");
+      if (teamsBtn) teamsBtn.classList.toggle("active", tab === "teams");
+      if (playersBtn) playersBtn.classList.toggle("active", tab === "players");
+      if (latestState) renderLeaderboardContent(latestState);
+    }
+
+    function toggleAutoCycle() {
+      autoCycleEnabled = !autoCycleEnabled;
+      const btn = document.getElementById("btn-toggle-cycle");
+      if (btn) {
+        btn.textContent = autoCycleEnabled ? "🔄 AUTO (12s)" : "⏸️ VAST";
+        btn.style.color = autoCycleEnabled ? "var(--hud-cyan)" : "var(--hud-muted)";
+      }
+    }
+
+    function startAutoCycle() {
+      if (autoCycleTimer) clearInterval(autoCycleTimer);
+      autoCycleTimer = setInterval(() => {
+        if (!autoCycleEnabled || !latestState || !latestState.groupsRevealed) return;
+        setLeaderboardTab(currentTab === "teams" ? "players" : "teams");
+      }, 12000);
+    }
+
+    // Render Groepen & Leaderboard (Reageert direct wanneer Victor groepen verdeelt op gsm!)
+    function renderLeaderboardContent(state) {
+      latestState = state;
       const container = document.getElementById("war-groups-body");
       const badge = document.getElementById("war-groups-state-badge");
+      const tabsWrap = document.getElementById("war-hud-tabs");
+      const panelTitle = document.getElementById("war-right-panel-title");
       if (!container || !state) return;
 
-      const isRevealed = state.groupsRevealed;
+      const isRevealed = Boolean(state.groupsRevealed);
+      // Haal alle groepen op (bevat altijd de 6 teams zodra leiding ze verdeelt op mobiel)
+      const groups = state.groups || state.adminGroupsList || [];
+      const hasAssignedGroups = groups.length > 0 && groups.some(g => g.leden && g.leden.length > 0);
+
+      // SCENARIO 1: VOLLEDIG SCOREBORD ONTGRENDELD (Alle 26 ingelogd of GM forceert)
+      if (isRevealed) {
+        if (badge) {
+          badge.textContent = "LIVE RANKING";
+          badge.style.color = "var(--hud-green)";
+        }
+        if (tabsWrap) tabsWrap.style.display = "flex";
+
+        if (currentTab === "teams") {
+          if (panelTitle) panelTitle.textContent = "🏆 TEAMS LEADERBOARD (6)";
+          const sortedGroups = [...groups].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+
+          container.innerHTML = `
+            <div class="groups-live-list">
+              ${sortedGroups.map((grp, idx) => {
+                const cur = grp.currentLocation;
+                let curTxt = grp.startLocationName ? `📍 Startpunt: ${grp.startLocationName}` : "Startpunt...";
+                if (cur) {
+                  if (cur.status === "voltooid") {
+                    curTxt = "🏆 ALLE 6 LOCATIES KLAAR!";
+                  } else if (cur.status === "bezig") {
+                    curTxt = `📍 Nu bezig: ${cur.naam} (Stap ${cur.stepNr}/6)`;
+                  } else {
+                    curTxt = `🏃 Onderweg naar: ${cur.naam} (Stap ${cur.stepNr}/6)`;
+                  }
+                }
+
+                const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+                const rankIcon = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+                const membersStr = grp.leden.map(m => m.naam).join(", ");
+
+                return `
+                  <div class="group-war-card ${rankClass}" style="--grp-color: ${grp.kleur || '#38bdf8'};">
+                    <div class="group-war-header">
+                      <div class="group-war-title">
+                        <span class="group-rank-badge">${rankIcon}</span>
+                        <span class="group-color-dot"></span>
+                        <span>${grp.naam}</span>
+                      </div>
+                      <div class="group-war-score">${grp.totalPoints || 0} PT</div>
+                    </div>
+                    <div class="group-war-location">${curTxt}</div>
+                    <div class="group-war-members">Leden: ${membersStr || 'Nog geen leden'}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `;
+        } else {
+          // INDIVIDUEEL SPELERS LEADERBOARD
+          if (panelTitle) panelTitle.textContent = "🎖️ AGENTEN LEADERBOARD (26)";
+          const leaderboard = state.leaderboard || [];
+
+          container.innerHTML = `
+            <div class="player-leaderboard-list">
+              ${leaderboard.map((p, idx) => {
+                const rowClass = idx === 0 ? "top-1" : idx === 1 ? "top-2" : idx === 2 ? "top-3" : "";
+                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
+                const grpName = p.groupName || p.adminGroupName ? ` • ${p.groupName || p.adminGroupName}` : "";
+
+                return `
+                  <div class="player-lb-row ${rowClass}">
+                    <div class="player-lb-left">
+                      <span class="player-lb-rank">${medal}</span>
+                      <div>
+                        <div class="player-lb-name">${p.naam}</div>
+                        <div class="player-lb-meta">Dossier #${p.dossierNr || ""}${grpName}</div>
+                      </div>
+                    </div>
+                    <div class="player-lb-points">${p.totalPoints || 0} PT</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // SCENARIO 2: GROEPEN ZIJN VERDEELD OP GSM (Toon direct de 6 teams en hun leden!)
+      if (hasAssignedGroups) {
+        if (badge) {
+          badge.textContent = "TEAMS TOEGEWEZEN";
+          badge.style.color = "var(--hud-cyan)";
+        }
+        if (tabsWrap) tabsWrap.style.display = "none";
+        if (panelTitle) panelTitle.textContent = "🎯 6 OPERATIE-TEAMS TOEGEWEZEN";
+
+        container.innerHTML = `
+          <div style="font-family:'JetBrains Mono', monospace; font-size:0.68rem; color:var(--hud-cyan); background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:0.4rem 0.6rem; border-radius:4px; margin-bottom:0.4rem;">
+            ✓ GROEPSINDELING LIVE ONTVANGEN VAN HOOFDKWARTIER
+          </div>
+          <div class="groups-live-list">
+            ${groups.map((grp, idx) => {
+              const startLoc = grp.startLocationName || (grp.orderedLocations && grp.orderedLocations[0] ? grp.orderedLocations[0].naam : `Sector ${idx + 1}`);
+              const membersStr = grp.leden.map(m => m.naam).join(", ");
+
+              return `
+                <div class="group-war-card" style="--grp-color: ${grp.kleur || '#38bdf8'};">
+                  <div class="group-war-header">
+                    <div class="group-war-title">
+                      <span class="group-color-dot"></span>
+                      <span>${grp.naam}</span>
+                    </div>
+                    <div style="font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--hud-green); font-weight:800; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:0.1rem 0.4rem; border-radius:3px;">
+                      ${grp.leden.length} AGENTEN
+                    </div>
+                  </div>
+                  <div class="group-war-location" style="color:#fde047;">📍 Startlocatie: ${startLoc}</div>
+                  <div class="group-war-members"><strong>Leden:</strong> ${membersStr || 'Nog geen leden'}</div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div style="margin-top:0.4rem; font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--hud-muted); text-align:center;">
+            🔒 Scorebord ontgrendelt zodra alle 26 agenten inloggen (${state.unlockedCount || 0}/26)
+          </div>
+        `;
+        return;
+      }
+
+      // SCENARIO 3: NOG GEEN GROEPEN VERDEELD & NIET ONTGRENDELD
       if (badge) {
-        badge.textContent = isRevealed ? `LIVE (${(state.groups || []).length} GROEPEN)` : "VERSLEUTELD";
-        badge.style.color = isRevealed ? "var(--hud-green)" : "var(--hud-amber)";
+        badge.textContent = "VERSLEUTELD";
+        badge.style.color = "var(--hud-amber)";
       }
-
-      if (!isRevealed) {
-        container.innerHTML = `
-          <div class="groups-placeholder-locked">
-            <div class="locked-icon">🔒</div>
-            <div class="locked-title">GROEPSINDELING VERSLEUTELD</div>
-            <p class="locked-sub">
-              De teams en routes worden automatisch op dit scherm onthuld zodra alle agenten zijn aangemeld of wanneer de Gamemaster op HQ de onthulling activeert.
-            </p>
-          </div>
-        `;
-        return;
-      }
-
-      const groups = state.groups || [];
-      if (groups.length === 0) {
-        container.innerHTML = `
-          <div style="text-align:center; padding:1.5rem; color:var(--hud-muted); font-size:0.85rem;">
-            Nog geen groepen ingedeeld op HQ.
-          </div>
-        `;
-        return;
-      }
+      if (tabsWrap) tabsWrap.style.display = "none";
+      if (panelTitle) panelTitle.textContent = "LEADERBOARD & GROEPEN";
 
       container.innerHTML = `
-        <div class="groups-live-list">
-          ${groups.map(grp => {
-            const cur = grp.currentLocation;
-            let curTxt = "Startpunt...";
-            if (cur) {
-              if (cur.status === "voltooid") {
-                curTxt = "🏆 ALLE 6 LOCATIES KLAAR!";
-              } else if (cur.status === "bezig") {
-                curTxt = `📍 Nu bezig: ${cur.naam} (Stap ${cur.stepNr}/6)`;
-              } else {
-                curTxt = `🏃 Onderweg naar: ${cur.naam} (Stap ${cur.stepNr}/6)`;
-              }
-            }
-
-            const membersStr = grp.leden.map(m => m.naam).join(", ");
-            return `
-              <div class="group-war-card" style="--grp-color: ${grp.kleur || '#38bdf8'};">
-                <div class="group-war-header">
-                  <div class="group-war-title">
-                    <span class="group-color-dot"></span>
-                    <span>${grp.naam}</span>
-                  </div>
-                  <div class="group-war-score">${grp.totalPoints || 0} PT</div>
-                </div>
-                <div class="group-war-location">${curTxt}</div>
-                <div class="group-war-members">Leden: ${membersStr || 'Nog geen leden'}</div>
-              </div>
-            `;
-          }).join("")}
+        <div class="groups-placeholder-locked">
+          <div class="locked-icon">🔒</div>
+          <div class="locked-title">LEADERBOARD &amp; GROEPEN VERSLEUTELD</div>
+          <p class="locked-sub">
+            Verdeel de groepen via het HQ Dashboard op gsm of wacht tot alle 26 agenten hun dossier hebben geactiveerd!
+          </p>
+          <div style="margin-top: 1rem; font-family:'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--hud-cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
+            ${state.unlockedCount || 0} / ${state.totalCount || 26} AGENTEN INGELOGD
+          </div>
         </div>
       `;
     }
 
-    // 7. Initialisatie
+    // 9. Initialisatie
     document.addEventListener("DOMContentLoaded", () => {
       initTargetTime();
       updateCountdown();
@@ -1230,24 +2104,40 @@
 
       document.getElementById("war-clock-btn").addEventListener("click", openClockModal);
       document.getElementById("btn-fullscreen").addEventListener("click", toggleFullscreen);
+      document.getElementById("btn-audio-toggle").addEventListener("click", toggleSound);
+      document.getElementById("btn-toggle-cycle").addEventListener("click", toggleAutoCycle);
 
-      // F toets voor fullscreen
+      // Klik ergens op de pagina om AudioContext te ontgrendelen conform browser audio-policy
+      document.addEventListener("click", () => initAudio(), { once: true });
+
+      // F toets voor fullscreen, M voor mute
       document.addEventListener("keydown", (e) => {
         if (e.key === "f" || e.key === "F") {
           toggleFullscreen();
+        } else if (e.key === "m" || e.key === "M") {
+          toggleSound();
         }
       });
 
+      initHackerTerminal();
       initWarMap();
+      startAutoCycle();
 
       // Koppel aan ScoreService Realtime Sync Engine (MQTT WebSockets)
       if (typeof ScoreService !== "undefined") {
+        try {
+          const initSt = ScoreService.getState();
+          renderAgentsStatus(initSt);
+          renderSectorsBar(initSt);
+          renderLeaderboardContent(initSt);
+        } catch (_) {}
+
         ScoreService.startRealtimeSync();
 
         ScoreService.subscribe((state) => {
           renderAgentsStatus(state);
           renderSectorsBar(state);
-          renderGroupsOverview(state);
+          renderLeaderboardContent(state);
         });
 
         ScoreService.onSyncStatusChange((status) => {
