@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a0e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>GEHEIM PORTAAL // Agenten Dossiers &amp; Live Scorebord</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- SUBTIELE ACHTERGROND-TELEMETRIE (BIJZAAK / SFEER) -->
+  <div class="intel-topbar">
+    <div class="intel-topbar-inner">
+      <span class="intel-topbar-item">
+        <span class="intel-blink-red"></span>
+        SYS-NET // SECTOR 2200 HERENTALS
+      </span>
+      <span class="intel-topbar-item intel-hide-mobile">
+        SAT-UPLINK: SENTINEL-4B // FREQ 148.925 MHz // AES-256
+      </span>
+      <span class="intel-topbar-item">
+        <span id="intel-live-clock">--:--:--</span> // CLEARANCE LVL-4
+      </span>
+    </div>
+  </div>
+
+  <main class="container">
+    <header class="portal-header">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span>BEVEILIGD NETWERK // LIVE VERBONDEN</span>
+      </div>
+      <h1 class="portal-title">Operatie Dossiers</h1>
+      <p class="portal-subtitle">
+        Kraak jouw persoonlijke code zo snel mogelijk! Wie zijn dossier als eerste ontgrendelt, pakt de meeste punten op het live scorebord.
+      </p>
+      <div class="rules-btn-wrap">
+        <button type="button" id="open-rules-btn" class="btn-rules">
+          📜 Bekijk de Officiële Spelregels
+        </button>
+      </div>
+
+      <!-- Kleine "Live Webcam" feed vanuit Headquarters (sfeer / bijzaak) -->
+      <div class="hq-webcam-wrap">
+        <div id="hq-webcam-box" class="hq-webcam-box" title="Live CCTV-feed vanuit Headquarters (Kapucijnenstraat 7)">
+          <img
+            src="img/hq-webcam.jpg"
+            alt="Live CCTV Headquarters"
+            class="hq-webcam-img"
+          />
+          <canvas id="hq-webcam-canvas" class="hq-webcam-canvas" width="240" height="135"></canvas>
+          <div class="hq-webcam-vignette"></div>
+          <div class="hq-webcam-hud-top">
+            <span class="hq-webcam-rec"><span class="intel-blink-red"></span> REC // CAM-01</span>
+            <span class="hq-webcam-fps">15 FPS</span>
+          </div>
+          <div class="hq-webcam-hud-bottom">
+            <span>HQ // KAPUCIJNENSTRAAT 7</span>
+            <span id="hq-webcam-timecode">--:--:--:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtiele 1-regelige status-ticker onderaan de header (sfeer / bijzaak) -->
+      <div class="intel-ticker-wrap" aria-live="polite">
+        <span id="intel-ticker-text" class="intel-ticker-text">
+          &gt; SATELLIETVERBINDING MET HEADQUARTERS (KAPUCIJNENSTRAAT 7) ACTIEF...
+        </span>
+      </div>
+    </header>
+
+    <!-- SECTIE 01: LIVE SCOREBORD (HOOFDZAAK) -->
+    <div class="section-eyebrow">01 // KLASSEMENT &amp; PUNTEN</div>
+    <section class="scoreboard-panel" aria-label="Live Scorebord">
+      <div class="scoreboard-header">
+        <div class="scoreboard-title-group">
+          <span class="status-dot"></span>
+          <h2 class="scoreboard-title">🏆 Live Scorebord</h2>
+        </div>
+        <div class="scoreboard-meta">
+          <span id="next-reward-pill" class="next-reward-pill">VOLGENDE PLEK (#1): +260 PT</span>
+          <span id="cracked-count-pill" class="cracked-count-pill">0 / 26 GEKRAAKT</span>
+        </div>
+      </div>
+
+      <div id="scoreboard-list" class="scoreboard-list">
+        <!-- Wordt realtime gevuld door js/portal.js & js/score-service.js -->
+      </div>
+
+      <div class="scoreboard-footer">
+        <button type="button" id="toggle-all-scores-btn" class="text-btn">
+          Toon alle 26 spelers
+        </button>
+        <button type="button" id="open-admin-btn" class="text-btn">
+          ⚙ Leiding Paneel
+        </button>
+      </div>
+    </section>
+
+    <!-- LIVE GROEPSINDELING (Pas zichtbaar zodra ALLE aanwezige spelers hun code hebben ingevuld!) -->
+    <section id="groups-panel" class="groups-panel" style="display: none;" aria-label="Actieve Groepen">
+      <div class="scoreboard-header">
+        <div class="scoreboard-title-group">
+          <span class="status-dot"></span>
+          <h2 class="scoreboard-title">👥 Actieve Groepen &amp; Teamscore</h2>
+        </div>
+        <div class="scoreboard-meta">
+          <span id="groups-count-pill" class="cracked-count-pill">0 GROEPEN</span>
+        </div>
+      </div>
+      <div id="groups-grid" class="groups-grid">
+        <!-- Wordt realtime gevuld zodra iedereen zijn code heeft ingevuld -->
+      </div>
+    </section>
+
+    <!-- SECTIE 02: OPERATIEGEBIED HERENTALS (HOOFDZAAK) -->
+    <div class="section-eyebrow">02 // KAART &amp; DOELWITLOCATIES</div>
+    <section class="radar-overview-panel" aria-label="Operatiegebied Herentals">
+      <div class="scoreboard-header">
+        <div class="scoreboard-title-group">
+          <span class="status-dot"></span>
+          <h2 class="scoreboard-title">📡 Operatiegebied Herentals</h2>
+        </div>
+        <div class="scoreboard-meta">
+          <span class="cracked-count-pill" style="border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; background: rgba(239, 68, 68, 0.08);">★ HQ + 6 LOCATIES</span>
+        </div>
+      </div>
+
+      <div class="radar-layout">
+        <div class="tactical-map-wrap">
+          <div class="map-hud-overlay">
+            <span class="intel-blink-red" style="margin-right: 0.35rem;"></span>LIVE RADAR // 2200 HERENTALS
+          </div>
+          <div class="radar-sweep-beam"></div>
+          <div class="radar-grid-overlay"></div>
+          <div id="herentals-map"></div>
+        </div>
+        <div id="loc-overview-list" class="loc-overview-list">
+          <!-- Wordt gevuld vanuit SPEL_CONFIG.locaties met pulserende dots & adressen -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTIE 03: SPELERS DOSSIERS (HOOFDZAAK) -->
+    <div class="section-eyebrow">03 // SELECTEER JOUW PERSOONLIJK DOSSIER</div>
+
+    <div class="search-bar-wrap">
+      <span class="search-icon">&gt;_</span>
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="Zoek jouw naam of dossiernummer..."
+        autocomplete="off"
+      />
+    </div>
+
+    <section id="players-grid" class="players-grid" aria-label="Spelers overzicht">
+      <!-- Wordt automatisch gevuld vanuit js/config.js -->
+    </section>
+
+    <!-- GEDEACTIVEERDE / AFWEZIGE AGENTEN (Enkel visueel onderaan, tellen nergens voor mee) -->
+    <section id="inactive-players-section" class="inactive-players-section" style="display: none;" aria-label="Gedeactiveerde agenten">
+      <div class="inactive-section-header">
+        <div class="section-eyebrow" style="color: rgba(239, 68, 68, 0.7); margin-bottom: 0.2rem;">
+          ARCHIEF // DOOR DE PAPIERVERSNIPPERAAR GEHAALD
+        </div>
+        <p class="inactive-section-sub">
+          Onderstaande agenten zijn vandaag op non-actief gezet door Headquarters en tellen niet mee voor de operatie:
+        </p>
+      </div>
+      <div id="inactive-players-grid" class="players-grid inactive-players-grid"></div>
+    </section>
+  </main>
+
+  <!-- Spelregels Modal -->
+  <div id="rules-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title">
+    <div class="modal-box" style="max-width: 540px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-tag">PROTOCOL // VERPLICHTE BRIEFING</div>
+      <h2 id="rules-modal-title" class="modal-title">📜 Officiële Spelregels</h2>
+      <p class="modal-desc">Houd je tijdens het hele spel aan deze regels:</p>
+
+      <div class="rules-list">
+        <div class="rule-card">
+          <span class="rule-num">#01</span>
+          <span class="rule-text">🚫 Geen fiets of ander voertuig gebruiken.</span>
+        </div>
+        <div class="rule-card">
+          <span class="rule-num">#02</span>
+          <span class="rule-text">👥 Je blijft ALTIJD in groep en splitst niet op.</span>
+        </div>
+        <div class="rule-card">
+          <span class="rule-num">#03</span>
+          <span class="rule-text">🤖 Zelf geen AI gebruiken.</span>
+        </div>
+        <div class="rule-card">
+          <span class="rule-num">#04</span>
+          <span class="rule-text">📍 Locaties moeten bezocht worden volgens de volgorde waarin je ze krijgt.</span>
+        </div>
+        <div class="rule-card">
+          <span class="rule-num">#05</span>
+          <span class="rule-text">❤️ Wees eerlijk en lief tegen elkaar.</span>
+        </div>
+        <div class="rule-card">
+          <span class="rule-num">#06</span>
+          <span class="rule-text">🕵️ Je verstopt niets voor andere teams en laat alles liggen zoals het hoort. Vind je een andere manier om een ander team te vertragen/saboteren? Ga je gang...</span>
+        </div>
+        <div class="rule-vicce-card">
+          <span class="rule-num">👑</span>
+          <span class="rule-text">Bij regels die hier niet staan: Gamemaster Vicce heeft altijd gelijk!</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="close-rules-btn" class="btn btn-primary">Begrepen!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wachtwoord / Pincode Modal voor Spelers -->
+  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-player-name">
+    <div class="modal-box">
+      <div id="modal-dossier-tag" class="modal-tag">DOSSIER // AUTORISATIE VEREIST</div>
+      <h2 id="modal-player-name" class="modal-title">Naam</h2>
+      <p class="modal-desc">Voer je persoonlijke pincode of wachtwoord in om dit dossier te ontgrendelen en je eerste punten te claimen.</p>
+
+      <form id="code-form" autocomplete="off">
+        <input
+          type="password"
+          id="code-input"
+          class="code-input"
+          placeholder="••••"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          enterkeyhint="go"
+          required
+        />
+        <div id="error-msg" class="error-msg" role="alert"></div>
+        <div class="modal-actions">
+          <button type="button" id="cancel-btn" class="btn btn-secondary">Annuleren</button>
+          <button type="submit" id="unlock-submit-btn" class="btn btn-primary">Ontgrendel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leiding Paneel Modal -->
+  <div id="admin-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <div class="modal-box" style="max-width: 640px; max-height: 92vh; overflow-y: auto;">
+      <div class="modal-tag">BEHEER // ALLEEN VOOR SPELMEESTER</div>
+      <h2 id="admin-modal-title" class="modal-title">Leiding Paneel</h2>
+
+      <!-- Stap 1: Inloggen met masterCode -->
+      <div id="admin-login-step">
+        <p class="modal-desc">Voer de mastercode in om aanwezigheid, scores, groepen, het message board en foto's te beheren.</p>
+        <form id="admin-login-form" autocomplete="off">
+          <input
+            type="password"
+            id="admin-code-input"
+            class="code-input"
+            placeholder="Mastercode..."
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="go"
+            required
+          />
+          <div id="admin-error-msg" class="error-msg" role="alert"></div>
+          <div class="modal-actions">
+            <button type="button" id="admin-cancel-btn" class="btn btn-secondary">Sluiten</button>
+            <button type="submit" class="btn btn-primary">Open Beheer</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Stap 2: Beheer Controls -->
+      <div id="admin-controls-step" style="display: none;">
+        <div style="margin-bottom: 1rem;">
+          <a href="hq-dashboard.html" class="btn btn-primary" style="width: 100%; display: flex; justify-content: center; text-decoration: none; font-weight: 800; padding: 0.75rem 1rem;">
+            🛰️ OPEN VOLLEDIG HQ GAMEMASTER DASHBOARD (VICCE) &rarr;
+          </a>
+        </div>
+
+        <!-- SECTIE 1: AANWEZIGHEID -->
+        <div class="admin-section" style="border-top: none; margin-top: 0; padding-top: 0.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.45rem;">
+            <span class="clue-label" style="margin-bottom: 0;">
+              1. Aanwezigheid (Tik op een naam om uit/aan te schakelen)
+            </span>
+            <span id="admin-attendance-count" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);">
+              26 / 26 aanwezig
+            </span>
+          </div>
+          <div id="admin-attendance-grid" class="attendance-grid"></div>
+          <button type="button" id="admin-enable-all-btn" class="btn btn-secondary" style="width: 100%; font-size: 0.74rem; padding: 0.55rem;">
+            Zet alle 26 spelers weer op aanwezig
+          </button>
+        </div>
+
+        <!-- SECTIE 2: BONUSPUNTEN & SPELER BEHEER -->
+        <div class="admin-section">
+          <label class="clue-label" for="admin-player-select" style="display:block; margin-bottom:0.4rem;">
+            2. Bonuspunten / Strafpunten Geven (Speler krijgt live pop-up!)
+          </label>
+          <select id="admin-player-select" class="admin-select"></select>
+
+          <div class="quick-pts-row">
+            <button type="button" class="btn-chip" data-delta="50">+50 PT</button>
+            <button type="button" class="btn-chip" data-delta="25">+25 PT</button>
+            <button type="button" class="btn-chip" data-delta="10">+10 PT</button>
+            <button type="button" class="btn-chip" data-delta="-10">-10 PT</button>
+            <button type="button" class="btn-chip" data-delta="-25">-25 PT</button>
+          </div>
+
+          <div class="admin-row-wrap" style="margin-bottom: 0.5rem;">
+            <input
+              type="number"
+              id="admin-custom-delta"
+              class="admin-input"
+              placeholder="Aantal pt (bv. 30 of -15)"
+              style="margin-bottom: 0; flex: 1; min-width: 140px;"
+            />
+            <button type="button" id="admin-apply-custom-btn" class="btn btn-primary" style="flex: 1 1 auto;">
+              Geef aan Speler
+            </button>
+            <button type="button" id="admin-apply-team-bonus-btn" class="btn btn-secondary" style="flex: 1 1 auto; font-size: 0.75rem; border-color: var(--amber); color: var(--amber);">
+              ⭐ Geef aan heel zijn Team
+            </button>
+          </div>
+
+          <button type="button" id="admin-revoke-player-btn" class="btn btn-secondary" style="width: 100%; margin-top: 0.25rem; font-size: 0.75rem;">
+            Zet ontgrendeling van deze speler terug
+          </button>
+        </div>
+
+        <!-- SECTIE 3: GROEPEN OP VOORHAND KLAARZETTEN -->
+        <div class="admin-section">
+          <div class="clue-label" style="margin-bottom: 0.35rem;">
+            3. Groepen Op Voorhand Instellen (Pas zichtbaar na alle codes!)
+          </div>
+          <div id="admin-groups-reveal-status" style="font-family: var(--font-mono); font-size: 0.75rem; padding: 0.55rem 0.75rem; border-radius: 6px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); color: var(--amber); margin-bottom: 0.65rem;">
+            🔒 Verborgen voor spelers totdat alle aanwezige spelers hun code hebben ingevuld.
+          </div>
+
+          <div class="admin-row-wrap" style="align-items: center; margin-bottom: 0.65rem;">
+            <label for="admin-group-size" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
+              Personen per groep:
+            </label>
+            <input
+              type="number"
+              id="admin-group-size"
+              class="admin-input"
+              value="4"
+              min="2"
+              max="13"
+              style="margin-bottom: 0; width: 72px; text-align: center;"
+            />
+            <button type="button" id="admin-random-groups-btn" class="btn btn-primary" style="flex: 1 1 180px; padding: 0.65rem 0.75rem; font-size: 0.78rem;">
+              🎲 Zet Willekeurige Groepen Klaar
+            </button>
+          </div>
+
+          <div class="admin-row-wrap" style="margin-bottom: 0.5rem;">
+            <select id="admin-group-select" class="admin-select" style="margin-bottom: 0; flex: 1 1 200px;">
+              <option value="">— Geen groep —</option>
+              <option value="Groep Blauw">Groep Blauw (Start: Zandpoort)</option>
+              <option value="Groep Rood">Groep Rood (Start: Begijnhof)</option>
+              <option value="Groep Geel">Groep Geel (Start: Bovenpoort)</option>
+              <option value="Groep Groen">Groep Groen (Start: Stadspark)</option>
+              <option value="Groep Paars">Groep Paars (Start: Kerkplein)</option>
+              <option value="Groep Oranje">Groep Oranje (Start: Nieuw Lokaal)</option>
+              <option value="Groep Roze">Groep Roze</option>
+              <option value="Groep Cyaan">Groep Cyaan</option>
+            </select>
+            <button type="button" id="admin-assign-group-btn" class="btn btn-secondary" style="flex: 1 1 auto; padding: 0.65rem 0.85rem; font-size: 0.78rem;">
+              Wijs gekozen speler toe
+            </button>
+          </div>
+
+          <!-- Voorvertoning van klaargezette groepen voor de admin -->
+          <div id="admin-groups-preview" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); margin-bottom: 0.55rem;"></div>
+
+          <div class="admin-row-wrap">
+            <button type="button" id="admin-toggle-reveal-btn" class="btn btn-secondary" style="flex: 1 1 160px; font-size: 0.73rem; padding: 0.55rem;">
+              🔓 Forceer groepen nu zichtbaar
+            </button>
+            <button type="button" id="admin-clear-groups-btn" class="btn btn-secondary" style="flex: 1 1 140px; font-size: 0.73rem; padding: 0.55rem;">
+              Wis groepsindeling
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTIE 4: MESSAGE BOARD (TIPS & GEHEIME BONUSOPDRACHTEN STUREN) -->
+        <div class="admin-section">
+          <div class="clue-label" style="margin-bottom: 0.45rem;">
+            4. 📡 Message Board (Stuur live tips of bonusopdrachten in hun map)
+          </div>
+
+          <form id="admin-msg-form" autocomplete="off">
+            <div class="admin-grid-2" style="margin-bottom: 0.5rem;">
+              <select id="admin-msg-target" class="admin-select" style="margin-bottom: 0;">
+                <option value="all">📢 Aan: Iedereen (Alle mappen)</option>
+                <optgroup label="Per Team">
+                  <option value="group:Groep Blauw">👥 Team: Groep Blauw</option>
+                  <option value="group:Groep Rood">👥 Team: Groep Rood</option>
+                  <option value="group:Groep Geel">👥 Team: Groep Geel</option>
+                  <option value="group:Groep Groen">👥 Team: Groep Groen</option>
+                  <option value="group:Groep Paars">👥 Team: Groep Paars</option>
+                  <option value="group:Groep Oranje">👥 Team: Groep Oranje</option>
+                  <option value="group:Groep Roze">👥 Team: Groep Roze</option>
+                  <option value="group:Groep Cyaan">👥 Team: Groep Cyaan</option>
+                </optgroup>
+                <optgroup id="admin-msg-players-optgroup" label="Specifieke Speler"></optgroup>
+              </select>
+
+              <select id="admin-msg-category" class="admin-select" style="margin-bottom: 0;">
+                <option value="tip">💡 Tip van de Spelleider</option>
+                <option value="bonus">⭐ Geheime Opdracht (Extra Punten!)</option>
+                <option value="info">📡 Algemeen Bericht</option>
+              </select>
+            </div>
+
+            <div class="admin-row-wrap" style="margin-bottom: 0.5rem;">
+              <select id="admin-msg-location" class="admin-select" style="margin-bottom: 0; flex: 1 1 180px;">
+                <option value="">📁 Bovenaan Dossier (Algemeen)</option>
+                <option value="zandpoort">📍 Mapje: Zandpoort</option>
+                <option value="begijnhof">📍 Mapje: Begijnhof</option>
+                <option value="bovenpoort">📍 Mapje: Bovenpoort</option>
+                <option value="stadspark">📍 Mapje: Stadspark</option>
+                <option value="kerkplein">📍 Mapje: Kerkplein</option>
+                <option value="nieuw-lokaal">📍 Mapje: Nieuw Lokaal</option>
+              </select>
+              <input
+                type="text"
+                id="admin-msg-text"
+                class="admin-input"
+                placeholder="Typ hier je tip of geheime bonusopdracht..."
+                style="margin-bottom: 0; flex: 2 1 220px;"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.6rem;">
+              📡 Plaats op Message Board (Spelers krijgen direct een pop-up!)
+            </button>
+          </form>
+
+          <div id="admin-msg-list" style="margin-top: 0.65rem; display: flex; flex-direction: column; gap: 0.35rem;"></div>
+        </div>
+
+        <!-- SECTIE 5: INGEZONDEN FOTO'S VAN SPELERS -->
+        <div class="admin-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+            <span class="clue-label" style="margin-bottom: 0;">
+              5. 📷 Ingezonden Opdrachtfoto's van Spelers
+            </span>
+            <span id="admin-photos-count" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber);">
+              0 foto's
+            </span>
+          </div>
+          <div id="admin-photos-grid" class="photos-grid"></div>
+        </div>
+
+        <!-- SECTIE 6: VOLLEDIGE RESET -->
+        <div class="admin-section">
+          <div class="clue-label" style="margin-bottom: 0.5rem;">6. Volledig Spel Resetten</div>
+          <button type="button" id="admin-reset-all-btn" class="btn btn-danger" style="width: 100%;">
+            ⚠ Reset Alle Scores, Berichten, Foto's &amp; Ontgrendelingen
+          </button>
+        </div>
+
+        <div id="admin-status-feedback" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); text-align: center; min-height: 1.4rem; margin-top: 0.75rem;"></div>
+
+        <div class="modal-actions" style="margin-top: 0.75rem;">
+          <button type="button" id="admin-close-btn" class="btn btn-secondary">Sluiten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
+  <script src="js/config.js"></script>
+  <script src="js/score-service.js"></script>
+  <script src="js/portal.js"></script>
+</body>
+</html>

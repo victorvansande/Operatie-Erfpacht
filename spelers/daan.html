@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dossier #01 - Daan</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body data-player-id="daan">
+  <main class="container">
+    <nav class="dossier-nav">
+      <a href="../index.html" class="back-link">&larr; Terug naar portaal</a>
+      <button type="button" id="lock-dossier-btn" class="back-link" style="cursor:pointer;">🔒 Vergrendel dossier</button>
+    </nav>
+
+    <!-- Vergrendeld scherm (als iemand rechtstreeks naar deze URL surft zonder code) -->
+    <section id="dossier-lock-screen" class="modal-box" style="margin: 3rem auto; display: none;">
+      <div class="modal-tag">DOSSIER #01 // BEVEILIGD</div>
+      <h1 class="modal-title">Daan</h1>
+      <p class="modal-desc">Voer jouw persoonlijke toegangscode in om je geheime pagina te bekijken.</p>
+      <form id="dossier-lock-form" autocomplete="off">
+        <input type="password" id="dossier-code-input" class="code-input" placeholder="••••" required />
+        <div id="dossier-error-msg" class="error-msg" role="alert"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Ontgrendel Dossier</button>
+      </form>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- GEHEIME INHOUD VAN DAAN (PAS HIERONDER DE TEKST AAN) -->
+    <!-- ===================================================================== -->
+    <article id="dossier-content" class="dossier-card">
+      <header class="dossier-header">
+        <div>
+          <div class="modal-tag">PERSOONLIJK DOSSIER #01</div>
+          <h1 class="portal-title" style="margin-bottom: 0;">Agent Daan</h1>
+        </div>
+        <span class="stamp">STRIKT VERTROUWELIJK</span>
+      </header>
+
+      <div class="mission-block">
+        <h2>&gt;_ Jouw Geheime Missie</h2>
+        <p>
+          Welkom <strong>Daan</strong>. Dit is jouw persoonlijke pagina. Laat dit scherm aan niemand anders zien!
+          Hieronder vind je jouw instructies en aanwijzingen voor het spel.
+        </p>
+      </div>
+
+      <div class="mission-block" style="border-left-color: var(--amber);">
+        <h2 style="color: var(--amber);">&gt;_ Opdracht / Aanwijzing</h2>
+        <p>
+          <!-- Pas deze tekst aan voor Daan -->
+          Nog geen specifieke opdracht ingevuld. De leiding zal hier jouw geheime boodschap of hint plaatsen.
+        </p>
+      </div>
+
+      <div class="clue-grid">
+        <div class="clue-box">
+          <div class="clue-label">Status</div>
+          <div id="player-live-score-status" class="clue-value" style="color: var(--accent);">ACTIEF IN HET SPEL</div>
+        </div>
+        <div class="clue-box">
+          <div class="clue-label">Geheime Rol / Team</div>
+          <div id="player-live-team-status" class="clue-value">Individueel (Nog geen groep)</div>
+        </div>
+        <div class="clue-box">
+          <div class="clue-label">Extra Hint</div>
+          <div class="clue-value">---</div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/score-service.js"></script>
+  <script src="../js/dossier.js"></script>
+</body>
+</html>
+
+

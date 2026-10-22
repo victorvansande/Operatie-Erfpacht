@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INTERNE DIENST BRIEFING // Operatie Erfpacht (Master Dossier HQ)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+      --ink: #0f172a;
+      --ink-muted: #475569;
+      --paper: #f8f6f0;
+      --paper-box: #f1ede2;
+      --border-dark: #1e293b;
+      --stamp-red: #b91c1c;
+      --accent-green: #047857;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body {
+      background: #0b0f17;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    .screen-toolbar {
+      background: #0e141c;
+      border-bottom: 2px solid #b91c1c;
+      color: #e2e8f0;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .toolbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #f87171;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tb-btn {
+      background: #b91c1c;
+      color: #ffffff;
+      border: 1px solid #ef4444;
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .screen-toolbar {
+        display: none !important;
+      }
+      .a4-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    .a4-sheet {
+      width: 210mm;
+      height: 297mm;
+      background: var(--paper);
+      margin: 1.5rem auto;
+      padding: 6.5mm 10mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+    }
+
+    .dossier-frame {
+      border: 2.2px solid var(--border-dark);
+      height: 100%;
+      padding: 4mm 5.5mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(circle at 80% 15%, rgba(185, 28, 28, 0.04) 0%, transparent 45%),
+        linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 6mm 6mm, 6mm 6mm;
+    }
+
+    .dossier-frame::before {
+      content: "STRIKT GEHEIM // ENKEL VOOR INTERNE DIENST (HQ BRIEFING) — NIET VOOR VELDAGENTEN";
+      position: absolute;
+      top: -2.4mm;
+      left: 6mm;
+      background: var(--paper);
+      padding: 0 2.5mm;
+      font-size: 6.8pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--stamp-red);
+    }
+
+    .dossier-frame::after {
+      content: "MASTER-FILE // OPERATIE ERFPACHT 2200 — GAMEMASTER HQ (KAPUCIJNENSTRAAT 7)";
+      position: absolute;
+      bottom: -2.2mm;
+      right: 6mm;
+      background: var(--paper);
+      padding: 0 2.5mm;
+      font-size: 6.2pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+    }
+
+    .watermark-seal {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      width: 115mm;
+      height: 115mm;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header */
+    .inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border-dark);
+      padding-bottom: 2.2mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .agency-brand {
+      display: flex;
+      align-items: center;
+      gap: 3mm;
+    }
+
+    .agency-seal-svg {
+      width: 13.5mm;
+      height: 13.5mm;
+      flex-shrink: 0;
+    }
+
+    .agency-dept {
+      font-size: 6.4pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+
+    .agency-main {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12.5pt;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      text-transform: uppercase;
+      margin: 0.2mm 0;
+    }
+
+    .agency-sub {
+      font-size: 6.5pt;
+      color: var(--stamp-red);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .header-stamps {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1mm;
+    }
+
+    .rubber-stamp {
+      border: 2px solid var(--stamp-red);
+      color: var(--stamp-red);
+      padding: 0.7mm 2.4mm;
+      font-size: 7.8pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transform: rotate(-2deg);
+      background: rgba(185, 28, 28, 0.06);
+    }
+
+    .doc-serial {
+      font-size: 6pt;
+      color: var(--ink-muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* Metadata tabel bovenaan */
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 6.8pt;
+      margin-top: 2mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-table td {
+      padding: 1mm 1.8mm;
+      border: 1px solid #94a3b8;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .meta-table td.meta-label {
+      font-weight: 800;
+      color: var(--ink-muted);
+      width: 22%;
+      background: var(--paper-box);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 6.2pt;
+    }
+
+    .meta-table td.meta-val {
+      font-weight: 700;
+      color: var(--ink);
+      width: 28%;
+    }
+
+    .highlight-yellow {
+      background: #fde047;
+      padding: 0.2mm 1.5mm;
+      font-weight: 800;
+    }
+
+    .highlight-red {
+      color: var(--stamp-red);
+      font-weight: 800;
+    }
+
+    /* Algemene Situatieschets / Onderschept Telefoontje */
+    .intercept-box {
+      margin-top: 2mm;
+      border: 1.5px solid var(--border-dark);
+      border-left: 4px solid var(--stamp-red);
+      background: rgba(255, 255, 255, 0.82);
+      padding: 2mm 3mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .section-tag {
+      font-size: 6.4pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--stamp-red);
+      margin-bottom: 1mm;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 0.6mm;
+    }
+
+    .intercept-box p {
+      font-size: 6.9pt;
+      line-height: 1.34;
+      margin-bottom: 1mm;
+      color: var(--ink);
+    }
+
+    .intercept-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .protocol-win-banner {
+      margin-top: 1.4mm;
+      background: var(--paper-box);
+      border: 1.2px solid var(--border-dark);
+      border-left: 4px solid var(--accent-green);
+      padding: 1.2mm 2.4mm;
+      font-size: 6.6pt;
+      line-height: 1.3;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2.5mm;
+    }
+
+    .protocol-win-badge {
+      background: var(--accent-green);
+      color: #ffffff;
+      font-size: 5.8pt;
+      font-weight: 800;
+      padding: 0.6mm 1.6mm;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .redacted {
+      background: #0f172a;
+      color: #0f172a;
+      padding: 0 1.2mm;
+      border-radius: 1px;
+      user-select: none;
+      font-size: 6.4pt;
+      display: inline-block;
+      line-height: 1.05;
+    }
+
+    /* De 6 Sabotage-Pistes / Locaties */
+    .locations-master-section {
+      margin-top: 2mm;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .locations-header-bar {
+      background: var(--ink);
+      color: #ffffff;
+      padding: 1.1mm 2.5mm;
+      font-size: 6.8pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.6mm;
+    }
+
+    .locations-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8mm;
+    }
+
+    .loc-dossier-item {
+      border: 1px solid var(--border-dark);
+      background: rgba(255, 255, 255, 0.78);
+      padding: 1.6mm 2.2mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.9mm;
+    }
+
+    .loc-left-col {
+      border-bottom: 1px dashed #94a3b8;
+      padding-bottom: 0.9mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5mm;
+    }
+
+    .loc-sector-num {
+      font-size: 5.5pt;
+      font-weight: 800;
+      color: var(--stamp-red);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .loc-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8.2pt;
+      font-weight: 700;
+      color: var(--ink);
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin: 0.1mm 0;
+    }
+
+    .loc-address {
+      font-size: 5.5pt;
+      color: var(--ink-muted);
+      line-height: 1.15;
+    }
+
+    .loc-code-badge {
+      display: inline-block;
+      font-size: 5.5pt;
+      font-weight: 800;
+      background: var(--paper-box);
+      border: 1px solid #64748b;
+      padding: 0.3mm 1.2mm;
+      color: var(--ink);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .loc-mission-text {
+      font-size: 6.35pt;
+      line-height: 1.32;
+      color: var(--ink);
+    }
+
+    .loc-deliverable {
+      margin-top: 0.6mm;
+      font-size: 5.7pt;
+      font-weight: 800;
+      color: var(--accent-green);
+      letter-spacing: 0.02em;
+    }
+
+    /* Footer */
+    .inv-footer {
+      margin-top: 1.8mm;
+      padding-top: 1.6mm;
+      border-top: 1.5px solid var(--border-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      font-size: 6pt;
+      color: var(--ink-muted);
+    }
+
+    .auth-sig {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .barcode-bars {
+      height: 7mm;
+      width: 42mm;
+      background: repeating-linear-gradient(
+        90deg,
+        #0f172a 0px,
+        #0f172a 1.5px,
+        transparent 1.5px,
+        transparent 3px,
+        #0f172a 3px,
+        #0f172a 6px,
+        transparent 6px,
+        transparent 8px,
+        #0f172a 8px,
+        #0f172a 9px,
+        transparent 9px,
+        transparent 11.5px
+      );
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <div>
+      <div class="toolbar-title">🕵️‍♂️ INTERNE DIENST BRIEFING // MASTER-DOSSIER VOOR GAMEMASTER &amp; HQ</div>
+      <div style="font-size: 0.8rem; color: #cbd5e1;">
+        Het volledige geclassificeerde verhaal en overzicht van de 6 locaties op 1 A4 (enkel voor interne dienst).
+      </div>
+    </div>
+    <div>
+      <button type="button" onclick="window.print()" class="tb-btn">
+        🖨️ Print / Opslaan als PDF
+      </button>
+    </div>
+  </div>
+
+  <section class="a4-sheet">
+    <div class="dossier-frame">
+      <!-- Watermerk op achtergrond -->
+      <svg class="watermark-seal" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" stroke="#0f172a" stroke-width="3"/>
+        <circle cx="50" cy="50" r="38" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <polygon points="50,12 59,38 86,38 64,54 72,81 50,65 28,81 36,54 14,38 41,38" stroke="#0f172a" stroke-width="2" fill="none"/>
+        <circle cx="50" cy="50" r="14" stroke="#0f172a" stroke-width="2"/>
+      </svg>
+
+      <!-- 1. Header -->
+      <header class="inv-header">
+        <div class="agency-brand">
+          <svg class="agency-seal-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="30" stroke="#0f172a" stroke-width="2.5" fill="#f1ede2"/>
+            <circle cx="32" cy="32" r="24" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="2 2"/>
+            <path d="M32 10 L37 25 L52 25 L40 34 L44 49 L32 40 L20 49 L24 34 L12 25 L27 25 Z" fill="#0f172a"/>
+            <circle cx="32" cy="32" r="6" fill="#f8f6f0" stroke="#0f172a" stroke-width="1.5"/>
+          </svg>
+          <div>
+            <div class="agency-dept">CENTRAL INTELLIGENCE &amp; SIGINT DIRECTORATE // FIELD DIVISION 2200</div>
+            <div class="agency-main">GEHEIME INLICHTINGENDIENST — BRIEFING HQ</div>
+            <div class="agency-sub">OPERATIE: ERFPACHT // CLASSIFICATIE: TOP SECRET — INTERNAL SERVICE EYES ONLY</div>
+          </div>
+        </div>
+
+        <div class="header-stamps">
+          <div class="rubber-stamp">CLASSIFIED // HQ</div>
+          <div class="doc-serial">DOC-REF: #SIGINT-1636-KSA // CLEARANCE LEVEL 5</div>
+        </div>
+      </header>
+
+      <!-- 2. Operatie-kerngegevens -->
+      <table class="meta-table">
+        <tr>
+          <td class="meta-label">Onderschept Signaal</td>
+          <td class="meta-val">Gisteren om <strong>16u36</strong> (Tap <span class="redacted">████-09</span>)</td>
+          <td class="meta-label">Kritieke Deadline</td>
+          <td class="meta-val"><span class="highlight-red">VANAVOND 22u00 STIPT</span></td>
+        </tr>
+        <tr>
+          <td class="meta-label">Doelwit Pand</td>
+          <td class="meta-val">Erfpacht-lokaal (<span class="redacted">██████████</span> 77)</td>
+          <td class="meta-label">Hoofdkwartier (HQ)</td>
+          <td class="meta-val">Kapucijnenstraat 7, 2200 Herentals</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Vijandige Actoren</td>
+          <td class="meta-val">Het Stad (cel <span class="redacted">██████</span>) + 3e Partij</td>
+          <td class="meta-label">Operatie-opzet</td>
+          <td class="meta-val"><span class="highlight-yellow">6 LOCATIES // 6 SABOTAGE-PISTES</span></td>
+        </tr>
+      </table>
+
+      <!-- 3. De Onderschepte Situatie (Algemene Briefing) -->
+      <section class="intercept-box">
+        <div class="section-tag">
+          <span>&gt;_ INTERCEPT-TRANSCRIPTIE // ALGEMENE SITUATIESCHETS VOOR INTERNE DIENST</span>
+          <span>BRON: SIGINT-TAP #1636 // STATUS: [<span class="redacted">CLASSIFIED</span>]</span>
+        </div>
+        <p>
+          <strong>1. HET COMPLOT (16u36):</strong> Het stad heeft ons achter de rug schaakmat gezet. Gisteren rond <strong>16u36</strong> kreeg het stad (via dienst <span class="redacted">██████████</span>) een telefoontje van een <strong>onbekende partij</strong> (codenaam <span class="redacted">████████ NV</span>). Zij boden enorm veel geld (<span class="redacted">€███.000</span>) om het lokaal — dat momenteel in onze erfpacht is en volop in verbouwing staat — stiekem door te verkopen vanaf het dak vernieuwd is.
+        </p>
+        <p>
+          <strong>2. INTERVENTIE GEHEIME DIENST:</strong> Onze geheime inlichtingendienst (sectie <span class="redacted">██████-4</span>) heeft dit kunnen onderscheppen en contacteert nu jullie KSA om jullie de kans te geven om dit plan te dwarsbomen.
+        </p>
+        <p>
+          <strong>3. DEADLINE VANAVOND 22u00:</strong> Vanavond om <strong>22u00</strong> gaat deze verkoop door, wordt het geld van de derde partij gestort (via rekening <span class="redacted">BE██ ████ ████</span>) en is het lokaal volgens alle wetten en regels officieel terug van de stad om dan door te verkopen aan de geheime derde partij. We zullen ze op <strong>6 verschillende manieren</strong> moeten dwarsbomen: <strong>6 locaties, 6 opdrachten, 6 kansen om ons lokaal terug te winnen.</strong>
+        </p>
+        <div class="protocol-win-banner">
+          <div>
+            <strong>EVALUATIE-PROTOCOL INLICHTINGENDIENST (WINNAARSCRITERIA):</strong> De eenheid (groep) die <strong>het beste bewijsmateriaal verzamelt</strong>, <strong>het snelste handelt</strong> in het veld én <strong>de bonusopdrachten volbrengt</strong>, wint de operatie en krijgt de hoogste onderscheiding van HQ.
+          </div>
+          <span class="protocol-win-badge">★ BESTE MATERIAAL + SNELSTE + BONUS = WINST</span>
+        </div>
+      </section>
+
+      <!-- 4. De 6 Locaties & Opdrachten (Stuk per stuk onthuld in de mappen) -->
+      <section class="locations-master-section">
+        <div class="locations-header-bar">
+          <span>OVERZICHT VAN DE 6 VELDSECTORS &amp; SABOTAGE-OPDRACHTEN (PER MAP VERGRENDELD)</span>
+          <span>SECTOR 2200 HERENTALS</span>
+        </div>
+
+        <div class="locations-grid">
+          <!-- 1. Begijnhof -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #01 // ODE</div>
+                <div class="loc-title">Begijnhof</div>
+                <div class="loc-address">Begijnhof 1–30</div>
+              </div>
+              <span class="loc-code-badge">CODE: begijn2</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                De KSA is begonnen als een gelovige jeugdbeweging (archiefstuk <span class="redacted">19██-KSA</span>), en soms moeten we een ode brengen. Breng een zo creatief mogelijke versie van het <strong>avondlied</strong>. Hoewel HQ niet gelovig is, moeten we alle pistes bewandelen. Spreek de Heer aan in ons avondlied, upload de video en breng het mee als bewijsmateriaal naar HQ.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Video-upload in mapje Begijnhof + meebrengen naar HQ</div>
+            </div>
+          </div>
+
+          <!-- 2. Zandpoort -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #02 // DE MOL</div>
+                <div class="loc-title">Zandpoort</div>
+                <div class="loc-address">Zandstraat 41–43</div>
+              </div>
+              <span class="loc-code-badge">CODE: zand1</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                We hebben een <strong>mol in de jeugddienst van de stad</strong> zitten (codenaam <span class="redacted">████████</span>). Hij is op de hoogte, HQ heeft hem ingelicht. Bel hem op het nummer <strong>0498 34 32 07</strong>, voer zijn opdracht uit en in ruil daarvoor zal hij in de volgende jeugdraad (op <span class="redacted">██/██/2026</span>) de stad aansprakelijk stellen, zodat we ze vanbinnenuit verantwoordelijk stellen en hun daden onthullen.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Bel de mol (0498343207) + voer zijn opdracht uit</div>
+            </div>
+          </div>
+
+          <!-- 3. Bovenpoort -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #03 // GETUIGE</div>
+                <div class="loc-title">Bovenpoort</div>
+                <div class="loc-address">Bovenrij 19–21</div>
+              </div>
+              <span class="loc-code-badge">CODE: boven3</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                Hier zoeken we een getuige die ons verhaal wil verdedigen. Neem een <strong>interview op met een voorbijganger</strong>, overtuig hen waarvoor de KSA staat en laat hen een getuigenis opnemen waarom het lokaal van ons moet zijn. Wees creatief: bij een overtuigende boodschap kunnen we deze misschien opsturen naar de onbekende 3e partij (<span class="redacted">Dhr. ███████</span>) om hen te overtuigen om de verkoop toch niet te laten doorgaan en het stad te laten zitten met hun deal. Upload de video naar het HQ-portaal.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Video-upload van getuigenis naar het HQ-portaal</div>
+            </div>
+          </div>
+
+          <!-- 4. Stadspark -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #04 // SIGINT HACK</div>
+                <div class="loc-title">Stadspark</div>
+                <div class="loc-address">Belgiëlaan / Olympiadelaan</div>
+              </div>
+              <span class="loc-code-badge">CODE: park4</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                Het park ligt centraal perfect gelegen om het <strong>radio- en wifisignaal van de stad</strong> (frequentie <span class="redacted">███.██ MHz</span>) te onderscheppen. Blijkt dat hun connecties ergens ondergronds toevallig pal onder het stadspark eindigen (knooppunt <span class="redacted">NODE-███</span>), de ideale plek om een hack uit te voeren. Hier hacken jullie de connectie van de stad om ervoor te zorgen dat de deal om 22u00 niet doorgaat.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Uitvoering ondergrondse signaal-hack in het Stadspark</div>
+            </div>
+          </div>
+
+          <!-- 5. Kerkplein -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #05 // BLACKMAIL</div>
+                <div class="loc-title">Kerkplein</div>
+                <div class="loc-address">Sint-Waldetrudiskerk</div>
+              </div>
+              <span class="loc-code-badge">CODE: kerk5</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                Tijd om ons voor te bereiden op een <strong>blackmail</strong>. Het is mogelijk dat het stad (dienst <span class="redacted">██████████</span>) ons ontdekt en doorheeft dat we met deze missie bezig zijn. We moeten klaar zijn om een borgsom te betalen, aangezien de stad enkel in geld communiceert. <strong>Haal per groep €10 euro af</strong> en bewaar ze om terug mee naar HQ te brengen. Film dat je het geld afhaalt, het moet live gebeuren.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Live video van geldafhaling + €10 cash naar HQ brengen</div>
+            </div>
+          </div>
+
+          <!-- 6. Nieuw Lokaal -->
+          <div class="loc-dossier-item">
+            <div class="loc-left-col">
+              <div>
+                <div class="loc-sector-num">SECTOR #06 // FORENSISCH</div>
+                <div class="loc-title">Nieuw Lokaal</div>
+                <div class="loc-address">Markgravenstraat 77</div>
+              </div>
+              <span class="loc-code-badge">CODE: lokaal6</span>
+            </div>
+            <div>
+              <div class="loc-mission-text">
+                Hier moeten we bewijsmateriaal verzamelen tegen aannemer <span class="redacted">██████████</span>. Duik in het <strong>puin van het dak dat net afgebroken is</strong>. Vind een zo goed mogelijk bewijsstuk dat het dak <strong>spijsrot</strong> was. Neem een foto, upload hem, maar neem ook het bewijsstuk terug mee naar HQ.
+              </div>
+              <div class="loc-deliverable">✓ BEWIJS: Foto-upload in mapje + fysiek rot dak-bewijsstuk naar HQ</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Footer -->
+      <footer class="inv-footer">
+        <div>
+          <div class="auth-sig">Gamemaster Vicce // Director of Internal Operations</div>
+          <div>HOOFDKWARTIER KAPUCIJNENSTRAAT 7 — VERNIETIG DIT OVERZICHT NA 22U00</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="barcode-bars"></div>
+          <div style="letter-spacing: 0.16em; margin-top: 0.5mm;">*HQ-INTERNAL-BRIEFING-2200*</div>
+        </div>
+      </footer>
+    </div>
+  </section>
+</body>
+</html>

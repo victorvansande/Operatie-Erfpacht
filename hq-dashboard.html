@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    if (location.search.includes("preview=1")) {
+      sessionStorage.setItem("jb_admin_unlocked", "true");
+    }
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070a0e" />
+  <title>HQ GAMEMASTER DASHBOARD // Operatie Erfpacht (Vicce)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .gm-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 4rem;
+    }
+
+    .gm-header-bar {
+      background: linear-gradient(135deg, rgba(14, 20, 28, 0.96), rgba(7, 10, 14, 0.98));
+      border: 1px solid var(--border-color);
+      border-left: 5px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.1rem 1.35rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.65);
+    }
+
+    .gm-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .gm-kpi-card {
+      background: rgba(14, 20, 28, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.25rem;
+    }
+
+    .gm-kpi-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .gm-kpi-val {
+      font-family: var(--font-sans);
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    .gm-kpi-sub {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+
+    /* Snel-beheer balk (Fase 1 & Fase 2 controls) */
+    .gm-quick-controls {
+      background: rgba(14, 20, 28, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.4rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    /* Groepen Command Matrix */
+    .gm-groups-matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(410px, 1fr));
+      gap: 1.15rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .gm-group-card {
+      background: rgba(12, 17, 24, 0.95);
+      border: 1.5px solid var(--border-color);
+      border-top: 4px solid var(--grp-color, var(--accent));
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .gm-group-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.65rem;
+    }
+
+    .gm-group-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .gm-group-score-box {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .gm-group-total-pts {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--amber);
+    }
+
+    .gm-where-banner {
+      background: rgba(16, 185, 129, 0.09);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-left: 4px solid var(--grp-color, var(--accent));
+      border-radius: 6px;
+      padding: 0.55rem 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    /* 6-Stappen Route Tracker per groep */
+    .gm-route-steps {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .gm-step-pill {
+      background: rgba(7, 10, 14, 0.85);
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .gm-step-pill.step-done {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: #10b981;
+      color: #ecfdf5;
+    }
+
+    .gm-step-pill.step-open {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: #f59e0b;
+      color: #fef3c7;
+    }
+
+    .gm-step-unlock-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      padding: 0.18rem 0.42rem;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .gm-step-unlock-btn:hover {
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .gm-bonus-bar {
+      background: rgba(7, 10, 14, 0.75);
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 0.6rem 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .gm-bonus-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.38rem;
+    }
+
+    .gm-chip-btn {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
+      font-weight: 700;
+      padding: 0.35rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .gm-chip-btn:hover {
+      background: var(--accent);
+      color: #05080d;
+    }
+
+    .gm-chip-btn.chip-amber {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fde047;
+    }
+
+    .gm-chip-btn.chip-amber:hover {
+      background: var(--amber);
+      color: #05080d;
+    }
+
+    .gm-chip-btn.chip-danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+
+    .gm-chip-btn.chip-danger:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    /* Twee-koloms sectie onderaan: Bewijs-Stream + Kaart/Spiekbriefje */
+    .gm-bottom-split {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .gm-panel-card {
+      background: rgba(12, 17, 24, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.15rem 1.25rem;
+    }
+
+    .gm-uploads-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.9rem;
+      margin-top: 0.85rem;
+    }
+
+    .gm-upload-card {
+      background: #070a0e;
+      border: 1.5px solid #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .gm-upload-card.is-reviewed {
+      border-color: #10b981;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.18);
+    }
+
+    .gm-upload-media {
+      width: 100%;
+      height: 175px;
+      object-fit: cover;
+      background: #000;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Groepsmappen weergave */
+    .gm-group-folder-box {
+      background: #090e16;
+      border: 1.5px solid #1e293b;
+      border-left: 5px solid var(--grp-color, var(--accent));
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin-bottom: 1.15rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    }
+
+    .gm-group-folder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      border-bottom: 1px dashed #334155;
+      padding-bottom: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .gm-view-toggle-btns {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .gm-view-tab {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.38rem 0.75rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .gm-view-tab.active {
+      background: var(--accent);
+      color: #05080d;
+      border-color: var(--accent);
+    }
+
+    .gm-cheat-table td,
+    .gm-cheat-table th {
+      border: 1px solid #1e293b;
+      padding: 0.4rem 0.55rem;
+      text-align: left;
+    }
+
+    .gm-cheat-table th {
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--accent);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 980px) {
+      .gm-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .gm-bottom-split {
+        grid-template-columns: 1fr;
+      }
+      .gm-groups-matrix {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .gm-container {
+        padding: 0.85rem 0.85rem 3rem;
+      }
+      .gm-route-steps {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Bovenste CIA / HQ Telemetriebalk -->
+  <div class="intel-topbar">
+    <div class="intel-topbar-inner">
+      <span class="intel-topbar-item">
+        <span class="intel-blink-red"></span>
+        <strong>HQ GAMEMASTER COMMAND CENTER // VICCE</strong>
+      </span>
+      <span class="intel-topbar-item intel-hide-mobile">
+        📍 HOOFDKWARTIER: <strong>KAPUCIJNENSTRAAT 7, 2200 HERENTALS</strong>
+      </span>
+      <span class="intel-topbar-item">
+        ⏳ DEADLINE 22u00: <strong id="gm-countdown-timer" style="color: var(--amber);">--:--:--</strong>
+      </span>
+    </div>
+  </div>
+
+  <main class="gm-container">
+    <!-- Header met snelle navigatie -->
+    <header class="gm-header-bar">
+      <div>
+        <div class="status-badge" style="margin-bottom: 0.35rem;">
+          <span class="status-dot"></span>
+          LIVE OVERZICHT VOOR GAMEMASTER VICCE — OPERATIE ERFPACHT
+        </div>
+        <h1 style="font-size: 1.65rem; font-weight: 700; color: #fff; margin: 0;">
+          🛰️ HQ Command Dashboard
+        </h1>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 0.2rem;">
+          Volg live waar elke groep zit, bekijk binnengekomen foto's &amp; video's en ken met 1 klik bonuspunten toe zonder fouten.
+        </p>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center;">
+        <a href="index.html" class="back-link">🏠 Naar Spelersportaal</a>
+        <a href="spelers/vicce.html" class="back-link" style="border-color: var(--accent); color: var(--accent);">📂 Mijn Test-Dossier (Vicce)</a>
+        <a href="interne-briefing-hq.html" target="_blank" class="back-link" style="border-color: var(--amber); color: var(--amber);">📄 Interne Briefing PDF</a>
+        <button type="button" id="gm-play-audio-briefing-btn" class="back-link" style="border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.12); cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+          <span class="intel-blink-red"></span>🎙️ <span id="gm-audio-btn-txt">Speel Audio-Briefing (01:27)</span>
+        </button>
+        <audio id="gm-briefing-audio" preload="none" src="audio/SIGINT-REC-1636-ENCRYPTED.mp3"></audio>
+      </div>
+    </header>
+
+    <!-- Live Feedback Banner bij elke actie -->
+    <div id="gm-action-toast" style="display: none; background: rgba(16, 185, 129, 0.16); border: 1.5px solid var(--accent); color: #ecfdf5; font-family: var(--font-mono); font-size: 0.84rem; font-weight: 700; padding: 0.7rem 1rem; border-radius: 8px; margin-bottom: 1.1rem; text-align: center;"></div>
+
+    <!-- 4 KPI Tellers -->
+    <section class="gm-kpi-grid">
+      <div class="gm-kpi-card" id="gm-kpi-card-attendance" style="cursor: pointer;" title="Klik om aanwezigheid & inactieve spelers te beheren">
+        <span class="gm-kpi-label">1. Aanwezige Agenten &amp; Logins 🔍</span>
+        <div class="gm-kpi-val" id="gm-kpi-players">0 / 26</div>
+        <span class="gm-kpi-sub" id="gm-kpi-players-sub">Wacht op eerste codes...</span>
+      </div>
+      <div class="gm-kpi-card">
+        <span class="gm-kpi-label">2. Status Groepen (Plot Twist)</span>
+        <div class="gm-kpi-val" id="gm-kpi-groups">VERBORGEN</div>
+        <span class="gm-kpi-sub" id="gm-kpi-groups-sub">Wordt onthuld na alle logins</span>
+      </div>
+      <div class="gm-kpi-card">
+        <span class="gm-kpi-label">3. Voltooide Locatie-Mappen</span>
+        <div class="gm-kpi-val" id="gm-kpi-locations">0</div>
+        <span class="gm-kpi-sub" id="gm-kpi-locations-sub">Geopende mappen in het veld</span>
+      </div>
+      <div class="gm-kpi-card">
+        <span class="gm-kpi-label">4. Ingezonden Bewijs (Foto/Video)</span>
+        <div class="gm-kpi-val" id="gm-kpi-uploads">0</div>
+        <span class="gm-kpi-sub" id="gm-kpi-uploads-sub">0 nog te beoordelen</span>
+      </div>
+    </section>
+
+    <!-- Snelle Spel- & Groepsbediening + Algemeen Bericht -->
+    <section class="gm-quick-controls">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem;">
+        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 700;">⚡ SNELLE HQ-ACTIES:</span>
+        <button type="button" id="gm-btn-random-groups" class="btn btn-secondary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
+          🎲 Verdeel Aanwezigen in Groepen (4p)
+        </button>
+        <button type="button" id="gm-btn-toggle-reveal" class="btn btn-primary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
+          👁️ Onthul Groepen Nu aan Iedereen
+        </button>
+        <button type="button" id="gm-btn-toggle-attendance" class="btn btn-secondary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
+          📋 Aanwezigheid &amp; Spelers
+        </button>
+        <button type="button" id="gm-btn-reset-game" class="btn btn-danger" style="padding: 0.48rem 0.85rem; font-size: 0.76rem; background: rgba(239, 68, 68, 0.18); border-color: var(--danger); color: #fca5a5; font-weight: 700;">
+          ⚠ Volledig Spel Resetten
+        </button>
+      </div>
+
+      <!-- Algemeen Bericht naar Iedereen sturen -->
+      <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; min-width: 280px; justify-content: flex-end;" autocomplete="off">
+        <input
+          type="text"
+          id="gm-broadcast-input"
+          class="admin-input"
+          placeholder="📡 Stuur live HQ-bericht of tip naar ALLE spelers tegelijk..."
+          style="margin-bottom: 0; flex: 1; min-width: 210px; font-size: 0.82rem; padding: 0.48rem 0.75rem;"
+          required
+        />
+        <button type="submit" class="btn btn-primary" style="padding: 0.48rem 0.9rem; font-size: 0.76rem;">
+          Zend naar Iedereen
+        </button>
+      </form>
+    </section>
+
+    <!-- Prominent Aanwezigheids- & Inactieve Spelers Paneel (Standaard Direct Zichtbaar) -->
+    <section id="gm-attendance-drawer" class="gm-panel-card" style="margin-bottom: 1.4rem; border: 1.5px solid rgba(56, 189, 248, 0.35);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; margin-bottom: 0.85rem; border-bottom: 1px dashed rgba(148, 163, 184, 0.2); padding-bottom: 0.65rem;">
+        <div>
+          <div class="live-toast-tag">&gt;_ AANWEZIGHEID &amp; INACTIEVE SPELERS (26 AGENTEN)</div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0;">
+            Duid hieronder direct aan wie er afwezig is. Klik bij een speler op <strong>[ ❌ Zet Inactief ]</strong> om iemand uit te sluiten. Inactieve spelers worden automatisch overgeslagen bij de groepsverdeling en kunnen niet inloggen.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <span id="gm-attendance-counts-badge" style="font-family: var(--font-mono); font-size: 0.75rem; background: rgba(15, 23, 42, 0.9); padding: 0.3rem 0.65rem; border-radius: 5px; border: 1px solid var(--border-color); color: #e2e8f0;">
+            🟢 26 Aanwezig | 🔴 0 Inactief
+          </span>
+          <button type="button" id="gm-enable-all-players-btn" class="btn btn-secondary" style="font-size: 0.72rem; padding: 0.35rem 0.75rem;">
+            ✅ Zet Iedereen op Aanwezig
+          </button>
+          <button type="button" id="gm-collapse-attendance-btn" class="text-btn" style="font-size: 0.72rem; color: var(--accent);">
+            Inklappen / Uitklappen
+          </button>
+        </div>
+      </div>
+      <div id="gm-attendance-chips" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 0.55rem;"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- HOOFDSECTIE 1: GROEPEN VOORTGANG, POSITIE & 1-KLIK BONUSPUNTEN      -->
+    <!-- =================================================================== -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <div>
+          <div class="live-toast-tag">&gt;_ LIVE GROEPEN-MATRIX // WAAR ZIT ELKE GROEP &amp; VOORTGANG (6 LOCATIES)</div>
+          <h2 style="font-size: 1.25rem; color: #fff; margin: 0.15rem 0 0;">
+            Overzicht per Groep (Route, Geopende Mappen, Bewijs &amp; Bonuspunten)
+          </h2>
+        </div>
+        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
+          🟢 = Map open + Bewijs binnen &nbsp;|&nbsp; 🟡 = Map geopend (Nu bezig) &nbsp;|&nbsp; 🔒 = Nog vergrendeld
+        </span>
+      </div>
+
+      <div id="gm-groups-container" class="gm-groups-matrix"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- HOOFDSECTIE 2: GROEPSMAPPEN BEWIJSMATERIAAL + RADAR & SPIEKBRIEFJE -->
+    <!-- =================================================================== -->
+    <section class="gm-bottom-split">
+      <!-- Links: Groepsmappen met alle foto's & video's per team in één oogopslag -->
+      <div class="gm-panel-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+          <div>
+            <div class="live-toast-tag">&gt;_ BEWIJSMATERIAAL DOSSIERS // FOTO'S &amp; VIDEO'S BEOORDELEN</div>
+            <h3 style="font-size: 1.15rem; color: #fff; margin: 0.1rem 0 0;">
+              Ingezonden Bestanden per Groep
+            </h3>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <div class="gm-view-toggle-btns">
+              <button type="button" id="gm-tab-group-folders" class="gm-view-tab active">
+                📂 Per Groepsmap
+              </button>
+              <button type="button" id="gm-tab-timeline" class="gm-view-tab">
+                🕒 Live Tijdlijn
+              </button>
+            </div>
+
+            <select id="gm-filter-location" class="admin-input" style="margin-bottom: 0; width: auto; padding: 0.38rem 0.65rem; font-size: 0.76rem;">
+              <option value="all">Alle 6 Locaties</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Weergave A: Mappen per groep (In één oogopslag per groep) -->
+        <div id="gm-group-folders-container"></div>
+
+        <!-- Weergave B: Chronologische Tijdlijn -->
+        <div id="gm-uploads-stream" class="gm-uploads-grid" style="display: none;"></div>
+      </div>
+
+      <!-- Rechts: Live Radar-Kaart + Spiekbriefje van alle Codes -->
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- Radar-kaart met groepsposities -->
+        <div class="gm-panel-card">
+          <div class="live-toast-tag">&gt;_ LIVE POSITIE-RADAR HERENTALS</div>
+          <h3 style="font-size: 1.05rem; color: #fff; margin: 0.1rem 0 0.65rem;">
+            Waar bevinden de groepen zich nu?
+          </h3>
+          <div id="gm-radar-map" style="width: 100%; height: 290px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden;"></div>
+          <div id="gm-location-occupancy" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem;"></div>
+        </div>
+
+        <!-- Spiekbriefje voor Gamemaster Vicce -->
+        <div class="gm-panel-card">
+          <div class="live-toast-tag" style="color: var(--amber);">&gt;_ GAMEMASTER SPIEKBRIEFJE (ALLE CODES &amp; MOL)</div>
+          <h3 style="font-size: 1.05rem; color: #fff; margin: 0.1rem 0 0.5rem;">
+            Locatiecodes &amp; Geheime Sleutels
+          </h3>
+
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent); border-radius: 6px; padding: 0.55rem 0.75rem; margin-bottom: 0.65rem; font-family: var(--font-mono); font-size: 0.76rem;">
+            <div>📞 <strong>NUMMER DE MOL (Zandpoort):</strong> <span style="color: #fff;">0498 34 32 07</span></div>
+            <div>🔑 <strong>CODEWOORD MOL:</strong> <span style="color: var(--amber);">"DE DAKPANNEN LIGGEN LOS"</span></div>
+            <div>💻 <strong>OVERRIDE STADSPARK HACK:</strong> <span style="color: #fff;">2200</span> (of automatische 1-klik hack)</div>
+          </div>
+
+          <table class="gm-cheat-table">
+            <thead>
+              <tr>
+                <th>Locatie</th>
+                <th>Map-Code</th>
+                <th>Vereist Bewijs op HQ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Begijnhof</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">begijn2</code></td>
+                <td>Video Avondlied (Heer aanspreken)</td>
+              </tr>
+              <tr>
+                <td><strong>Zandpoort</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">zand1</code></td>
+                <td>Bel de Mol + voer zijn opdracht uit</td>
+              </tr>
+              <tr>
+                <td><strong>Bovenpoort</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">boven3</code></td>
+                <td>Video-interview getuige voor 3e partij</td>
+              </tr>
+              <tr>
+                <td><strong>Stadspark</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">park4</code></td>
+                <td>Ondergrondse Wi-Fi Hack + groepsfoto</td>
+              </tr>
+              <tr>
+                <td><strong>Kerkplein</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">kerk5</code></td>
+                <td>Live video geldafhaling + <strong>€10 cash op HQ</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Nieuw Lokaal</strong></td>
+                <td><code style="color: var(--amber); font-weight: 800;">lokaal6</code></td>
+                <td>Foto + <strong>fysiek stuk spijsrot dak op HQ</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <details style="margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted);">
+            <summary style="cursor: pointer; color: var(--accent); font-weight: 700;">
+              🔑 Toon alle 26 persoonlijke speler-codes (Uitnodigingen)
+            </summary>
+            <div id="gm-player-codes-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.3rem; margin-top: 0.5rem; color: #e2e8f0;"></div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mastercode Toegangscontrole Modal (leiding2026) -->
+  <div id="gm-auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" style="display: none; z-index: 9999;">
+    <div class="modal-box" style="max-width: 440px; text-align: center;">
+      <div class="modal-tag">HQ SECURITY // TOEGANGSCONTROLE</div>
+      <h2 class="modal-title">Gamemaster HQ</h2>
+      <p class="modal-desc" style="margin-bottom: 1rem;">
+        Voer de mastercode <code>leiding2026</code> in om het live Gamemaster Dashboard te openen:
+      </p>
+      <form id="gm-auth-form" autocomplete="off">
+        <input
+          type="password"
+          id="gm-auth-input"
+          class="code-input"
+          placeholder="Mastercode..."
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          enterkeyhint="go"
+          required
+        />
+        <div id="gm-auth-error" class="error-msg" style="margin-top: 0.5rem;" role="alert"></div>
+        <div class="modal-actions" style="margin-top: 1rem;">
+          <a href="index.html" class="btn btn-secondary" style="text-decoration: none;">Naar Portaal</a>
+          <button type="submit" class="btn btn-primary">Open Dashboard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="js/config.js"></script>
+  <script src="js/score-service.js"></script>
+  <script src="js/hq-dashboard.js"></script>
+</body>
+</html>

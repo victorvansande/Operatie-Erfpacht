@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEHEIME BRIEFING VOOR VELDAGENTEN // Operatie Erfpacht</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+      --ink: #0f172a;
+      --ink-muted: #475569;
+      --paper: #f8f6f0;
+      --paper-box: #f1ede2;
+      --border-dark: #1e293b;
+      --stamp-red: #b91c1c;
+      --accent-green: #047857;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body {
+      background: #0b0f17;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    .screen-toolbar {
+      background: #0e141c;
+      border-bottom: 2px solid #b91c1c;
+      color: #e2e8f0;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .toolbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #f87171;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tb-btn {
+      background: #b91c1c;
+      color: #ffffff;
+      border: 1px solid #ef4444;
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .screen-toolbar {
+        display: none !important;
+      }
+      .a4-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    .a4-sheet {
+      width: 210mm;
+      height: 297mm;
+      background: var(--paper);
+      margin: 1.5rem auto;
+      padding: 8mm 11mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+    }
+
+    .dossier-frame {
+      border: 2.5px solid var(--border-dark);
+      height: 100%;
+      padding: 5mm 6.5mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(circle at 80% 15%, rgba(185, 28, 28, 0.04) 0%, transparent 45%),
+        linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 6mm 6mm, 6mm 6mm;
+    }
+
+    .dossier-frame::before {
+      content: "GECLASSIFICEERD // SPOEDBERICHT AAN ALLE KSA-EENHEDEN — OPERATIE ERFPACHT";
+      position: absolute;
+      top: -2.6mm;
+      left: 6mm;
+      background: var(--paper);
+      padding: 0 3mm;
+      font-size: 7.2pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--stamp-red);
+    }
+
+    .dossier-frame::after {
+      content: "CENTRAL INTELLIGENCE & SIGINT DIRECTORATE // HOOFDKWARTIER KAPUCIJNENSTRAAT 7";
+      position: absolute;
+      bottom: -2.4mm;
+      right: 6mm;
+      background: var(--paper);
+      padding: 0 3mm;
+      font-size: 6.5pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+    }
+
+    .watermark-seal {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      width: 125mm;
+      height: 125mm;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header */
+    .inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2.5px solid var(--border-dark);
+      padding-bottom: 4.5mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .agency-brand {
+      display: flex;
+      align-items: center;
+      gap: 4.2mm;
+    }
+
+    .agency-seal-svg {
+      width: 18mm;
+      height: 18mm;
+      flex-shrink: 0;
+    }
+
+    .agency-dept {
+      font-size: 7.5pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+
+    .agency-main {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16pt;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--ink);
+      text-transform: uppercase;
+      margin: 0.6mm 0;
+    }
+
+    .agency-sub {
+      font-size: 7.5pt;
+      color: var(--stamp-red);
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .header-stamps {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1.6mm;
+    }
+
+    .rubber-stamp {
+      border: 2.2px solid var(--stamp-red);
+      color: var(--stamp-red);
+      padding: 1.2mm 3.4mm;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transform: rotate(-2.5deg);
+      background: rgba(185, 28, 28, 0.06);
+    }
+
+    .doc-serial {
+      font-size: 6.8pt;
+      color: var(--ink-muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* Metadata tabel bovenaan */
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.2pt;
+      margin-top: 4mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-table td {
+      padding: 2.2mm 3mm;
+      border: 1px solid #94a3b8;
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .meta-table td.meta-label {
+      font-weight: 800;
+      color: var(--ink-muted);
+      width: 23%;
+      background: var(--paper-box);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 7.2pt;
+    }
+
+    .meta-table td.meta-val {
+      font-weight: 700;
+      color: var(--ink);
+      width: 27%;
+    }
+
+    .highlight-yellow {
+      background: #fde047;
+      padding: 0.3mm 1.8mm;
+      font-weight: 800;
+    }
+
+    .highlight-red {
+      color: var(--stamp-red);
+      font-weight: 800;
+    }
+
+    .redacted {
+      background: #0f172a;
+      color: #0f172a;
+      padding: 0 1.6mm;
+      border-radius: 1px;
+      user-select: none;
+      font-size: 7.8pt;
+      display: inline-block;
+      line-height: 1.1;
+    }
+
+    /* Noodmelding / Onderschept Complot */
+    .intercept-box {
+      margin-top: 2.2mm;
+      border: 1.8px solid var(--border-dark);
+      border-left: 5px solid var(--stamp-red);
+      background: rgba(255, 255, 255, 0.86);
+      padding: 3.2mm 4mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .section-tag {
+      font-size: 7.2pt;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: var(--stamp-red);
+      margin-bottom: 1.8mm;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1.5px dashed #cbd5e1;
+      padding-bottom: 1mm;
+    }
+
+    .intercept-box p {
+      font-size: 8.3pt;
+      line-height: 1.46;
+      margin-bottom: 2mm;
+      color: var(--ink);
+    }
+
+    .intercept-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Geheime Platform Instructieblok */
+    .platform-access-box {
+      margin-top: 2.2mm;
+      border: 1.8px solid var(--border-dark);
+      background: var(--paper-box);
+      padding: 3.2mm 4mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .platform-header {
+      background: var(--ink);
+      color: #ffffff;
+      padding: 1.2mm 2.6mm;
+      font-size: 7.4pt;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2mm;
+    }
+
+    .platform-steps {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.8mm;
+    }
+
+    .step-item {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #94a3b8;
+      border-left: 4px solid var(--ink);
+      padding: 1.8mm 2.8mm;
+      font-size: 8pt;
+      line-height: 1.4;
+    }
+
+    .step-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8.6pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ink);
+      margin-bottom: 0.5mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .step-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.2pt;
+      font-weight: 800;
+      background: var(--paper-box);
+      border: 1px solid #64748b;
+      padding: 0.2mm 1.5mm;
+      color: var(--stamp-red);
+    }
+
+    /* Evaluatie-protocol (Winnaarscriteria) */
+    .protocol-win-banner {
+      margin-top: 2.2mm;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1.8px solid var(--border-dark);
+      border-left: 5px solid var(--accent-green);
+      padding: 2.4mm 3.6mm;
+      font-size: 7.8pt;
+      line-height: 1.4;
+      color: var(--ink);
+      position: relative;
+      z-index: 2;
+    }
+
+    .protocol-win-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5mm;
+    }
+
+    .protocol-win-title {
+      font-weight: 800;
+      font-size: 8pt;
+      letter-spacing: 0.1em;
+      color: var(--accent-green);
+      text-transform: uppercase;
+    }
+
+    .protocol-win-badge {
+      background: var(--accent-green);
+      color: #ffffff;
+      font-size: 6.8pt;
+      font-weight: 800;
+      padding: 0.8mm 2.2mm;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Footer */
+    .inv-footer {
+      margin-top: 4mm;
+      padding-top: 3mm;
+      border-top: 2px solid var(--border-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      font-size: 7pt;
+      color: var(--ink-muted);
+    }
+
+    .auth-sig {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .barcode-bars {
+      height: 8.5mm;
+      width: 48mm;
+      background: repeating-linear-gradient(
+        90deg,
+        #0f172a 0px,
+        #0f172a 1.5px,
+        transparent 1.5px,
+        transparent 3px,
+        #0f172a 3px,
+        #0f172a 6px,
+        transparent 6px,
+        transparent 8px,
+        #0f172a 8px,
+        #0f172a 9px,
+        transparent 9px,
+        transparent 11.5px
+      );
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <div>
+      <div class="toolbar-title">📨 INTRODUCTIEBRIEF VOOR DE LEDEN // OPERATIE ERFPACHT (ZONDER SPOILERS)</div>
+      <div style="font-size: 0.8rem; color: #cbd5e1;">
+        Officiële briefing van de Geheime Inlichtingendienst om voor te lezen of te overhandigen bij de start op HQ (1 A4).
+      </div>
+    </div>
+    <div>
+      <button type="button" onclick="window.print()" class="tb-btn">
+        🖨️ Print / Opslaan als PDF
+      </button>
+    </div>
+  </div>
+
+  <section class="a4-sheet">
+    <div class="dossier-frame">
+      <!-- Watermerk op achtergrond -->
+      <svg class="watermark-seal" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" stroke="#0f172a" stroke-width="3"/>
+        <circle cx="50" cy="50" r="38" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <polygon points="50,12 59,38 86,38 64,54 72,81 50,65 28,81 36,54 14,38 41,38" stroke="#0f172a" stroke-width="2" fill="none"/>
+        <circle cx="50" cy="50" r="14" stroke="#0f172a" stroke-width="2"/>
+      </svg>
+
+      <!-- 1. Header -->
+      <header class="inv-header">
+        <div class="agency-brand">
+          <svg class="agency-seal-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="30" stroke="#0f172a" stroke-width="2.5" fill="#f1ede2"/>
+            <circle cx="32" cy="32" r="24" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="2 2"/>
+            <path d="M32 10 L37 25 L52 25 L40 34 L44 49 L32 40 L20 49 L24 34 L12 25 L27 25 Z" fill="#0f172a"/>
+            <circle cx="32" cy="32" r="6" fill="#f8f6f0" stroke="#0f172a" stroke-width="1.5"/>
+          </svg>
+          <div>
+            <div class="agency-dept">CENTRAL INTELLIGENCE &amp; SIGINT DIRECTORATE // FIELD DIVISION 2200</div>
+            <div class="agency-main">GEHEIME INLICHTINGENDIENST — SPOEDBERICHT</div>
+            <div class="agency-sub">OPERATIE: ERFPACHT // BESTEMD VOOR: ALLE REKRUTEN VAN KSA HERENTALS</div>
+          </div>
+        </div>
+
+        <div class="header-stamps">
+          <div class="rubber-stamp">TOP SECRET // KSA</div>
+          <div class="doc-serial">DOC-ID: #ALERT-1636-HQ // PRIORITY: CRITICAL</div>
+        </div>
+      </header>
+
+      <!-- 2. Operatie-kerngegevens -->
+      <table class="meta-table">
+        <tr>
+          <td class="meta-label">Onderschept Gesprek</td>
+          <td class="meta-val">Gisteren om <strong>16u36</strong> (Lijn <span class="redacted">████-09</span>)</td>
+          <td class="meta-label">Kritieke Deadline</td>
+          <td class="meta-val"><span class="highlight-red">VANAVOND OM 22u00 STIPT</span></td>
+        </tr>
+        <tr>
+          <td class="meta-label">Bedreigd Doelwit</td>
+          <td class="meta-val">Ons KSA-lokaal in erfpacht (<span class="redacted">██████████</span>)</td>
+          <td class="meta-label">Commandopost (HQ)</td>
+          <td class="meta-val">Kapucijnenstraat 7, 2200 Herentals</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Vijandige Actoren</td>
+          <td class="meta-val">Het Stad (cel <span class="redacted">██████</span>) + 3e Partij</td>
+          <td class="meta-label">Communicatiekanaal</td>
+          <td class="meta-val"><span class="highlight-yellow">GEHEIM DIGITAAL HQ-PLATFORM</span></td>
+        </tr>
+      </table>
+
+      <!-- 3. De Situatieschets (Zonder spoilers van de locaties) -->
+      <section class="intercept-box">
+        <div class="section-tag">
+          <span>&gt;_ NOODBRIEFING // WAAROM JULLIE VANAVOND OPGEROEPEN ZIJN</span>
+          <span>BRON: SIGINT-TAP #1636 // [<span class="redacted">CLASSIFIED</span>]</span>
+        </div>
+        <p>
+          <strong>HET VERRAAD ACHTER ONZE RUG:</strong> Het stad heeft ons achter de rug schaakmat gezet. Gisterenmiddag rond <strong>16u36</strong> kreeg het stad (via dienst <span class="redacted">███████████</span>) een geheim telefoontje van een <strong>onbekende derde partij</strong> (holding <span class="redacted">█████████ NV</span>). Zij boden enorm veel geld (<span class="redacted">€███.000</span>) om ons lokaal — dat momenteel in onze erfpacht zit en volop in verbouwing staat — stiekem door te verkopen zodra het dak vernieuwd is.
+        </p>
+        <p>
+          <strong>DE TIKKENDE KLOK (22u00):</strong> Vanavond om <strong>22u00 stipt</strong> gaat deze achterkamerdeal door. Op dat moment wordt het geld van de derde partij gestort (op rekening <span class="redacted">BE██ ████ ████</span>) en is het lokaal volgens alle wetten en regels officieel terug van de stad, om onmiddellijk door te verkopen aan deze geheime koper.
+        </p>
+        <p>
+          <strong>INTERVENTIE VAN DE INLICHTINGENDIENST:</strong> Onze geheime inlichtingendienst (eenheid <span class="redacted">██████-4</span>) heeft dit telefoongesprek kunnen onderscheppen. Wij contacteren nu jullie KSA om jullie één laatste kans te geven om terug te slaan en dit plan te dwarsbomen vóór de klok 22u00 slaat.
+        </p>
+      </section>
+
+      <!-- 4. Toegang tot het Geheime Platform (Zonder de locaties/opdrachten te verklappen) -->
+      <section class="platform-access-box">
+        <div class="platform-header">
+          <span>OPERATIE-INSTRUCTIE // TOEGANG TOT HET GEHEIME PLATFORM</span>
+          <span>CLEARANCE VEREIST</span>
+        </div>
+
+        <div class="platform-steps">
+          <div class="step-item">
+            <div class="step-title">
+              <span>STAP 1 — PERSOONLIJKE LOGIN &amp; GEHEIM PLATFORM</span>
+              <span class="step-badge">FASE 01 // HQ</span>
+            </div>
+            Omdat het stad meeluistert op normale kanalen, heeft onze inlichtingendienst een <strong>geheim digitaal platform</strong> opgezet. Elke agent krijgt een <strong>persoonlijke login en geheime 4-cijferige toegangscode</strong>. Zoek op dit hoofdkwartier zo snel mogelijk jouw verborgen persoonsdossier en log met je gsm in op het platform.
+          </div>
+
+          <div class="step-item">
+            <div class="step-title">
+              <span>STAP 2 — STAP-VOOR-STAP ONTHULLING VAN DE SABOTAGE-MISSIE</span>
+              <span class="step-badge">FASE 02 // LOCKED</span>
+            </div>
+            Uit veiligheidsoverwegingen staat er in deze brief <strong>niets</strong> over onze exacte sabotageplannen (<span class="redacted">████████████████████</span>). Pas wanneer iedereen op het geheime platform is ingelogd, worden de geclassificeerde mappen, doelwitten en instructies om het stad te dwarsbomen stap voor stap aan jullie vrijgegeven.
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Evaluatie-protocol (Winnaarscriteria) -->
+      <section class="protocol-win-banner">
+        <div class="protocol-win-top">
+          <span class="protocol-win-title">&gt;_ EVALUATIE-PROTOCOL GEHEIME INLICHTINGENDIENST</span>
+          <span class="protocol-win-badge">★ BESTE MATERIAAL + SNELSTE + BONUS = WINST</span>
+        </div>
+        <div>
+          Elke seconde telt — al vanaf het zoeken en ingeven van jullie persoonlijke login op HQ. De groep die vanavond <strong>het beste bewijsmateriaal verzamelt</strong>, <strong>het snelste handelt</strong> én onderweg <strong>de extra bonusopdrachten volbrengt</strong>, wint deze operatie en redt de toekomst van ons lokaal.
+        </div>
+      </section>
+
+      <!-- 6. Footer -->
+      <footer class="inv-footer">
+        <div>
+          <div class="auth-sig">Gamemaster Vicce // Director of Special Operations</div>
+          <div>HOOFDKWARTIER KAPUCIJNENSTRAAT 7 — WACHT OP HET SIGNAAL OM JE LOGIN TE ZOEKEN</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="barcode-bars"></div>
+          <div style="letter-spacing: 0.16em; margin-top: 0.5mm;">*KSA-FIELD-BRIEFING-2200*</div>
+        </div>
+      </footer>
+    </div>
+  </section>
+</body>
+</html>

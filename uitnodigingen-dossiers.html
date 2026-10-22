@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFICIËLE UITNODIGINGEN // Operatie Dossiers (A4 Print)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+      --ink: #0f172a;
+      --ink-muted: #475569;
+      --paper: #f8f6f0;
+      --paper-box: #f1ede2;
+      --border-dark: #1e293b;
+      --stamp-red: #b91c1c;
+      --accent-green: #047857;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body {
+      background: #0b0f17;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    /* Bedieningsbalk op scherm (verdwijnt automatisch op PDF / bij afdrukken) */
+    .screen-toolbar {
+      background: #0e141c;
+      border-bottom: 2px solid #10b981;
+      color: #e2e8f0;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .toolbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #10b981;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tb-btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tb-btn:hover {
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .tb-btn.primary {
+      background: #10b981;
+      color: #04130d;
+      border-color: #10b981;
+      font-weight: 700;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .screen-toolbar {
+        display: none !important;
+      }
+      .a4-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    /* A4 Pagina (210mm x 297mm) */
+    .a4-sheet {
+      width: 210mm;
+      height: 297mm;
+      background: #ffffff;
+      margin: 1.5rem auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      break-after: page;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    /* Elke helft van de A4 is exact 148.5mm hoog (A5 formaat) */
+    .a5-invitation {
+      width: 210mm;
+      height: 147mm;
+      padding: 8.5mm 11mm 7.5mm 11mm;
+      background: var(--paper);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Subtiel dossier-kader binnen elk A5 kaartje */
+    .dossier-frame {
+      border: 1.8px solid var(--border-dark);
+      height: 100%;
+      padding: 4.5mm 5.5mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(circle at 85% 20%, rgba(185, 28, 28, 0.03) 0%, transparent 45%),
+        linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 6mm 6mm, 6mm 6mm;
+    }
+
+    /* Dubbele hoekmarkeringen */
+    .dossier-frame::before {
+      content: "TOP SECRET // NOFORN // OPERATIE DOSSIERS — SECTOR 2200 HERENTALS";
+      position: absolute;
+      top: -2.3mm;
+      left: 6mm;
+      background: var(--paper);
+      padding: 0 2mm;
+      font-size: 6.5pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--stamp-red);
+    }
+
+    .dossier-frame::after {
+      content: "FORMULIER CIA-FBI-SF86 // VERNIETIG NA VELDOPERATIE";
+      position: absolute;
+      bottom: -2.2mm;
+      right: 6mm;
+      background: var(--paper);
+      padding: 0 2mm;
+      font-size: 6pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+    }
+
+    /* Watermerk op de achtergrond */
+    .watermark-seal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      width: 68mm;
+      height: 68mm;
+      opacity: 0.045;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Snijlijn in het midden van de A4 */
+    .cut-line {
+      width: 210mm;
+      height: 3mm;
+      background: #ffffff;
+      border-top: 1px dashed #64748b;
+      border-bottom: 1px dashed #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8mm;
+      font-size: 6.5pt;
+      color: #475569;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Bovenste rij: Agency Header + Zegel + Stempel */
+    .inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1.5px solid var(--border-dark);
+      padding-bottom: 2.5mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .agency-brand {
+      display: flex;
+      align-items: center;
+      gap: 3.2mm;
+    }
+
+    .agency-seal-svg {
+      width: 13.5mm;
+      height: 13.5mm;
+      flex-shrink: 0;
+    }
+
+    .agency-titles {
+      line-height: 1.2;
+    }
+
+    .agency-dept {
+      font-size: 6.5pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+    }
+
+    .agency-main {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5pt;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+
+    .agency-sub {
+      font-size: 6.8pt;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .header-stamps {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1mm;
+    }
+
+    .rubber-stamp {
+      border: 1.8px solid var(--stamp-red);
+      color: var(--stamp-red);
+      padding: 0.8mm 2.4mm;
+      font-size: 7.5pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transform: rotate(-2.5deg);
+      background: rgba(185, 28, 28, 0.05);
+    }
+
+    .doc-serial {
+      font-size: 6.5pt;
+      color: var(--ink-muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* Midden: Agent Profiel Tabel + NFC Sticker Scan-Zone */
+    .agent-profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 44mm;
+      gap: 3.5mm;
+      margin-top: 2.2mm;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.4pt;
+    }
+
+    .meta-table td {
+      padding: 1.1mm 1.8mm;
+      border: 1px solid #94a3b8;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .meta-table td.meta-label {
+      font-weight: 700;
+      color: var(--ink-muted);
+      width: 38%;
+      background: var(--paper-box);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 6.6pt;
+    }
+
+    .meta-table td.meta-val {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .agent-name-highlight {
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: #000000;
+      letter-spacing: 0.04em;
+      background: #fde047;
+      padding: 0.2mm 1.8mm;
+    }
+
+    /* NFC TAG STICKER ZONE (~2.2cm cirkel voor een 2cm NFC sticker + 'SCAN MIJ' eromheen) */
+    .nfc-zone-box {
+      border: 1.5px solid var(--border-dark);
+      background: #ffffff;
+      padding: 1.6mm 2mm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      position: relative;
+    }
+
+    .nfc-call-to-action {
+      background: var(--stamp-red);
+      color: #ffffff;
+      font-size: 6.6pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.6mm 1.8mm;
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    /* Exact 22mm cirkel (zodat een 20mm / 2cm NFC tag er precies in past!) */
+    .nfc-sticker-circle {
+      width: 22mm;
+      height: 22mm;
+      border-radius: 50%;
+      border: 1.5px dashed #0f172a;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 1mm 0;
+      position: relative;
+      box-shadow: 0 0 0 1.2mm rgba(185, 28, 28, 0.08);
+    }
+
+    .nfc-sticker-circle::before {
+      content: "((( • )))";
+      font-size: 6.5pt;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.05em;
+    }
+
+    .nfc-sticker-circle::after {
+      content: "NFC 2CM";
+      font-size: 4.8pt;
+      color: #cbd5e1;
+      letter-spacing: 0.08em;
+      margin-top: 0.4mm;
+    }
+
+    .nfc-sub-label {
+      font-size: 5.6pt;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: 0.05em;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    /* Briefing tekst met gecensureerde balkjes */
+    .briefing-box {
+      margin-top: 2.2mm;
+      border: 1px solid var(--border-dark);
+      background: rgba(255, 255, 255, 0.72);
+      padding: 2.4mm 3.2mm;
+      font-size: 7.3pt;
+      line-height: 1.42;
+      color: var(--ink);
+      position: relative;
+      z-index: 2;
+    }
+
+    .briefing-header {
+      font-size: 6.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--stamp-red);
+      margin-bottom: 1mm;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .briefing-box p {
+      margin-bottom: 1.4mm;
+    }
+
+    .briefing-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .redacted {
+      background: #0f172a;
+      color: #0f172a;
+      padding: 0 1.2mm;
+      border-radius: 1px;
+      user-select: none;
+      font-size: 6.8pt;
+    }
+
+    /* Onderste strook: Autorisatie, Persoonlijke Code & Barcode */
+    .inv-footer {
+      margin-top: 2mm;
+      padding-top: 2mm;
+      border-top: 1.2px dashed var(--border-dark);
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.85fr;
+      gap: 3mm;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth-block {
+      font-size: 6.3pt;
+      line-height: 1.3;
+      color: var(--ink-muted);
+    }
+
+    .auth-sig {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8.2pt;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: 0.03em;
+    }
+
+    .code-clearance-box {
+      border: 1.4px solid var(--border-dark);
+      background: #ffffff;
+      padding: 1.4mm 2.2mm;
+      text-align: center;
+    }
+
+    .code-box-label {
+      font-size: 5.8pt;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--stamp-red);
+      text-transform: uppercase;
+      margin-bottom: 0.6mm;
+    }
+
+    .code-box-value {
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .barcode-block {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.6mm;
+    }
+
+    .barcode-bars {
+      height: 7.5mm;
+      width: 36mm;
+      background: repeating-linear-gradient(
+        90deg,
+        #0f172a 0px,
+        #0f172a 1.5px,
+        transparent 1.5px,
+        transparent 3px,
+        #0f172a 3px,
+        #0f172a 6px,
+        transparent 6px,
+        transparent 8px,
+        #0f172a 8px,
+        #0f172a 9px,
+        transparent 9px,
+        transparent 11.5px
+      );
+    }
+
+    .barcode-num {
+      font-size: 5.8pt;
+      letter-spacing: 0.16em;
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <div>
+      <div class="toolbar-title">🖨️ A4 Geheime Dossiers Generator (26 Spelers op 13 A4'tjes)</div>
+      <div style="font-size: 0.8rem; color: #94a3b8;">
+        2 spelers per A4 met kniplijn, inclusief ieders persoonlijke code en 2cm NFC-cirkel. Druk op <strong>Print / Opslaan als PDF</strong>.
+      </div>
+    </div>
+    <div class="toolbar-actions">
+      <button type="button" id="toggle-code-btn" class="tb-btn">
+        🔑 Pincode ZICHTBAAR (Klik om te verbergen)
+      </button>
+      <button type="button" id="toggle-mode-btn" class="tb-btn">
+        📄 Modus: 2 Verschillende Spelers per A4 (13 pag.)
+      </button>
+      <button type="button" onclick="window.print()" class="tb-btn primary">
+        🖨️ Print / Opslaan als PDF
+      </button>
+    </div>
+  </div>
+
+  <div id="sheets-container"></div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const container = document.getElementById("sheets-container");
+    const toggleCodeBtn = document.getElementById("toggle-code-btn");
+    const toggleModeBtn = document.getElementById("toggle-mode-btn");
+
+    // Standaard: toon direct de persoonlijke pincode van elke speler op zijn/haar kaart
+    let showSecretCode = true;
+    // Standaard: 2 verschillende spelers op 1 A4 (13 pagina's totaal om papier te besparen)
+    let duplicatePerA4 = false;
+
+    constDIVISIONS = [
+      "CIA // SPECIAL ACTIVITIES DIVISION (SAD)",
+      "FBI // COUNTERINTELLIGENCE DIVISION (CD-4)",
+      "NSA // SIGNALS INTELLIGENCE DIRECTORATE (SIGINT)",
+      "ADIV // ALGEMENE DIENST INLICHTINGEN & VEILIGHEID",
+      "MI6 // SECRET INTELLIGENCE SERVICE — FIELD OPS",
+      "NATO // CLANDESTINE HUMINT TASKFORCE 2200"
+    ];
+
+    const CODENAMES = [
+      "NIGHTHAWK", "BLACKBRIAR", "TREADSTONE", "SENTINEL", "VALKYRIE",
+      "GLASS-HOUSE", "ECLIPSE", "IRON-GATE", "WINTER-FOX", "SHADOW-NET",
+      "SPECTRE", "OMEGA-7", "SILVER-WOLF", "RED-MERCURY", "COBALT"
+    ];
+
+    function buildInvitationHtml(speler, copyNum) {
+      const nrInt = parseInt(speler.dossierNr, 10) || 1;
+      const division = constDIVISIONS[(nrInt - 1) % constDIVISIONS.length];
+      const codename = CODENAMES[(nrInt - 1) % CODENAMES.length];
+      const clearanceSerial = `CIA-2200-HR-${speler.dossierNr}-${1000 + nrInt * 37}`;
+      const codeDisplay = showSecretCode
+        ? speler.code
+        : "[ &nbsp;&nbsp;•&nbsp;&nbsp;•&nbsp;&nbsp;•&nbsp;&nbsp;•&nbsp;&nbsp; ]";
+
+      return `
+        <article class="a5-invitation">
+          <div class="dossier-frame">
+            <!-- Achtergrond Zegel Watermerk -->
+            <svg class="watermark-seal" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="46" stroke="#0f172a" stroke-width="3"/>
+              <circle cx="50" cy="50" r="38" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3 2"/>
+              <polygon points="50,12 59,38 86,38 64,54 72,81 50,65 28,81 36,54 14,38 41,38" stroke="#0f172a" stroke-width="2" fill="none"/>
+              <circle cx="50" cy="50" r="14" stroke="#0f172a" stroke-width="2"/>
+            </svg>
+
+            <!-- 1. Header -->
+            <header class="inv-header">
+              <div class="agency-brand">
+                <svg class="agency-seal-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="32" cy="32" r="30" stroke="#0f172a" stroke-width="2.5" fill="#f1ede2"/>
+                  <circle cx="32" cy="32" r="24" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="2 2"/>
+                  <path d="M32 10 L37 25 L52 25 L40 34 L44 49 L32 40 L20 49 L24 34 L12 25 L27 25 Z" fill="#0f172a"/>
+                  <circle cx="32" cy="32" r="6" fill="#f8f6f0" stroke="#0f172a" stroke-width="1.5"/>
+                </svg>
+                <div class="agency-titles">
+                  <div class="agency-dept">${division}</div>
+                  <div class="agency-main">PERSOONLIJK VELDDOSSIER #${speler.dossierNr}</div>
+                  <div class="agency-sub">OPERATIE DOSSIERS // SECTOR 2200 HERENTALS (BELGIË)</div>
+                </div>
+              </div>
+
+              <div class="header-stamps">
+                <div class="rubber-stamp">TOP SECRET // EYES ONLY</div>
+                <div class="doc-serial">DOC-REF: ${clearanceSerial} // EX. #0${copyNum}</div>
+              </div>
+            </header>
+
+            <!-- 2. Agent Profiel & Biometrie -->
+            <section class="agent-profile-grid">
+              <table class="meta-table">
+                <tr>
+                  <td class="meta-label">Opgeroepen Agent</td>
+                  <td class="meta-val">
+                    <span class="agent-name-highlight">AGENT ${speler.naam.toUpperCase()}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Dossier &amp; Codenaam</td>
+                  <td class="meta-val">DOSSIER #${speler.dossierNr} // PROJECT "${codename}"</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Hoofdkwartier (HQ)</td>
+                  <td class="meta-val">KAPUCIJNENSTRAAT 7, 2200 HERENTALS</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Satelliet-Uplink</td>
+                  <td class="meta-val">SENTINEL-4B // FREQ 148.925 MHz (51°10'48"N 04°49'46"E)</td>
+                </tr>
+                <tr>
+                  <td class="meta-label">Operatie-Status</td>
+                  <td class="meta-val" style="color: #b91c1c;">FASE 1: STRIKT INDIVIDUEEL [IEDER VOOR ZICH]</td>
+                </tr>
+              </table>
+
+              <div class="nfc-zone-box">
+                <div class="nfc-call-to-action">📲 SCAN MIJ MET GSM</div>
+                <div class="nfc-sticker-circle"></div>
+                <div class="nfc-sub-label">HOUD TELEFOON HIER TEGEN<br/>VOOR DIGITAAL DOSSIER</div>
+              </div>
+            </section>
+
+            <!-- 3. Officiële Briefing & Veldinstructie op het Hoofdkwartier -->
+            <section class="briefing-box">
+              <div class="briefing-header">
+                <span>&gt;_ GECLASSIFICEERD VELDDOSSIER // GEVONDEN OP HOOFDKWARTIER</span>
+                <span>PRIORITEIT: ALFA-1</span>
+              </div>
+              <p>
+                Goed werk <strong>Agent ${speler.naam}</strong> — u heeft uw verborgen dossier op het Hoofdkwartier (<strong>Kapucijnenstraat 7</strong>) gelokaliseerd. Op last van het <strong>Joint Intelligence Command (Langley / Brussel)</strong> en onderschepte NSA-satellietbeelden (zaaknr. <span class="redacted">██████████</span>) bent u nu officieel geactiveerd in <strong>Sector 2200 Herentals</strong>.
+              </p>
+              <p>
+                <strong>DIRECTE ACTIE VEREIST (OM TER EERST):</strong> Scan onmiddellijk de <strong>NFC-chip</strong> hiernaast met uw smartphone om het geheime portaal te openen en voer uw <strong>persoonlijke toegangscode (${showSecretCode ? speler.code : "zie onderaan"})</strong> zo snel mogelijk in! Wie zijn dossier als eerste ontgrendelt, pakt de meeste punten op het live scorebord.
+              </p>
+              <p>
+                <strong>STRIKTE GEHEIMHOUDING:</strong> Dit is voorlopig ieder voor zich. Laat de verstopte dossiers van andere agenten liggen! Pas zodra <strong>elke aanwezige veldagent</strong> zijn eigen dossier heeft gevonden en zijn code heeft ingevoerd, geeft de satelliet Fase 2 (<span class="redacted">████████████</span>) en de doellocaties vrij.
+              </p>
+            </section>
+
+            <!-- 4. Onderste balk: Handtekening, Codevak & Barcode -->
+            <footer class="inv-footer">
+              <div class="auth-block">
+                <div>GEAUTORISEERD DOOR HOOFDKWARTIER:</div>
+                <div class="auth-sig">Gamemaster Vicce // Director HQ</div>
+                <div>CLEARANCE LEVEL 4 — GEEN KOPIEËN TOEGESTAAN</div>
+              </div>
+
+              <div class="code-clearance-box">
+                <div class="code-box-label">JOUW PERSOONLIJKE CODE (#${speler.dossierNr})</div>
+                <div class="code-box-value">${codeDisplay}</div>
+              </div>
+
+              <div class="barcode-block">
+                <div class="barcode-bars"></div>
+                <div class="barcode-num">*${clearanceSerial}*</div>
+              </div>
+            </footer>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderSheets() {
+      container.innerHTML = "";
+      const spelers = SPEL_CONFIG.spelers || [];
+
+      if (duplicatePerA4) {
+        // 26 A4'tjes: op elke A4 staat 2x dezelfde uitnodiging van die speler
+        spelers.forEach((speler) => {
+          const sheet = document.createElement("section");
+          sheet.className = "a4-sheet";
+          sheet.innerHTML = `
+            ${buildInvitationHtml(speler, 1)}
+            <div class="cut-line">
+              <span>✂ SNIJLIJN // HIER KNIPPEN</span>
+              <span>DOSSIER #${speler.dossierNr} — AGENT ${speler.naam.toUpperCase()} (2X)</span>
+              <span>HIER KNIPPEN // SNIJLIJN ✂</span>
+            </div>
+            ${buildInvitationHtml(speler, 2)}
+          `;
+          container.appendChild(sheet);
+        });
+      } else {
+        // 13 A4'tjes: 2 verschillende spelers per A4
+        for (let i = 0; i < spelers.length; i += 2) {
+          const s1 = spelers[i];
+          const s2 = spelers[i + 1] || spelers[i];
+          const sheet = document.createElement("section");
+          sheet.className = "a4-sheet";
+          sheet.innerHTML = `
+            ${buildInvitationHtml(s1, 1)}
+            <div class="cut-line">
+              <span>✂ SNIJLIJN // HIER KNIPPEN</span>
+              <span>DOSSIER #${s1.dossierNr} (${s1.naam.toUpperCase()}) &amp; DOSSIER #${s2.dossierNr} (${s2.naam.toUpperCase()})</span>
+              <span>HIER KNIPPEN // SNIJLIJN ✂</span>
+            </div>
+            ${buildInvitationHtml(s2, 1)}
+          `;
+          container.appendChild(sheet);
+        }
+      }
+    }
+
+    toggleCodeBtn.addEventListener("click", () => {
+      showSecretCode = !showSecretCode;
+      toggleCodeBtn.textContent = showSecretCode
+        ? "🔑 Pincode ZICHTBAAR op kaart (Klik om te verbergen)"
+        : "🔑 Toon/Verberg Pincode op Kaart";
+      renderSheets();
+    });
+
+    toggleModeBtn.addEventListener("click", () => {
+      duplicatePerA4 = !duplicatePerA4;
+      toggleModeBtn.textContent = duplicatePerA4
+        ? "📄 Modus: 2x Dezelfde Speler per A4 (26 pag.)"
+        : "📄 Modus: 2 Verschillende Spelers per A4 (13 pag.)";
+      renderSheets();
+    });
+
+    renderSheets();
+  </script>
+</body>
+</html>
