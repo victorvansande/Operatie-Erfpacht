@@ -363,35 +363,88 @@ const ScoreService = (() => {
     });
   }
 
-  function playIntelChime(category) {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const now = ctx.currentTime;
-      let tones = [784, 987.77, 1174.66];
-      if (category === "alert") {
-        tones = [880, 587.33, 880, 587.33];
-      } else if (category === "bonus") {
-        tones = [523.25, 659.25, 783.99, 1046.50];
+  let sharedAudioContext = null;
+  function getSharedAudioContext() {
+    if (!sharedAudioContext) {
+      const AudioClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioClass) sharedAudioContext = new AudioClass();
+    }
+    if (sharedAudioContext && sharedAudioContext.state === "suspended") {
+      sharedAudioContext.resume().catch(() => {});
+    }
+    return sharedAudioContext;
+  }
+
+  // Ontgrendel de audio-context direct bij de allereerste aanraking/klik van de speler
+  if (typeof window !== "undefined") {
+    const unlockAudio = () => {
+      const ctx = getSharedAudioContext();
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume().catch(() => {});
       }
-      tones.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now + idx * 0.11);
-        gain.gain.setValueAtTime(0.08, now + idx * 0.11);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.11);
-        osc.stop(now + idx * 0.11 + 0.25);
+      ["click", "touchstart", "keydown"].forEach((evt) => {
+        window.removeEventListener(evt, unlockAudio);
       });
+    };
+    ["click", "touchstart", "keydown"].forEach((evt) => {
+      window.addEventListener(evt, unlockAudio, { passive: true });
+    });
+  }
+
+  function playIntelChime(category) {
+    // 1. Speel het authentieke militaire radio-alert audiobestand af
+    try {
+      const isSub =
+        typeof window !== "undefined" &&
+        window.location.pathname.includes("/spelers/");
+      const audioUrl = isSub ? "../audio/intel-alert.wav" : "audio/intel-alert.wav";
+      const sound = new Audio(audioUrl);
+      sound.volume = 1.0;
+      sound.play().catch(() => {});
     } catch (_) {}
 
+    // 2. Synthetiseer een luid, doordringend en thematisch militair belsignaal via Web Audio API
+    try {
+      const ctx = getSharedAudioContext();
+      if (ctx) {
+        if (ctx.state === "suspended") ctx.resume().catch(() => {});
+        const now = ctx.currentTime;
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.45, now);
+        masterGain.connect(ctx.destination);
+
+        let tones = [880, 1174.66, 1479.98, 1760];
+        let waveType = "triangle";
+
+        if (category === "alert") {
+          // Luid tweetonig noodsignaal
+          tones = [1396.91, 880, 1396.91, 880, 1567.98];
+          waveType = "sawtooth";
+        } else if (category === "bonus") {
+          // Triomfantelijke missie-fanfare
+          tones = [659.25, 783.99, 1046.5, 1318.51, 1567.98];
+          waveType = "triangle";
+        }
+
+        tones.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = waveType;
+          osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+          gain.gain.setValueAtTime(0.4, now + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.22);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.25);
+        });
+      }
+    } catch (_) {}
+
+    // 3. Sterk mobiel trillingspatroon (tactisch dubbel-alarm)
     try {
       if (navigator.vibrate) {
-        navigator.vibrate([160, 80, 160, 80, 300]);
+        navigator.vibrate([220, 90, 220, 90, 400, 100, 400]);
       }
     } catch (_) {}
   }
