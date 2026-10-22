@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ENVELOPPE VENSTER KAARTJES (11cm x 4cm) // Operatie Erfpacht</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --card-w: 110mm;
+      --card-h: 40mm;
+      --card-radius: 8mm;
+      --ink: #0f172a;
+      --ink-muted: #475569;
+      --stamp-red: #b91c1c;
+      --amber: #d97706;
+      --paper-bg: #ffffff;
+      --paper-border: #0f172a;
+      --accent: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Toolbar (alleen zichtbaar op scherm) */
+    .screen-toolbar {
+      background: #0b0f17;
+      border-bottom: 2px solid var(--amber);
+      color: #e2e8f0;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .toolbar-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #f59e0b;
+      letter-spacing: 0.04em;
+    }
+
+    .toolbar-badge {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--amber);
+      color: #fde047;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tb-btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+      font-family: 'Space Grotesk', sans-serif;
+      text-decoration: none;
+    }
+
+    .tb-btn:hover {
+      background: #334155;
+      border-color: #64748b;
+    }
+
+    .tb-btn-primary {
+      background: var(--amber);
+      color: #000;
+      border-color: #f59e0b;
+    }
+
+    .tb-btn-primary:hover {
+      background: #f59e0b;
+      color: #000;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+    }
+
+    /* Uitleg banner op scherm */
+    .screen-intro {
+      max-width: 1200px;
+      margin: 1.25rem auto 0;
+      padding: 0 1.5rem;
+      width: 100%;
+    }
+
+    .intro-box {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid #334155;
+      border-left: 4px solid var(--amber);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .intro-box strong {
+      color: #f59e0b;
+    }
+
+    /* Print & Screen Layout Container */
+    .print-sheet-container {
+      flex: 1;
+      max-width: 1300px;
+      margin: 1.5rem auto 3rem;
+      padding: 0 1.5rem;
+      width: 100%;
+    }
+
+    /* A4 Landscape Sheets */
+    .a4-landscape-page {
+      background: #ffffff;
+      color: #0f172a;
+      width: 297mm;
+      min-height: 210mm;
+      margin: 0 auto 2.5rem;
+      padding: 10mm 12mm;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.7);
+      border-radius: 4px;
+      position: relative;
+      box-sizing: border-box;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-header-mark {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 2mm;
+      margin-bottom: 3mm;
+      border-bottom: 0.5mm dashed #cbd5e1;
+      font-size: 7pt;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 110mm);
+      grid-auto-rows: 40mm;
+      gap: 5mm 10mm;
+      justify-content: center;
+      align-content: start;
+    }
+
+    /* HET VENSTER-KAARTJE (EXACT 110mm x 40mm) */
+    .window-card-cell {
+      position: relative;
+      width: 110mm;
+      height: 40mm;
+    }
+
+    /* Snijlijnen / Crop marks buiten het kaartje */
+    .cut-guide {
+      position: absolute;
+      inset: -1.5mm;
+      border: 0.3mm dashed rgba(148, 163, 184, 0.7);
+      border-radius: calc(var(--card-radius) + 1.5mm);
+      pointer-events: none;
+    }
+
+    .cut-label {
+      position: absolute;
+      top: -3.5mm;
+      right: 0;
+      font-size: 5pt;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Het echte kaartje dat door het venster zichtbaar is */
+    .window-badge {
+      width: 110mm;
+      height: 40mm;
+      background: var(--paper-bg);
+      border: 0.6mm solid var(--paper-border);
+      border-radius: var(--card-radius);
+      box-sizing: border-box;
+      padding: 2.2mm 3.2mm 2mm 3.5mm;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 0.25mm rgba(15, 23, 42, 0.2);
+    }
+
+    /* Optionele vintage manila stijl */
+    body.theme-manila .window-badge {
+      background: #faf6eb;
+      --paper-bg: #faf6eb;
+      box-shadow: inset 0 0 10mm rgba(217, 119, 6, 0.08);
+    }
+
+    /* Subtiel watermerk / achtergrondpatroon */
+    .badge-watermark {
+      position: absolute;
+      right: 18mm;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32mm;
+      height: 32mm;
+      opacity: 0.045;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 1. Header balk (Top) */
+    .badge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      border-bottom: 0.3mm solid rgba(15, 23, 42, 0.35);
+      padding-bottom: 1mm;
+      margin-bottom: 0.5mm;
+    }
+
+    .badge-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5mm;
+    }
+
+    .badge-shield-icon {
+      width: 3.5mm;
+      height: 3.5mm;
+      display: block;
+    }
+
+    .badge-agency-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.6pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .badge-header-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5mm;
+    }
+
+    .badge-stamp-classified {
+      border: 0.35mm solid var(--stamp-red);
+      color: var(--stamp-red);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 5.2pt;
+      font-weight: 900;
+      padding: 0.2mm 1.2mm;
+      letter-spacing: 0.08em;
+      border-radius: 0.8mm;
+      background: rgba(185, 28, 28, 0.06);
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    /* 2. Midden / Hoofddeel (Naam & Details) */
+    .badge-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      padding: 0.5mm 0;
+    }
+
+    .badge-agent-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .badge-agent-prefix {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.4pt;
+      font-weight: 700;
+      color: #475569;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.2mm;
+      display: flex;
+      align-items: center;
+      gap: 1.2mm;
+    }
+
+    .badge-agent-prefix .dossier-pill {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.1mm 1mm;
+      border-radius: 0.6mm;
+      font-weight: 800;
+      font-size: 5pt;
+    }
+
+    /* DE NAAM VAN DE PERSOON: GROOT, KRACHTIG, VOLLEDIG LEESBAAR DOOR HET PLASTIC */
+    .badge-agent-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15.5pt;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+      line-height: 1.05;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.6mm;
+    }
+
+    .badge-sub-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5mm;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.2pt;
+      color: #334155;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      color: #94a3b8;
+    }
+
+    .badge-lock-tag {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    /* Rechterkant: Barcode + Zegel */
+    .badge-right-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      margin-left: 2mm;
+      flex-shrink: 0;
+    }
+
+    .badge-barcode-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      background: #ffffff;
+      padding: 0.4mm 0.8mm;
+      border: 0.25mm solid #cbd5e1;
+      border-radius: 0.6mm;
+    }
+
+    .barcode-bars {
+      width: 22mm;
+      height: 6.5mm;
+      display: block;
+    }
+
+    .barcode-caption {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 4.6pt;
+      color: #0f172a;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      margin-top: 0.2mm;
+    }
+
+    /* 3. Footer balk (Onderaan) */
+    .badge-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      border-top: 0.3mm solid rgba(15, 23, 42, 0.35);
+      padding-top: 0.8mm;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5pt;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .badge-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+    }
+
+    .badge-footer-right {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      color: #0f172a;
+      background: rgba(15, 23, 42, 0.06);
+      padding: 0.2mm 1.2mm;
+      border-radius: 0.6mm;
+    }
+
+    /* Hoek-haakjes / Crosshairs voor high-tech look */
+    .badge-crosshair {
+      position: absolute;
+      width: 2mm;
+      height: 2mm;
+      border: 0.35mm solid #94a3b8;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .ch-tl { top: 1.5mm; left: 1.5mm; border-right: none; border-bottom: none; }
+    .ch-tr { top: 1.5mm; right: 1.5mm; border-left: none; border-bottom: none; }
+    .ch-bl { bottom: 1.5mm; left: 1.5mm; border-right: none; border-top: none; }
+    .ch-br { bottom: 1.5mm; right: 1.5mm; border-left: none; border-top: none; }
+
+    /* Venster-Simulator Modal (interactief op scherm) */
+    #simulator-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .sim-content {
+      background: #0f172a;
+      border: 2px solid var(--amber);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+      position: relative;
+    }
+
+    .envelope-mockup {
+      width: 100%;
+      height: 240px;
+      background: #002d72; /* Donkerblauw zoals op de foto van de gebruiker */
+      border-radius: 8px;
+      position: relative;
+      margin: 1.5rem 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 24px 32px;
+    }
+
+    .envelope-window-cutout {
+      width: 280px;
+      height: 102px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transform: scale(0.9);
+    }
+
+    /* Print media regels */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .screen-toolbar, .screen-intro, #simulator-modal {
+        display: none !important;
+      }
+      .print-sheet-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+      }
+      .a4-landscape-page {
+        margin: 0 !important;
+        padding: 8mm 10mm !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+        page-break-after: always !important;
+      }
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Toolbar -->
+  <header class="screen-toolbar">
+    <div class="toolbar-left">
+      <span style="font-size: 1.25rem;">✉️</span>
+      <div>
+        <div class="toolbar-title">Enveloppe Venster Kaartjes // Operatie Erfpacht</div>
+        <div style="font-size: 0.72rem; color: #94a3b8;">Formaat: exact 11cm x 4cm (met afgeronde hoeken) • 26 Spelers</div>
+      </div>
+      <span class="toolbar-badge">110mm &times; 40mm</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button type="button" class="tb-btn tb-btn-primary" onclick="window.print()">
+        🖨️ Afdrukken / Opslaan als PDF
+      </button>
+      <button type="button" class="tb-btn" onclick="toggleTheme()">
+        🎨 Stijl: <span id="theme-label">Wit Papier</span>
+      </button>
+      <button type="button" class="tb-btn" onclick="toggleGuides()">
+        ✂️ <span id="guide-label">Verberg</span> Snijlijnen
+      </button>
+      <button type="button" class="tb-btn" onclick="openSimulator('Daan', '01')">
+        🔍 Enveloppe Simulator
+      </button>
+      <a href="hq-dashboard.html" class="tb-btn">
+        &larr; HQ Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Screen Intro / Handleiding -->
+  <section class="screen-intro">
+    <div class="intro-box">
+      <strong>ℹ️ INSTRUCTIES VOOR DE ENVELOPPEN:</strong>
+      Elk kaartje hieronder is ontworpen op <strong>exact 11 cm breed op 4 cm hoog</strong> met een <strong>afronding van 8 mm</strong>. Dit past naadloos in het venster van de blauwe enveloppe.<br>
+      • <strong>Geheime PIN-bescherming:</strong> De persoonlijke pincode staat <em>niet</em> in het venster (zodat niemand vals kan kijken); er staat enkel <code>PIN INSIDE 🔒</code>. De echte pincode zit veilig binnenin de uitnodiging!<br>
+      • <strong>Print-instructie:</strong> Klik op <strong>"Afdrukken / Opslaan als PDF"</strong>, kies formaat <strong>A4 Liggend (Landscape)</strong> en schaal <strong>100% (Ware grootte / Geen marges aanpassen)</strong> zodat de 11cm &times; 4cm exact klopt.
+    </div>
+  </section>
+
+  <!-- Print Sheets Container -->
+  <main class="print-sheet-container" id="sheets-container">
+    <!-- Wordt via onderstaande script dynamisch gevuld met 8 kaartjes per A4 Landscape blad -->
+  </main>
+
+  <!-- Simulator Modal (om te testen hoe het er in de blauwe enveloppe uitziet) -->
+  <div id="simulator-modal" onclick="closeSimulator(event)">
+    <div class="sim-content" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 0.6rem;">
+        <h3 style="color: var(--amber); font-family: 'Space Grotesk', sans-serif;">✉️ Blauwe Enveloppe Venster-Simulator</h3>
+        <button type="button" onclick="closeSimulator()" style="background: none; border: none; color: #fff; font-size: 1.25rem; cursor: pointer;">&times;</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin: 0.75rem 0 0.25rem;">
+        Dit is een simulatie van hoe het kaartje eruit ziet achter het cellofaanvenster (11cm &times; 4cm) van jouw donkerblauwe enveloppe:
+      </p>
+
+      <div class="envelope-mockup">
+        <div class="envelope-window-cutout" id="sim-window-target">
+          <!-- Geselecteerde kaartje verschijnt hier -->
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #64748b;">
+        <span>Vensterafmeting: 110mm &times; 40mm (radius: 8mm)</span>
+        <button type="button" class="tb-btn tb-btn-primary" onclick="closeSimulator()">Sluiten</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const AGENCY_SEAL_SVG = `
+      <svg class="badge-shield-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 6V11C3 16.5 6.8 21.7 12 23C17.2 21.7 21 16.5 21 11V6L12 2Z" stroke="#0f172a" stroke-width="1.8" fill="#f8fafc"/>
+        <path d="M12 6L14 10H18L15 13L16 17L12 14.5L8 17L9 13L6 10H10L12 6Z" fill="#0f172a"/>
+      </svg>
+    `;
+
+    const FINGERPRINT_SVG = `
+      <svg class="badge-watermark" viewBox="0 0 100 100" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 20 C35 20 25 32 25 48 C25 68 35 85 50 85 C65 85 75 68 75 48 C75 32 65 20 50 20 Z" stroke-dasharray="8 6"/>
+        <path d="M50 30 C40 30 33 38 33 50 C33 64 40 76 50 76 C60 76 67 64 67 50 C67 38 60 30 50 30 Z" stroke-dasharray="6 4"/>
+        <path d="M50 40 C44 40 40 45 40 52 C40 60 44 68 50 68 C56 68 60 60 60 52 C60 45 56 40 50 40 Z"/>
+        <path d="M50 10 C28 10 15 26 15 48 C15 74 28 92 50 92 C72 92 85 74 85 48 C85 26 72 10 50 10 Z" stroke-dasharray="12 8"/>
+      </svg>
+    `;
+
+    function generateBarcodeSVG(codeStr) {
+      // Genereert een realistische vector-streepjescode
+      let rects = "";
+      let x = 0;
+      const pattern = [2, 1, 3, 1, 1, 2, 4, 1, 2, 3, 1, 2, 1, 3, 2, 1, 4, 1, 1, 2, 3, 1, 2, 1, 3, 1, 1, 4, 2, 1, 2, 3];
+      for (let i = 0; i < pattern.length; i++) {
+        const w = (pattern[i] * 0.45);
+        if (i % 2 === 0) {
+          rects += `<rect x="${x.toFixed(2)}" y="0" width="${w.toFixed(2)}" height="20" fill="#0f172a" />`;
+        }
+        x += w;
+      }
+      return `
+        <svg class="barcode-bars" viewBox="0 0 ${x.toFixed(2)} 20" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          ${rects}
+        </svg>
+      `;
+    }
+
+    function createBadgeHtml(p) {
+      const barcodeSvg = generateBarcodeSVG(p.dossierNr);
+      return `
+        <div class="window-card-cell" data-player-id="${p.id}">
+          <div class="cut-guide">
+            <span class="cut-label">✂ 110 &times; 40 mm</span>
+          </div>
+
+          <article class="window-badge" onclick="openSimulator('${p.naam.replace(/'/g, "\\'")}', '${p.dossierNr}')" title="Klik om te testen in de enveloppe-simulator">
+            ${FINGERPRINT_SVG}
+
+            <!-- Crosshairs -->
+            <div class="badge-crosshair ch-tl"></div>
+            <div class="badge-crosshair ch-tr"></div>
+            <div class="badge-crosshair ch-bl"></div>
+            <div class="badge-crosshair ch-br"></div>
+
+            <!-- 1. Header -->
+            <div class="badge-header">
+              <div class="badge-header-left">
+                ${AGENCY_SEAL_SVG}
+                <span class="badge-agency-title">TOP SECRET // OPERATIE ERFPACHT</span>
+              </div>
+              <div class="badge-header-right">
+                <span class="badge-stamp-classified">EYES ONLY</span>
+              </div>
+            </div>
+
+            <!-- 2. Body -->
+            <div class="badge-body">
+              <div class="badge-agent-info">
+                <div class="badge-agent-prefix">
+                  <span>VELDAGENT</span>
+                  <span class="dossier-pill">#${p.dossierNr}</span>
+                </div>
+                <div class="badge-agent-name">${p.naam}</div>
+                <div class="badge-sub-row">
+                  <span>CLEARANCE: LVL 4</span>
+                  <span class="badge-dot">•</span>
+                  <span>SECTOR: 2200-HRT</span>
+                  <span class="badge-dot">•</span>
+                  <span class="badge-lock-tag">PIN INSIDE 🔒</span>
+                </div>
+              </div>
+
+              <div class="badge-right-block">
+                <div class="badge-barcode-box">
+                  ${barcodeSvg}
+                  <span class="barcode-caption">HRT-${p.dossierNr}-CONFIDENTIAL</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Footer -->
+            <div class="badge-footer">
+              <div class="badge-footer-left">
+                <span>📍 DROPZONE: KAPUCIJNENSTRAAT 7</span>
+              </div>
+              <div class="badge-footer-right">
+                <span>🕶️ DRESSCODE: PET + BRIL</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      `;
+    }
+
+    // Render alle spelers in A4 Landscape pagina's (8 per blad)
+    function renderSheets() {
+      const container = document.getElementById("sheets-container");
+      if (!container) return;
+
+      const players = (typeof SPEL_CONFIG !== "undefined" && SPEL_CONFIG.spelers)
+        ? SPEL_CONFIG.spelers
+        : [
+            { id: "daan", naam: "Daan", dossierNr: "01", code: "1042" },
+            { id: "dominique", naam: "Dominique", dossierNr: "02", code: "2819" },
+            { id: "eline", naam: "Eline", dossierNr: "03", code: "3940" },
+            { id: "emile", naam: "Emile", dossierNr: "04", code: "4175" },
+            { id: "floris", naam: "Floris", dossierNr: "05", code: "5623" },
+            { id: "gino", naam: "Gino", dossierNr: "06", code: "6381" },
+            { id: "hanne", naam: "Hanne", dossierNr: "07", code: "7492" },
+            { id: "jassin", naam: "Jassin", dossierNr: "08", code: "8514" },
+            { id: "jules", naam: "Jules", dossierNr: "09", code: "9267" },
+            { id: "julie", naam: "Julie", dossierNr: "10", code: "1938" },
+            { id: "len", naam: "Len", dossierNr: "11", code: "2476" },
+            { id: "leon", naam: "Leon", dossierNr: "12", code: "3589" },
+            { id: "lex", naam: "Lex", dossierNr: "13", code: "4612" },
+            { id: "lotte", naam: "Lotte", dossierNr: "14", code: "5734" },
+            { id: "luna", naam: "Luna", dossierNr: "15", code: "6845" },
+            { id: "mart", naam: "Mart", dossierNr: "16", code: "7956" },
+            { id: "matthijs", naam: "Matthijs", dossierNr: "17", code: "8167" },
+            { id: "merlijn", naam: "Merlijn", dossierNr: "18", code: "9378" },
+            { id: "olivier", naam: "Olivier", dossierNr: "19", code: "1489" },
+            { id: "phebe", naam: "Phebe", dossierNr: "20", code: "2591" },
+            { id: "riet", naam: "Riet", dossierNr: "21", code: "3614" },
+            { id: "rik", naam: "Rik", dossierNr: "22", code: "4725" },
+            { id: "rosan", naam: "Rosan", dossierNr: "23", code: "5836" },
+            { id: "siebe", naam: "Siebe", dossierNr: "24", code: "6947" },
+            { id: "tobias", naam: "Tobias", dossierNr: "25", code: "7158" },
+            { id: "vicce", naam: "Vicce", dossierNr: "26", code: "8269" }
+          ];
+
+      // Voeg 2 blanco reservekaartjes toe voor eventuele extra gasten
+      const allCards = [...players, 
+        { id: "extra1", naam: "AGENT RECRUIT", dossierNr: "27", code: "0000" },
+        { id: "extra2", naam: "AGENT RECRUIT", dossierNr: "28", code: "0000" }
+      ];
+
+      const CARDS_PER_PAGE = 8;
+      const totalPages = Math.ceil(allCards.length / CARDS_PER_PAGE);
+
+      let html = "";
+      for (let pIdx = 0; pIdx < totalPages; pIdx++) {
+        const pageCards = allCards.slice(pIdx * CARDS_PER_PAGE, (pIdx + 1) * CARDS_PER_PAGE);
+
+        html += `
+          <div class="a4-landscape-page">
+            <div class="page-header-mark">
+              <span>★ OPERATIE ERFPACHT // UITNODIGINGSLABELS VOOR VENSTERENVELOPPE (110 &times; 40 MM)</span>
+              <span>BLAD ${pIdx + 1} VAN ${totalPages} // A4 LANDSCAPE // SCHAAL: 100% (WERKELIJKE GROOTTE)</span>
+            </div>
+            <div class="cards-grid">
+              ${pageCards.map((p) => createBadgeHtml(p)).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Toggle snijlijnen
+    let guidesVisible = true;
+    function toggleGuides() {
+      guidesVisible = !guidesVisible;
+      document.querySelectorAll(".cut-guide").forEach(g => {
+        g.style.display = guidesVisible ? "block" : "none";
+      });
+      document.getElementById("guide-label").textContent = guidesVisible ? "Verberg" : "Toon";
+    }
+
+    // Toggle vintage manila stijl
+    let isManila = false;
+    function toggleTheme() {
+      isManila = !isManila;
+      if (isManila) {
+        document.body.classList.add("theme-manila");
+        document.getElementById("theme-label").textContent = "Vintage Manila";
+      } else {
+        document.body.classList.remove("theme-manila");
+        document.getElementById("theme-label").textContent = "Wit Papier";
+      }
+    }
+
+    // Simulator functies
+    function openSimulator(name, dossierNr) {
+      const modal = document.getElementById("simulator-modal");
+      const target = document.getElementById("sim-window-target");
+      if (!modal || !target) return;
+
+      const dummyPlayer = { id: "sim", naam: name, dossierNr: dossierNr, code: "9999" };
+      target.innerHTML = createBadgeHtml(dummyPlayer);
+      modal.style.display = "flex";
+    }
+
+    function closeSimulator(e) {
+      const modal = document.getElementById("simulator-modal");
+      if (modal) modal.style.display = "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", renderSheets);
+  </script>
+</body>
+</html>
