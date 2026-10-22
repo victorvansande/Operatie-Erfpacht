@@ -1870,11 +1870,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <input
                   type="text"
                   class="admin-input loc-photo-caption"
-                  placeholder="Opmerking voor HQ (bv. hoofdopdracht of bonusopdracht)"
+                  placeholder="${loc.id === 'zandpoort' ? 'Beschrijving tagmark (bv. logo van onze groep)' : 'Opmerking voor HQ (bv. hoofdopdracht of bonusopdracht)'}"
                   style="margin-bottom: 0; flex: 1; min-width: 160px;"
                 />
                 <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; padding: 0.6rem 1rem;">
-                  Upload Bewijs in ${loc.naam}
+                  ${loc.uploadKnopTekst || `Upload Bewijs in ${loc.naam}`}
                 </button>
               </form>
               <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); margin-top: 0.45rem; min-height: 1.1rem;"></div>
@@ -1956,7 +1956,7 @@ document.addEventListener("DOMContentLoaded", () => {
           photoStatus.textContent = "Fout bij uploaden. Probeer opnieuw.";
         } finally {
           photoSubmit.disabled = false;
-          photoSubmit.textContent = `Upload Bewijs in ${loc.naam}`;
+          photoSubmit.textContent = loc.uploadKnopTekst || `Upload Bewijs in ${loc.naam}`;
         }
       });
 

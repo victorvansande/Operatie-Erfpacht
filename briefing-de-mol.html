@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCRIPT &amp; BRIEFING VOOR DE MOL // Operatie Erfpacht (Zandpoort)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap');
+
+    :root {
+      --ink: #0f172a;
+      --ink-muted: #475569;
+      --paper: #f8f6f0;
+      --paper-box: #f1ede2;
+      --border-dark: #1e293b;
+      --stamp-red: #b91c1c;
+      --accent-green: #047857;
+      --amber: #d97706;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    body {
+      background: #0b0f17;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    .screen-toolbar {
+      background: #0e141c;
+      border-bottom: 2px solid var(--amber);
+      color: #e2e8f0;
+      padding: 0.9rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .toolbar-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #f59e0b;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tb-btn {
+      background: var(--amber);
+      color: #000;
+      border: 1px solid #f59e0b;
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tb-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .screen-toolbar {
+        display: none !important;
+      }
+      .a4-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: var(--paper);
+      margin: 1.5rem auto;
+      padding: 8mm 10mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      page-break-after: always;
+    }
+
+    .dossier-frame {
+      border: 2.2px solid var(--border-dark);
+      min-height: 100%;
+      padding: 5mm 6mm;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        radial-gradient(circle at 85% 12%, rgba(217, 119, 6, 0.05) 0%, transparent 45%),
+        linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 6mm 6mm, 6mm 6mm;
+    }
+
+    .dossier-frame::before {
+      content: "STRIKT GEHEIM // INSTRUCTIEBRIEF VOOR DE INFILTRANT (DE MOL) — NIET VOOR SPELERS";
+      position: absolute;
+      top: -2.4mm;
+      left: 6mm;
+      background: var(--paper);
+      padding: 0 2.5mm;
+      font-size: 6.5pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--amber);
+    }
+
+    .dossier-frame::after {
+      content: "TELEFOON-PROTOCOL #144.80 // CONTACTPERSOON ZANDPOORT (0498 34 32 07)";
+      position: absolute;
+      bottom: -2.2mm;
+      right: 6mm;
+      background: var(--paper);
+      padding: 0 2.5mm;
+      font-size: 6.2pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ink-muted);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--border-dark);
+      padding-bottom: 4mm;
+      margin-bottom: 3.5mm;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3.5mm;
+    }
+
+    .agency-seal {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13.5pt;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .brand-text .sub {
+      font-size: 7pt;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 1mm;
+    }
+
+    .stamp-badge {
+      border: 2px solid var(--stamp-red);
+      color: var(--stamp-red);
+      padding: 1.5mm 3.5mm;
+      font-size: 7.5pt;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transform: rotate(-2deg);
+      background: rgba(185, 28, 28, 0.05);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2mm;
+      background: var(--paper-box);
+      border: 1.5px solid var(--border-dark);
+      padding: 2.5mm 3mm;
+      margin-bottom: 3.5mm;
+      font-size: 7.2pt;
+    }
+
+    .summary-cell .lbl {
+      font-size: 5.8pt;
+      font-weight: 800;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5mm;
+    }
+
+    .summary-cell .val {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .step-box {
+      background: #ffffff;
+      border: 1.5px solid var(--border-dark);
+      border-left: 4.5px solid var(--amber);
+      border-radius: 4px;
+      padding: 3mm 4mm;
+      margin-bottom: 3mm;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.8mm;
+    }
+
+    .step-tag {
+      font-size: 7.5pt;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--amber);
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+    }
+
+    .step-badge {
+      background: #fef3c7;
+      border: 1px solid #d97706;
+      color: #92400e;
+      font-size: 6.2pt;
+      font-weight: 700;
+      padding: 0.5mm 2mm;
+      border-radius: 3px;
+    }
+
+    .script-dialogue {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 4px;
+      padding: 2.5mm 3.5mm;
+      font-size: 7.8pt;
+      line-height: 1.45;
+      margin: 1.8mm 0;
+      border-left: 3px solid #38bdf8;
+    }
+
+    .script-dialogue strong {
+      color: #38bdf8;
+    }
+
+    .script-dialogue em {
+      color: #fde047;
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    .rule-bullet {
+      font-size: 7.2pt;
+      line-height: 1.4;
+      color: var(--ink-muted);
+      margin-top: 1mm;
+    }
+
+    .warning-box {
+      background: #fffbeb;
+      border: 1.5px dashed #d97706;
+      border-radius: 4px;
+      padding: 2.5mm 3.5mm;
+      font-size: 7pt;
+      line-height: 1.35;
+      color: #78350f;
+      margin-top: 2.5mm;
+    }
+
+    .doc-footer {
+      border-top: 1px solid var(--border-dark);
+      padding-top: 2.5mm;
+      margin-top: 2.5mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 6.2pt;
+      color: var(--ink-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .barcode {
+      display: flex;
+      gap: 1px;
+      height: 14px;
+      align-items: stretch;
+    }
+    .barcode span {
+      background: var(--ink);
+      width: 1.5px;
+    }
+    .barcode span.w { width: 3.5px; }
+    .barcode span.s { width: 1px; }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Toolbar (onzichtbaar bij print/PDF) -->
+  <div class="screen-toolbar">
+    <div>
+      <div class="toolbar-title">🕵️ HANDLEIDING &amp; SCRIPT: INFILTRANT "DE MOL"</div>
+      <div style="font-size: 0.8rem; color: #94a3b8;">Exclusieve instructiebrief voor de contactpersoon op nummer 0498 34 32 07</div>
+    </div>
+    <div style="display: flex; gap: 0.6rem; align-items: center;">
+      <button type="button" onclick="window.print()" class="tb-btn">🖨️ Print of Sla op als PDF</button>
+      <a href="hq-dashboard.html" class="tb-btn tb-btn-secondary">&larr; Terug naar HQ Dashboard</a>
+    </div>
+  </div>
+
+  <div class="a4-sheet">
+    <div class="dossier-frame">
+      <div>
+        <!-- Kop -->
+        <header class="header-row">
+          <div class="brand-wrap">
+            <svg class="agency-seal" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="30" stroke="#0f172a" stroke-width="2.5" fill="#f1ede2"/>
+              <circle cx="32" cy="32" r="24" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="2 2"/>
+              <path d="M32 10 L37 25 L52 25 L40 34 L44 49 L32 40 L20 49 L24 34 L12 25 L27 25 Z" fill="#0f172a"/>
+              <circle cx="32" cy="32" r="6" fill="#f8f6f0" stroke="#0f172a" stroke-width="1.5"/>
+            </svg>
+            <div class="brand-text">
+              <h1>Instructiedossier // "De Mol"</h1>
+              <div class="sub">HUMINT Infiltratiepost Jeugddienst // Sector Zandpoort</div>
+            </div>
+          </div>
+          <div class="stamp-badge">
+            TOP SECRET<br>EXCLUSIEF VOOR DE MOL
+          </div>
+        </header>
+
+        <!-- Samenvatting matrix -->
+        <div class="summary-grid">
+          <div class="summary-cell">
+            <div class="lbl">JOUW ROL IN HET SPEL</div>
+            <div class="val">Infiltrant Jeugddienst</div>
+          </div>
+          <div class="summary-cell">
+            <div class="lbl">JOUW GSM-NUMMER</div>
+            <div class="val" style="color: var(--amber); font-weight: 800;">0498 34 32 07</div>
+          </div>
+          <div class="summary-cell">
+            <div class="lbl">VEREIST CODEWOORD</div>
+            <div class="val" style="color: var(--stamp-red); font-weight: 800;">"DE DAKPANNEN LIGGEN LOS"</div>
+          </div>
+          <div class="summary-cell">
+            <div class="lbl">MISSIE VOOR SPELERS</div>
+            <div class="val">Krijt-Tagmark Zandpoort</div>
+          </div>
+        </div>
+
+        <p style="font-size: 7.2pt; line-height: 1.4; color: var(--ink-muted); margin-bottom: 3.5mm;">
+          <strong>BELANGRIJK:</strong> De spelers weten vooraf <em>niets</em> over krijt of een tagmark. Dit staat bewust nergens in hun dossier! Jij bent de enige die hen deze geheime veldopdracht mag geven wanneer ze jou zaterdagavond live opbellen vanaf de Zandpoort. Volg onderstaand stappenplan:
+        </p>
+
+        <!-- STAP 1 -->
+        <div class="step-box">
+          <div class="step-header">
+            <div class="step-tag">FASE 1: TELEFOON RINKELT (ONNOZEL &amp; WANFROUWS)</div>
+            <span class="step-badge">GEEN CODEWOORD = INHANGEN</span>
+          </div>
+          <p class="rule-bullet">
+            Neem op met een verstoorde of wantrouwige stem, alsof je gestoord wordt op een privénummer en niets van een spel weet:
+          </p>
+          <div class="script-dialogue">
+            <strong>Jij:</strong> "Hallo?... Ja hallo? Wie is dit? Waarom bel je mij op dit nummer?... Ik koop niets hoor, verkeerd verbonden!"
+          </div>
+          <p class="rule-bullet">
+            ⚠️ <strong>Regel:</strong> Zeg <em>niets</em> over KSA of de stad tot de spelers uitdrukkelijk het geheime codewoord uitspreken! Als ze aarzelen: <em>"Als je niets zinnigs te zeggen hebt, hang ik in!"</em>
+          </p>
+        </div>
+
+        <!-- STAP 2 -->
+        <div class="step-box">
+          <div class="step-header">
+            <div class="step-tag">FASE 2: CODEWOORD VALT ("DE DAKPANNEN LIGGEN LOS")</div>
+            <span class="step-badge">OMSCHAKELING NAAR SPION</span>
+          </div>
+          <p class="rule-bullet">
+            Zodra de speler <em>"De dakpannen liggen los"</em> zegt, val je 1 seconde doodstil. Verander direct van toon naar een zenuwachtige, fluisterende spion:
+          </p>
+          <div class="script-dialogue">
+            <strong>Jij:</strong> "...Wacht. Zeg dat nog eens?... <em>'De dakpannen liggen los'</em>?... Oef. Jullie zijn van HQ. Praat stil, ik zit niet alleen."
+          </div>
+        </div>
+
+        <!-- STAP 3 -->
+        <div class="step-box">
+          <div class="step-header">
+            <div class="step-tag">FASE 3: HET KORTE VERHAAL (DE COVER BIJ DE JEUGDDIENST)</div>
+            <span class="step-badge">THEMATISCHE SPANNING</span>
+          </div>
+          <div class="script-dialogue">
+            <strong>Jij:</strong> "Luister goed, ik heb amper batterij. Ik werk undercover binnen de jeugddienst van Herentals. De schepen en de burgemeester proberen de verkoopakte van het KSA-lokaal er vanavond koste wat het kost door te drukken voor 22u00.<br><br>
+            Ik kan ze van binnenuit saboteren op de komende jeugdraad en al hun geheime verslagen lekken... MAAR ik moet 100% zeker weten dat ik met échte, actieve veldagenten praat en niet met verklikkers van het stadhuis of luie spionnen die op hun gat blijven zitten!"
+          </div>
+        </div>
+
+        <!-- STAP 4 -->
+        <div class="step-box" style="border-left-color: var(--stamp-red);">
+          <div class="step-header">
+            <div class="step-tag" style="color: var(--stamp-red);">FASE 4: DE OPDRACHT (HET KRIJT-TAGMARK ONDER DE ZANDPOORT)</div>
+            <span class="step-badge" style="background:#fee2e2; border-color:#ef4444; color:#991b1b;">KERN VAN DE OPDRACHT</span>
+          </div>
+          <p class="rule-bullet">
+            Geef hen nu de exacte, concrete opdracht:
+          </p>
+          <div class="script-dialogue" style="border-left-color: var(--stamp-red);">
+            <strong>Jij:</strong> "Jullie staan nu aan de Zandpoort, toch? Bewijs het me.<br><br>
+            Jullie moeten nú ter plekke onder de boog van de Zandpoort met krijt een uniek, clandestien <em>'tagmark'</em> — een eigen geheim groepslogo of herkenningsembleem — aanbrengen op de grond of muur. Zorg dat het origineel is en duidelijk zichtbaar voor een geoefend oog.<br><br>
+            Ik passeer morgenochtend vroeg zélf onder de Zandpoort om mijn hond uit te laten en naar het stadhuis te fietsen. Pas als ik dat fysieke kenteken daar met eigen ogen in het krijt zie staan, weet ik dat jullie écht ter plekke waren en trek ik mijn mond open op het schepencollege!"
+          </div>
+        </div>
+
+        <!-- STAP 5 -->
+        <div class="step-box" style="border-left-color: var(--accent-green);">
+          <div class="step-header">
+            <div class="step-tag" style="color: var(--accent-green);">FASE 5: HET BEWIJS VOOR HQ &amp; HAASTIG INHANGEN</div>
+            <span class="step-badge" style="background:#dcfce7; border-color:#10b981; color:#065f46;">UPLOAD IN HET PORTAAL</span>
+          </div>
+          <div class="script-dialogue" style="border-left-color: var(--accent-green);">
+            <strong>Jij:</strong> "En nog één ding: maak nú meteen een haarscherpe foto van jullie aangebrachte tagmark en upload die direct via jullie dossier op het portaal naar Gamemaster Vicce op HQ! Zo kan HQ controleren of jullie embleem overeenkomt met wat ik morgenochtend aantref.<br><br>
+            Wacht... er komt iemand de gang op... Ik moet inhangen. Zorg dat dat tagmark er staat! Succes!"<br>
+            <em>*KLIK &mdash; Hang resoluut op*</em>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          💡 <strong>EXTRA TIPS VOOR DE MOL:</strong><br>
+          &bull; Er bellen ongeveer <strong>4 verschillende groepen</strong> op verschillende tijdstippen tussen 19u30 en 21u30. Speel bij elke groep hetzelfde intense spelletje!<br>
+          &bull; Als een groep zegt dat ze geen stoepkrijt bij hebben: <em>"Dan vind je maar een zachte steen, baksteenpuin of leen je krijt in de straat. Echte spionnen improviseren!"</em><br>
+          &bull; Gamemaster Vicce ziet alle geüploade tagmark-foto's live binnenkomen op het HQ Dashboard.
+        </div>
+      </div>
+
+      <!-- Voetnoot -->
+      <footer class="doc-footer">
+        <div>OPERATIE ERFPACHT 2200 // DOSSIER DE MOL // AUTORISATIE GAMEMASTER VICCE</div>
+        <div class="barcode">
+          <span class="w"></span><span class="s"></span><span></span><span class="w"></span><span></span><span class="s"></span><span class="w"></span><span></span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -121,11 +121,12 @@ const SPEL_CONFIG = {
       bonusOpdracht: "Bonusopdracht (+50 pt): Neem aan de Zandpoort een undercover spionagefoto waarop jullie groep onherkenbaar gecamoufleerd opgaat in het straatbeeld terwijl jullie bellen met de mol! (De groep met het beste materiaal, de snelste tijd én volbrachte bonusopdrachten wint!)",
       vereistBewijs: [
         "Telefonisch contact met de mol (0498 34 32 07) met het juiste codewoord",
-        "Uitvoering van de veld-opdracht die de mol jullie aan de telefoon geeft",
-        "Upload hieronder jullie bewijsfoto of -video van de uitgevoerde mol-opdracht"
+        "Uitvoering van de geheime opdracht die de mol jullie aan de telefoon dicteert",
+        "Upload hieronder jullie officiële tagmark-bewijsmateriaal voor Gamemaster HQ"
       ],
-      uploadTitel: "📷🎬 UPLOADZONE ZANDPOORT // BEWIJS VOOR DE MOL & HQ",
-      uploadHint: "Upload hier de foto of video van de opdracht die jullie van de mol hebben gekregen (en jullie undercover bonusfoto).",
+      uploadTitel: "📷 BEWIJSMATERIAAL // TAGMARK UPLOADZONE",
+      uploadHint: "Upload hier het officiële tagmark-bewijs na telefonisch contact met de infiltrant.",
+      uploadKnopTekst: "Upload Tagmark naar HQ",
       gelektDocument: {
         titel: "GELEKT DOSSIER #01/06 // INTERNE FICHE JEUGDDIENST",
         stempel: "BRON: HUMINT-MOL // JEUGDRAAD",
