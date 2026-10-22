@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPELLEIDER CHEAT SHEET // Operatie Erfpacht (Victor HQ)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap');
+
+    :root {
+      --ink: #0f172a;
+      --ink-muted: #334155;
+      --paper: #f8fafc;
+      --border-dark: #0f172a;
+      --gold: #b45309;
+      --gold-bg: #fef3c7;
+      --red: #b91c1c;
+      --red-bg: #fee2e2;
+      --blue: #1d4ed8;
+      --blue-bg: #dbeafe;
+      --green: #047857;
+      --green-bg: #d1fae5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm 8mm;
+    }
+
+    body {
+      background: #0b0f17;
+      color: var(--ink);
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 8.5pt;
+      line-height: 1.3;
+    }
+
+    .screen-toolbar {
+      background: #0e141c;
+      border-bottom: 2px solid #f59e0b;
+      color: #e2e8f0;
+      padding: 0.75rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .toolbar-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #f59e0b;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tb-actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .tb-btn {
+      background: #f59e0b;
+      color: #000;
+      border: 1px solid #d97706;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .tb-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .screen-toolbar {
+        display: none !important;
+      }
+      .page-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        page-break-after: always;
+        height: auto;
+      }
+      .page-sheet:last-child {
+        page-break-after: avoid;
+      }
+    }
+
+    .page-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      margin: 1.5rem auto;
+      padding: 8mm 10mm;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      border: 1px solid #cbd5e1;
+    }
+
+    /* HEADER BLOCK */
+    .cheat-header {
+      border: 2px solid var(--border-dark);
+      background: #f8fafc;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .cheat-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .doc-classification {
+      display: inline-block;
+      background: var(--red);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 7pt;
+      padding: 1px 5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      align-self: flex-start;
+      border-radius: 2px;
+    }
+
+    .sheet-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .sheet-subtitle {
+      font-size: 7.5pt;
+      color: var(--ink-muted);
+      font-weight: 600;
+    }
+
+    .master-credentials-pill {
+      background: #0f172a;
+      color: #fbbf24;
+      border: 1px solid #f59e0b;
+      padding: 5px 8px;
+      text-align: right;
+      font-size: 7.5pt;
+      border-radius: 4px;
+    }
+
+    .master-code-val {
+      font-size: 9.5pt;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.05em;
+    }
+
+    /* SECTION BOX */
+    .sec-box {
+      border: 1.5px solid var(--border-dark);
+      margin-bottom: 8px;
+      background: #ffffff;
+    }
+
+    .sec-head {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 3px 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8.5pt;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sec-head.gold {
+      background: #92400e;
+      color: #fef3c7;
+    }
+
+    .sec-head.red {
+      background: #991b1b;
+      color: #fee2e2;
+    }
+
+    .sec-head.blue {
+      background: #1e3a8a;
+      color: #dbeafe;
+    }
+
+    .sec-body {
+      padding: 6px 8px;
+    }
+
+    /* TIMELINE FLOW */
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .flow-step {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      padding: 5px 6px;
+      border-radius: 3px;
+    }
+
+    .flow-step-time {
+      font-weight: 800;
+      font-size: 7.5pt;
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 3px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 2px;
+    }
+
+    .flow-step-title {
+      font-weight: 800;
+      font-size: 8pt;
+      margin-bottom: 2px;
+      color: #0f172a;
+    }
+
+    .flow-step ul {
+      list-style: none;
+      padding-left: 0;
+      font-size: 7pt;
+      color: var(--ink-muted);
+    }
+
+    .flow-step li {
+      margin-bottom: 2px;
+      padding-left: 8px;
+      position: relative;
+    }
+
+    .flow-step li::before {
+      content: "▪";
+      position: absolute;
+      left: 0;
+      color: #64748b;
+    }
+
+    /* SECTORS TABLE */
+    .table-sectors {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2pt;
+    }
+
+    .table-sectors th {
+      background: #e2e8f0;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: left;
+      padding: 3px 5px;
+      border: 1px solid #94a3b8;
+      text-transform: uppercase;
+      font-size: 6.8pt;
+    }
+
+    .table-sectors td {
+      padding: 4px 5px;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+    }
+
+    .table-sectors tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .badge-code {
+      display: inline-block;
+      background: #0f172a;
+      color: #38bdf8;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 7.5pt;
+    }
+
+    .badge-sector-name {
+      font-weight: 800;
+      color: #0f172a;
+      font-size: 8pt;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .text-bonus {
+      color: #b45309;
+      font-weight: 700;
+      font-size: 6.8pt;
+      margin-top: 2px;
+    }
+
+    .text-proof {
+      color: #047857;
+      font-weight: 700;
+      font-size: 6.8pt;
+      margin-top: 2px;
+    }
+
+    /* DE MOL & RADIO SPECIAL */
+    .mol-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr;
+      gap: 8px;
+      background: #fffbeb;
+      border: 1px dashed #d97706;
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+
+    .mol-hotline {
+      font-size: 9.5pt;
+      font-weight: 800;
+      color: #b91c1c;
+      letter-spacing: 0.05em;
+    }
+
+    .mol-codeword {
+      background: #0f172a;
+      color: #fbbf24;
+      padding: 2px 6px;
+      font-weight: 800;
+      border-radius: 2px;
+      display: inline-block;
+      margin-top: 2px;
+    }
+
+    /* PLAYERS TABLE (PAGE 2) */
+    .players-matrix {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .player-card-mini {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      padding: 3px 6px;
+      border-radius: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 7.5pt;
+    }
+
+    .player-name-id {
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .player-pin-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 1px 4px;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+
+    /* PHYSICAL ITEMS CHECKLIST */
+    .physical-bringback {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .physical-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .physical-item {
+      background: #ffffff;
+      border: 1px solid #93c5fd;
+      padding: 4px 6px;
+      border-radius: 3px;
+      font-size: 7pt;
+    }
+
+    .physical-item-title {
+      font-weight: 800;
+      color: #1e40af;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* EMERGENCY BOX */
+    .emergency-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      font-size: 7.2pt;
+    }
+
+    .emergency-card {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      padding: 4px 6px;
+      border-radius: 3px;
+    }
+
+    .emergency-card-title {
+      font-weight: 800;
+      color: #991b1b;
+      margin-bottom: 2px;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 6.8pt;
+      color: #64748b;
+      margin-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCREEN TOOLBAR (Hidden when printing to PDF) -->
+  <div class="screen-toolbar">
+    <div class="toolbar-title">
+      <span>📋</span> MASTER TACTICAL CHEAT SHEET // SPELLEIDER VICTOR
+    </div>
+    <div class="tb-actions">
+      <button class="tb-btn" onclick="window.print()">
+        <span>🖨️</span> Print Cheat Sheet naar PDF
+      </button>
+      <a href="hq-dashboard.html" class="tb-btn tb-btn-secondary">
+        <span>🛡️</span> Open HQ Control Panel
+      </a>
+      <a href="beamer.html" class="tb-btn tb-btn-secondary" target="_blank">
+        <span>📡</span> Open War Room Beamer
+      </a>
+    </div>
+  </div>
+
+  <!-- ==================== PAGINA 1: OVERZICHT, TIJDLIJN & ALLE 6 SECTOREN ==================== -->
+  <div class="page-sheet">
+    
+    <!-- HEADER -->
+    <div class="cheat-header">
+      <div class="cheat-header-left">
+        <span class="doc-classification">STRIKT VERTROUWELIJK // COMMANDOPOST HQ</span>
+        <h1 class="sheet-title">OPERATIE ERFPACHT — SPELLEIDER CHEAT SHEET</h1>
+        <div class="sheet-subtitle">Draaiboek, Locatie-codes, Opdrachten &amp; Master Referentie voor Victor // Kapucijnenstraat 7</div>
+      </div>
+      <div class="master-credentials-pill">
+        <div>HQ CONTROL PANEL CODE:</div>
+        <div class="master-code-val">leiding2026</div>
+        <div style="font-size: 6.5pt; color: #94a3b8; margin-top: 2px;">WIFI OVERRIDE: <strong>2200</strong></div>
+      </div>
+    </div>
+
+    <!-- 1. SPELVERLOOP & TIJDLIJN (CHRONOLOGISCH) -->
+    <div class="sec-box">
+      <div class="sec-head gold">
+        <span>⏱️ CHRONOLOGISCHE SPELFLOW // WAT VICTOR MOET DOEN</span>
+        <span style="font-size: 7pt; font-weight: 600;">DOEL: 22u00 VERKOOP DECOR STOPPEN</span>
+      </div>
+      <div class="sec-body">
+        <div class="timeline-grid">
+          
+          <div class="flow-step">
+            <div class="flow-step-time"><span>1️⃣</span> T-30 // VOORBEREIDING</div>
+            <div class="flow-step-title">HQ Opstarten</div>
+            <ul>
+              <li>Zet beamer aan op <code>beamer.html</code> (War Room radar + agent chips).</li>
+              <li>Open HQ Control Panel op je gsm/tablet (<code>hq-dashboard.html</code>).</li>
+              <li>Leg enveloppen klaar met dossier-codes voor de 25 agenten.</li>
+            </ul>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-step-time"><span>2️⃣</span> T-00 // DE BRIEFING</div>
+            <div class="flow-step-title">Start &amp; Dispatch</div>
+            <ul>
+              <li>Toon video/briefing aan de groep.</li>
+              <li>Laat iedereen naar <code>index.html</code> gaan, biometrisch scannen en inloggen met hun 4-cijferige pincode.</li>
+              <li>Elk team start op een andere sector (6 teams). Groepen vertrekken direct.</li>
+            </ul>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-step-time"><span>3️⃣</span> T+00 TOT T+90 // IN HET VELD</div>
+            <div class="flow-step-title">Live HQ Monitoring</div>
+            <ul>
+              <li>Volg agents live op de GPS-radar.</li>
+              <li>Mol (Zandpoort) belt/wordt gebeld via <code>0498 34 32 07</code>.</li>
+              <li>Keur uploads en bonusmissies goed in het HQ Control Panel.</li>
+              <li>Stuur optioneel broadcasts/tips naar alle dossiers.</li>
+            </ul>
+          </div>
+
+          <div class="flow-step">
+            <div class="flow-step-time"><span>4️⃣</span> T+90 // AFSLUITING &amp; CHECKOUT</div>
+            <div class="flow-step-title">Debriefing &amp; Ontslag</div>
+            <ul>
+              <li>Teams keren terug naar HQ met hun fysieke bewijzen (geld, hout, snack!).</li>
+              <li>Activeer in HQ Control Panel: <strong>Fase 3: Einde Spel // Debriefing</strong>.</li>
+              <li>Spelers melden zich af met pincode ➔ cinematisch ontslagscherm!</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. DE 6 SECTOREN: CODE, OPDRACHT, BEWIJS & TOOLS -->
+    <div class="sec-box">
+      <div class="sec-head">
+        <span>📍 DE 6 SECTOREN // CODES, VELDOPDRACHTEN &amp; CONTROLE</span>
+        <span style="font-size: 7pt; font-weight: 600;">HERENTALS CENTRUM</span>
+      </div>
+      <div class="sec-body" style="padding: 4px;">
+        <table class="table-sectors">
+          <thead>
+            <tr>
+              <th style="width: 14%;">Sector &amp; Adres</th>
+              <th style="width: 9%;">Ontgrendel-Code</th>
+              <th style="width: 32%;">Veldopdracht &amp; Instructie</th>
+              <th style="width: 25%;">Vereist Bewijs voor HQ</th>
+              <th style="width: 20%;">Veld-Tool &amp; Bonus (+50 pt)</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            <!-- SECTOR 1: ZANDPOORT -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>🚪</span> Zandpoort</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Zandstraat 41–43</div>
+                <div style="font-size: 6.5pt; color: #3b82f6; font-weight: 700;">Start: Groep Blauw</div>
+              </td>
+              <td><span class="badge-code">zand1</span></td>
+              <td>
+                Bel de <strong>Mol</strong> in de jeugddienst. Zeg codewoord, ontvang zijn instructie om de stad vanbinnenuit te ontmaskeren op de jeugdraad.
+              </td>
+              <td>
+                <div class="text-proof">✓ Bellen met 0498 34 32 07</div>
+                <div class="text-proof">✓ Codewoord vermelden</div>
+                <div class="text-proof">✓ Tagmark bewijsfoto uploaden</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Bellen naar Mol</strong></div>
+                <div class="text-bonus">★ Bonus: Undercover foto terwijl men met de mol belt (+50 pt).</div>
+              </td>
+            </tr>
+
+            <!-- SECTOR 2: BEGIJNHOF -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>⛪</span> Begijnhof</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Begijnhof 1–30</div>
+                <div style="font-size: 6.5pt; color: #ef4444; font-weight: 700;">Start: Groep Rood</div>
+              </td>
+              <td><span class="badge-code">begijn2</span></td>
+              <td>
+                KSA roots eren: zing een uiterst creatieve versie van het <strong>KSA-avondlied</strong>. Spreek de Heer expliciet aan om het lokaal te redden!
+              </td>
+              <td>
+                <div class="text-proof">✓ Video van gezongen avondlied</div>
+                <div class="text-proof">✓ Video uploaden in dossier</div>
+                <div class="text-proof">✓ Video op gsm tonen op HQ</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Spiekbriefje Liedtekst</strong></div>
+                <div class="text-bonus">★ Bonus: Op de knieën / rap / gregoriaans koor (+50 pt).</div>
+              </td>
+            </tr>
+
+            <!-- SECTOR 3: BOVENPOORT -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>🏰</span> Bovenpoort</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Bovenrij 19–21</div>
+                <div style="font-size: 6.5pt; color: #eab308; font-weight: 700;">Start: Groep Geel</div>
+              </td>
+              <td><span class="badge-code">boven3</span></td>
+              <td>
+                Overtuig een toevallige voorbijganger om een interview te geven gericht aan de geheime koper (ontbindende clausule artikel 14.2 activeren!).
+              </td>
+              <td>
+                <div class="text-proof">✓ Video-interview met getuige</div>
+                <div class="text-proof">✓ Duidelijke boodschap tegen koper</div>
+                <div class="text-proof">✓ Video uploaden in dossier</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Interview Richtvragen</strong></div>
+                <div class="text-bonus">★ Bonus: Minstens 2 vreemden die roepen: "LOKAAL BLIJFT VAN KSA!" (+50 pt).</div>
+              </td>
+            </tr>
+
+            <!-- SECTOR 4: STADSPARK -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>🌳</span> Stadspark</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Belgiëlaan</div>
+                <div style="font-size: 6.5pt; color: #10b981; font-weight: 700;">Start: Groep Groen</div>
+              </td>
+              <td><span class="badge-code">park4</span></td>
+              <td>
+                Ondergronds knooppunt <code>NODE-PK04</code> hacken om de digitale verkooptransactie en SWIFT-betaling van 22u00 te blokkeren.
+              </td>
+              <td>
+                <div class="text-proof">✓ SIGINT-hack uitvoeren in app</div>
+                <div class="text-proof">✓ Foto dat connectie verbroken is</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Terminal Hack</strong> (Freq: <code>144.80 MHz</code> / PIN: <code>2200</code>)</div>
+                <div class="text-bonus">★ Bonus: Actie-hackerfoto bij rioolput of elektrakast (+50 pt).</div>
+              </td>
+            </tr>
+
+            <!-- SECTOR 5: KERKPLEIN -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>🔔</span> Kerkplein</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Sint-Waldetrudis</div>
+                <div style="font-size: 6.5pt; color: #a855f7; font-weight: 700;">Start: Groep Paars</div>
+              </td>
+              <td><span class="badge-code">kerk5</span></td>
+              <td>
+                Voorbereiden op blackmail door stadswacht: haal <strong>€10,00 contant</strong> af of wissel. Moet LIVE gefilmd worden!
+              </td>
+              <td>
+                <div class="text-proof">✓ Live video van geldafhaling</div>
+                <div class="text-proof">✓ Video uploaden in dossier</div>
+                <div class="text-proof" style="color: #b91c1c;">✓ FYSIEK BILJET €10 MEE NAAR HQ!</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Blackmail Protocol</strong></div>
+                <div class="text-bonus">★ Bonus: Wissel zónder bankautomaat (bij handelszaak/voorbijganger) (+50 pt).</div>
+              </td>
+            </tr>
+
+            <!-- SECTOR 6: NIEUW LOKAAL -->
+            <tr>
+              <td>
+                <div class="badge-sector-name"><span>🏠</span> Nieuw Lokaal</div>
+                <div style="font-size: 6.5pt; color: #64748b;">Markgravenstraat 77</div>
+                <div style="font-size: 6.5pt; color: #f97316; font-weight: 700;">Start: Groep Oranje</div>
+              </td>
+              <td><span class="badge-code">lokaal6</span></td>
+              <td>
+                Duik in het puin van het afgebroken dak. Vind tastbaar bewijs dat het dak spijsrot was (vervalsingsakte 22u00 nietig verklaren!).
+              </td>
+              <td>
+                <div class="text-proof">✓ Foto van stuk spijsrot dakpuin</div>
+                <div class="text-proof">✓ Foto uploaden in dossier</div>
+                <div class="text-proof" style="color: #b91c1c;">✓ FYSIEK STUK HOUT MEE NAAR HQ!</div>
+              </td>
+              <td>
+                <div>Tool: <strong>Forensische Checklist</strong></div>
+                <div class="text-bonus">★ Bonus: CSI-expert videoreportage van het vermolmd hout (+50 pt).</div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. DE MOL CONTACT-KAART -->
+    <div class="sec-box">
+      <div class="sec-head red">
+        <span>🕵️ DE MOL // DIRECTE INTERCEPTIE &amp; CONTACTGEGEVENS</span>
+        <span style="font-size: 7pt; font-weight: 600;">SECTOR ZANDPOORT</span>
+      </div>
+      <div class="sec-body">
+        <div class="mol-grid">
+          <div>
+            <div style="font-size: 7pt; color: #64748b; font-weight: 700;">HOTLINE TELEFOONNUMMER:</div>
+            <div class="mol-hotline">📞 0498 34 32 07</div>
+            <div style="font-size: 7pt; color: #64748b; font-weight: 700; margin-top: 4px;">GEHEIM CODEWOORD:</div>
+            <div class="mol-codeword">"DE DAKPANNEN LIGGEN LOS"</div>
+          </div>
+          <div style="font-size: 7.2pt; color: #0f172a;">
+            <strong>WAT DE MOL MOET DOEN BIJ OPROEP:</strong>
+            <p>1. Wacht tot de beller het codewoord <em>"DE DAKPANNEN LIGGEN LOS"</em> zegt. Zo niet: ophangen ("Verkeerd verbonden!").</p>
+            <p>2. Zodra het codewoord correct is: bevestig dat je in de jeugdraad zit en geef ze de opdracht om hun tagmark achter te laten en HQ in te lichten.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Operatie Erfpacht // Pagina 1 van 2 // Gedrukt voor Gamemaster Victor (Kapucijnenstraat 7)
+    </div>
+
+  </div>
+
+
+  <!-- ==================== PAGINA 2: SPELERSCODES, BONUSOPDRACHTEN & NOODDRAAIBOEK ==================== -->
+  <div class="page-sheet">
+
+    <!-- HEADER 2 -->
+    <div class="cheat-header" style="margin-bottom: 6px;">
+      <div class="cheat-header-left">
+        <span class="doc-classification" style="background: #1e3a8a;">PERSONEELSDOSSIER &amp; NOODDRAAIBOEK</span>
+        <h1 class="sheet-title" style="font-size: 11pt;">25 VELDAGENTEN PINCODES &amp; TACTISCHE BONUSMISSIES</h1>
+      </div>
+      <div style="font-size: 7.5pt; text-align: right; color: #334155;">
+        <div><strong>25 VELDAGENTEN</strong> (Vicce &amp; Lander tellen niet mee)</div>
+        <div style="color: #047857; font-weight: 700;">HQ Master: <code>leiding2026</code></div>
+      </div>
+    </div>
+
+    <!-- 1. ALLE 25 SPELERS + PINCODES MATRIX -->
+    <div class="sec-box">
+      <div class="sec-head">
+        <span>👥 VELDAGENTEN // DOSSIERNUMMERS &amp; PERSOONLIJKE PINCODES (25 SPELERS)</span>
+        <span style="font-size: 7pt; font-weight: 600;">GEBRUIK OM TE HELPEN BIJ INLOGGEN/AFMELDEN</span>
+      </div>
+      <div class="sec-body">
+        <div class="players-matrix">
+          
+          <!-- Kolom 1 -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>01</span> Daan</span>
+              <span class="player-pin-badge">1042</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>02</span> Dominique</span>
+              <span class="player-pin-badge">2819</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>03</span> Eline</span>
+              <span class="player-pin-badge">3940</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>04</span> Emile</span>
+              <span class="player-pin-badge">4175</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>05</span> Floris</span>
+              <span class="player-pin-badge">5623</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>06</span> Gino</span>
+              <span class="player-pin-badge">6381</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>07</span> Hanne</span>
+              <span class="player-pin-badge">7492</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>08</span> Jassin</span>
+              <span class="player-pin-badge">8514</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>09</span> Jules</span>
+              <span class="player-pin-badge">9267</span>
+            </div>
+          </div>
+
+          <!-- Kolom 2 -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>10</span> Julie</span>
+              <span class="player-pin-badge">1938</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>11</span> Len</span>
+              <span class="player-pin-badge">2476</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>12</span> Leon</span>
+              <span class="player-pin-badge">3589</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>13</span> Lex</span>
+              <span class="player-pin-badge">4612</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>14</span> Lotte</span>
+              <span class="player-pin-badge">5734</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>15</span> Luna</span>
+              <span class="player-pin-badge">6845</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>16</span> Mart</span>
+              <span class="player-pin-badge">7956</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>17</span> Matthijs</span>
+              <span class="player-pin-badge">8167</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>18</span> Merlijn</span>
+              <span class="player-pin-badge">9378</span>
+            </div>
+          </div>
+
+          <!-- Kolom 3 -->
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>19</span> Olivier</span>
+              <span class="player-pin-badge">1489</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>20</span> Phebe</span>
+              <span class="player-pin-badge">2591</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>21</span> Riet</span>
+              <span class="player-pin-badge">3614</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>22</span> Rik</span>
+              <span class="player-pin-badge">4725</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>23</span> Rosan</span>
+              <span class="player-pin-badge">5836</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>24</span> Siebe</span>
+              <span class="player-pin-badge">6947</span>
+            </div>
+            <div class="player-card-mini">
+              <span class="player-name-id"><span>25</span> Tobias</span>
+              <span class="player-pin-badge">7158</span>
+            </div>
+            <!-- Test & Gamemaster fiches -->
+            <div class="player-card-mini" style="background: #f1f5f9; border-style: dashed;">
+              <span class="player-name-id" style="color: #475569;"><span>99</span> Lander (Tester)</span>
+              <span class="player-pin-badge" style="background: #e2e8f0; color: #0f172a;">9999</span>
+            </div>
+            <div class="player-card-mini" style="background: #fef2f2; border-color: #fca5a5;">
+              <span class="player-name-id" style="color: #991b1b;"><span>26</span> Vicce (HQ)</span>
+              <span class="player-pin-badge" style="background: #fee2e2; color: #991b1b;">8269</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. DE 5 BONUSMISSIES -->
+    <div class="sec-box">
+      <div class="sec-head gold">
+        <span>🏆 DE 5 BONUSMISSIES &amp; INTERCEPTIES // PUNTEN &amp; OPLOSSINGEN</span>
+        <span style="font-size: 7pt; font-weight: 600;">OPTIONELE EXTRA PUNTEN</span>
+      </div>
+      <div class="sec-body" style="padding: 4px;">
+        <table class="table-sectors">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Missie &amp; Type</th>
+              <th style="width: 8%;">Punten</th>
+              <th style="width: 47%;">Wat moeten ze doen?</th>
+              <th style="width: 25%;">Oplossing / Controle HQ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>📱 Burner SMS</strong><br><span style="font-size: 6.5pt; color: #64748b;">Nokia Toetsenreeks</span></td>
+              <td><span style="font-weight: 800; color: #b45309;">+75 pt</span></td>
+              <td>Ontcijfer toetsenreeks: <code>44-2-66-4-5-666-66-4-33-777-33-66</code> van oude retro Nokia burner phone.</td>
+              <td>Antwoord: <strong>hangjongeren</strong><br><span style="font-size: 6.5pt; color: #047857;">(Directe validatie in dossier)</span></td>
+            </tr>
+            <tr>
+              <td><strong>🍺 Ad Fundum</strong><br><span style="font-size: 6.5pt; color: #64748b;">Café Infiltratie</span></td>
+              <td><span style="font-weight: 800; color: #b45309;">+100 pt</span></td>
+              <td>Infiltreer een café in Herentals. Trek een adje (pint of frisdrank). Film met stopwatch op 2e scherm in beeld!</td>
+              <td>Controleer ingestuurde video op geldige stopwatch-tijd. Snelste tijd wint.</td>
+            </tr>
+            <tr>
+              <td><strong>🍟 Snack Vicce</strong><br><span style="font-size: 6.5pt; color: #64748b;">Logistiek Noodrantsoen</span></td>
+              <td><span style="font-weight: 800; color: #b45309;">+100 pt</span></td>
+              <td>Breng Gamemaster Vicce op het einde van de tocht een snack mee naar HQ (frituur, bakker, snoep) die hij lust!</td>
+              <td><strong>Fysieke overhandiging</strong> op HQ. Victor keurt goed en proeft.</td>
+            </tr>
+            <tr>
+              <td><strong>📢 Volksstem</strong><br><span style="font-size: 6.5pt; color: #64748b;">Psy-Ops Koor</span></td>
+              <td><span style="font-weight: 800; color: #b45309;">+150 pt</span></td>
+              <td>Krijg minstens <strong>6 vreemden tegelijk</strong> in beeld die in koor roepen: <em>'Redt de KSA, de ware eigenaars van de erfpacht!'</em></td>
+              <td>Tel minstens 6 verschillende voorbijgangers op de video.</td>
+            </tr>
+            <tr>
+              <td><strong>🐕 Speurhond K9</strong><br><span style="font-size: 6.5pt; color: #64748b;">K9 Rekrutering</span></td>
+              <td><span style="font-weight: 800; color: #b45309;">+50 pt</span></td>
+              <td>Vind een hond in Herentals en neem een officiële sollicitatiefoto met het team en de hond voor HQ.</td>
+              <td>Foto van kandidaat-speurhond met groepsleden.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. FYSIEKE BEWIJSSTUKKEN CHECKLIST BIJ BINNENKOMST HQ -->
+    <div class="physical-bringback">
+      <div style="font-weight: 800; font-size: 8pt; color: #1e3a8a; display: flex; justify-content: space-between;">
+        <span>🎒 FYSIEKE OBJECTEN DIE ZE MOETEN MEEBRENGEN NAAR HQ:</span>
+        <span style="color: #b91c1c;">CHECK DIT AAN DE DEUR BIJ FINISH!</span>
+      </div>
+      <div class="physical-grid">
+        <div class="physical-item">
+          <div class="physical-item-title">💶 €10 Cash Biljet</div>
+          Afgehaald/gewisseld aan het Kerkplein als borgsom.
+        </div>
+        <div class="physical-item">
+          <div class="physical-item-title">🪵 Stuk Spijsrot Dak</div>
+          Fysiek stuk hout/puin van Markgravenstraat 77.
+        </div>
+        <div class="physical-item">
+          <div class="physical-item-title">🍟 Snack voor Vicce</div>
+          Lekkere snack/eten meegebracht voor de Gamemaster.
+        </div>
+        <div class="physical-item">
+          <div class="physical-item-title">📱 Gsm met Video's</div>
+          Originele video van Avondlied en Getuige interview.
+        </div>
+        <div class="physical-item">
+          <div class="physical-item-title">🎖️ Afmeldcode</div>
+          Elke agent logt finaal uit met zijn persoonlijke 4-cijferige pincode!
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. NOODPROCEDURES & TROUBLESHOOTING -->
+    <div class="sec-box">
+      <div class="sec-head red">
+        <span>🚨 NOODDRAAIBOEK &amp; TROUBLESHOOTING VOOR VICTOR</span>
+        <span style="font-size: 7pt; font-weight: 600;">ALTIJD EEN OPLOSSING</span>
+      </div>
+      <div class="sec-body">
+        <div class="emergency-grid">
+          
+          <div class="emergency-card">
+            <div class="emergency-card-title">🔑 Speler pincode vergeten?</div>
+            <p>Geen paniek: check de tabel hierboven of kijk in het HQ Control Panel onder Spelersbeheer. De 4-cijferige code staat in vet goud bij elke speler.</p>
+          </div>
+
+          <div class="emergency-card">
+            <div class="emergency-card-title">📡 GPS storing / Sector op slot?</div>
+            <p>Open het HQ Control Panel en gebruik de <strong>Manuele Override</strong> om een sector direct voor een groep of iedereen vrij te geven, of geef ze de sectorcode.</p>
+          </div>
+
+          <div class="emergency-card">
+            <div class="emergency-card-title">🛑 Per ongeluk afgemeld?</div>
+            <p>Het afmeldscherm kan <strong>NOOIT</strong> per ongeluk openen tijdens het spel. De debriefing-knop is pas actief als Victor Fase 3 aanzet in het HQ Control Panel.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Operatie Erfpacht // Pagina 2 van 2 // Einde Spelleider Dossier // Succes zaterdag Victor!
+    </div>
+
+  </div>
+
+</body>
+</html>

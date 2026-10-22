@@ -418,15 +418,13 @@
       </div>
 
       <div style="display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center;">
-        <a href="index.html" class="back-link">🏠 Naar Spelersportaal</a>
-        <a href="spelers/vicce.html" class="back-link" style="border-color: var(--accent); color: var(--accent);">📂 Mijn Test-Dossier (Vicce)</a>
-        <a href="interne-briefing-hq.html" target="_blank" class="back-link" style="border-color: var(--amber); color: var(--amber);">📄 Interne Briefing PDF</a>
-        <a href="briefing-de-mol.html" target="_blank" class="back-link" style="border-color: #38bdf8; color: #38bdf8;">🕵️ Script De Mol (PDF)</a>
-        <a href="enveloppe-vensters.html" target="_blank" class="back-link" style="border-color: #a855f7; color: #c084fc;">✉️ Enveloppe Kaartjes (11x4cm)</a>
-        <a href="beamer.html" target="_blank" class="back-link" style="border-color: #f59e0b; color: #fde047; background: rgba(245, 158, 11, 0.14); font-weight: 800;">📽️ Beamer Modus // War Room (Fullscreen)</a>
+        <a href="beamer.html" target="_blank" class="back-link" style="border-color: #f59e0b; color: #fde047; background: rgba(245, 158, 11, 0.14); font-weight: 800;">📽️ Beamer Modus // War Room</a>
         <button type="button" id="gm-play-audio-briefing-btn" class="back-link" style="border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.12); cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
           <span class="intel-blink-red"></span>🎙️ <span id="gm-audio-btn-txt">Speel Audio-Briefing (01:27)</span>
         </button>
+        <a href="spelers/vicce.html" class="back-link" style="border-color: var(--accent); color: var(--accent);">📂 Dossier Vicce HQ</a>
+        <a href="spelers/lander.html" class="back-link" style="border-color: #10b981; color: #6ee7b7; background: rgba(16,185,129,0.12);">📂 Dossier Lander (Tester Unlocked)</a>
+        <a href="index.html" class="back-link">🏠 Spelersportaal</a>
         <audio id="gm-briefing-audio" preload="none" src="audio/SIGINT-REC-1636-ENCRYPTED.mp3"></audio>
       </div>
     </header>
@@ -437,8 +435,8 @@
     <!-- 4 KPI Tellers -->
     <section class="gm-kpi-grid">
       <div class="gm-kpi-card" id="gm-kpi-card-attendance" style="cursor: pointer;" title="Klik om aanwezigheid & inactieve spelers te beheren">
-        <span class="gm-kpi-label">1. Aanwezige Agenten &amp; Logins 🔍</span>
-        <div class="gm-kpi-val" id="gm-kpi-players">0 / 26</div>
+        <span class="gm-kpi-label">1. Aanwezige Veldagenten 🔍</span>
+        <div class="gm-kpi-val" id="gm-kpi-players">0 / 25</div>
         <span class="gm-kpi-sub" id="gm-kpi-players-sub">Wacht op eerste codes...</span>
       </div>
       <div class="gm-kpi-card">
@@ -458,62 +456,84 @@
       </div>
     </section>
 
-    <!-- Snelle Spel- & Groepsbediening + Algemeen Bericht -->
-    <section class="gm-quick-controls">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem;">
-        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 700;">⚡ SNELLE HQ-ACTIES:</span>
-        <button type="button" id="gm-btn-random-groups" class="btn btn-secondary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
-          🎲 Verdeel Aanwezigen in Groepen (4p)
-        </button>
-        <button type="button" id="gm-btn-toggle-reveal" class="btn btn-primary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
-          👁️ Onthul Groepen Nu aan Iedereen
-        </button>
-        <button type="button" id="gm-btn-toggle-attendance" class="btn btn-secondary" style="padding: 0.48rem 0.85rem; font-size: 0.76rem;">
-          📋 Aanwezigheid &amp; Spelers
-        </button>
-        <button type="button" id="gm-btn-reset-game" class="btn btn-danger" style="padding: 0.48rem 0.85rem; font-size: 0.76rem; background: rgba(239, 68, 68, 0.18); border-color: var(--danger); color: #fca5a5; font-weight: 700;">
-          ⚠ Volledig Spel Resetten
-        </button>
+    <!-- Snelle Spel- & Groepsbediening (Fase 1) -->
+    <section class="gm-quick-controls" style="flex-direction: column; align-items: stretch; gap: 0.85rem;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.65rem;">
+        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 800; letter-spacing: 0.05em;">
+          ⚡ FASE 1: SPELLEIDING SNELTOETSEN
+        </span>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+          <button type="button" id="gm-btn-random-groups" class="btn btn-secondary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
+            🎲 Verdeel Aanwezigen in Groepen (4p)
+          </button>
+          <button type="button" id="gm-btn-toggle-reveal" class="btn btn-primary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
+            👁️ Onthul Groepen Nu aan Iedereen
+          </button>
+          <button type="button" id="gm-btn-toggle-attendance" class="btn btn-secondary" style="padding: 0.5rem 0.95rem; font-size: 0.78rem; font-weight: 700;">
+            📋 Aanwezigheid &amp; PINs
+          </button>
+          <button type="button" id="gm-btn-reset-game" class="btn btn-danger" style="padding: 0.5rem 0.85rem; font-size: 0.76rem; background: rgba(239, 68, 68, 0.18); border-color: var(--danger); color: #fca5a5; font-weight: 700;">
+            ⚠ Spel Resetten
+          </button>
+        </div>
       </div>
 
-      <!-- Live Notificatie / Intel Bericht naar Spelers of Groepen sturen (verschijnt als popup) -->
-      <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; min-width: 320px; justify-content: flex-end;" autocomplete="off">
-        <select
-          id="gm-broadcast-target"
-          class="admin-input"
-          style="margin-bottom: 0; width: auto; max-width: 195px; font-size: 0.78rem; padding: 0.48rem 0.65rem; background: #0b111a; border-color: var(--accent); color: var(--accent); font-weight: 700;"
-        >
-          <option value="all">🌐 Iedereen (Broadcast)</option>
-          <optgroup label="Groepen / Teams" id="gm-broadcast-target-groups">
-            <!-- Dynamisch gevuld -->
-          </optgroup>
-          <optgroup label="Individuele Agenten" id="gm-broadcast-target-players">
-            <!-- Dynamisch gevuld -->
-          </optgroup>
-        </select>
+      <!-- Broadcast Zendstation (Zonder overbodige categorieën) -->
+      <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 0.75rem;">
+        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8; font-weight: 700; margin-bottom: 0.45rem;">
+          📢 ZEND COMMUNICATIE / TIP NAAR VELDAGENTEN:
+        </div>
+        <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.5rem;" autocomplete="off">
+          <select
+            id="gm-broadcast-target"
+            class="admin-input"
+            style="margin-bottom: 0; width: auto; min-width: 170px; font-size: 0.8rem; padding: 0.5rem 0.75rem; background: #0b111a; border-color: var(--accent); color: var(--accent); font-weight: 700;"
+          >
+            <option value="all">🌐 Iedereen (Broadcast)</option>
+            <optgroup label="Groepen / Teams" id="gm-broadcast-target-groups">
+              <!-- Dynamisch gevuld -->
+            </optgroup>
+            <optgroup label="Individuele Agenten" id="gm-broadcast-target-players">
+              <!-- Dynamisch gevuld -->
+            </optgroup>
+          </select>
 
-        <select
-          id="gm-broadcast-category"
-          class="admin-input"
-          style="margin-bottom: 0; width: auto; max-width: 140px; font-size: 0.78rem; padding: 0.48rem 0.65rem; background: #0b111a; border-color: #334155; color: #e2e8f0;"
-        >
-          <option value="tip">💡 Tactische Tip</option>
-          <option value="alert">🚨 Spoedinstructie</option>
-          <option value="bonus">⭐ Bonusmissie</option>
-        </select>
+          <input
+            type="text"
+            id="gm-broadcast-input"
+            class="admin-input"
+            placeholder="Typ bericht (verschijnt direct als popup bij ontvanger)..."
+            style="margin-bottom: 0; flex: 1; min-width: 220px; font-size: 0.82rem; padding: 0.5rem 0.85rem;"
+            required
+          />
+          <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.15rem; font-size: 0.8rem; font-weight: 700; white-space: nowrap;">
+            ⚡ Zend Bericht
+          </button>
+        </form>
+      </div>
+    </section>
 
-        <input
-          type="text"
-          id="gm-broadcast-input"
-          class="admin-input"
-          placeholder="Typ HQ-instructie (verschijnt direct als popup bij ontvanger)..."
-          style="margin-bottom: 0; flex: 1; min-width: 220px; font-size: 0.82rem; padding: 0.48rem 0.75rem;"
-          required
-        />
-        <button type="submit" class="btn btn-primary" style="padding: 0.48rem 0.95rem; font-size: 0.76rem; font-weight: 700;">
-          ⚡ Zend Notificatie
+    <!-- FASE 3: EINDE SPEL & DEBRIEFING CONTROLE KAART -->
+    <section class="gm-panel-card" style="margin-bottom: 1.4rem; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.45);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem;">
+        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 800; letter-spacing: 0.05em;">
+          🏁 FASE 3: EINDE SPEL // AFMELDDESK &amp; DEBRIEFING
+        </span>
+        <span id="gm-debrief-status-pill" style="font-family: var(--font-mono); font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid rgba(255,255,255,0.15);">
+          DEBRIEFING INACTIEF (SPEL BEZIG)
+        </span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.85rem;">
+        <div style="font-size: 0.84rem; color: #cbd5e1; max-width: 650px; line-height: 1.45;">
+          Activeer dit <strong>pas helemaal op het einde</strong> wanneer alle groepen terug in HQ zijn. Spelers krijgen dan op hun gsm de vraag om hun persoonlijke code in te voeren om hun dossier definitief te verzegelen en hun bedanking / eervol ontslag te zien.
+          <div id="gm-debrief-count-sub" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); margin-top: 0.35rem; font-weight: 700;">
+            Voortgang: 0 / 25 veldagenten afgemeld &amp; verzegeld
+          </div>
+        </div>
+        <button type="button" id="gm-btn-toggle-debrief" class="btn" style="background: rgba(245, 158, 11, 0.2); border: 1.5px solid var(--amber); color: #fde047; font-weight: 800; font-size: 0.85rem; padding: 0.6rem 1.25rem; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); cursor: pointer;">
+          🚨 Activeer Einde Spel &amp; Debriefing
         </button>
-      </form>
+      </div>
     </section>
 
     <!-- Prominent Aanwezigheids- & Inactieve Spelers Paneel (Standaard Direct Zichtbaar) -->
@@ -684,13 +704,13 @@
     </section>
   </main>
 
-  <!-- Mastercode Toegangscontrole Modal (leiding2026) -->
+  <!-- Mastercode Toegangscontrole Modal -->
   <div id="gm-auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" style="display: none; z-index: 9999;">
     <div class="modal-box" style="max-width: 440px; text-align: center;">
       <div class="modal-tag">HQ SECURITY // TOEGANGSCONTROLE</div>
-      <h2 class="modal-title">Gamemaster HQ</h2>
+      <h2 class="modal-title">HQ Control Panel</h2>
       <p class="modal-desc" style="margin-bottom: 1rem;">
-        Voer de mastercode <code>leiding2026</code> in om het live Gamemaster Dashboard te openen:
+        Beveiligde toegang voor de spelleiding. Voer de autorisatiecode in om het live HQ Control Panel te openen:
       </p>
       <form id="gm-auth-form" autocomplete="off">
         <input

@@ -454,6 +454,13 @@
       font-weight: 800;
       box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
     }
+    .chip-mini.debriefed {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: rgba(245, 158, 11, 0.7);
+      color: #fde047;
+      font-weight: 800;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);
+    }
 
     /* CYBER TERMINAL WIDGET */
     .hud-terminal-card {
@@ -1957,7 +1964,10 @@
       }
 
       if (summaryEl) {
-        if (allDone) {
+        if (state.debriefingActive) {
+          summaryEl.textContent = `🚨 DEBRIEFING ACTIEF: ${state.debriefedCount || 0} / ${total} AGENTEN AFGEMELD`;
+          summaryEl.style.color = "#f59e0b";
+        } else if (allDone) {
           summaryEl.textContent = `✓ ALLE ${total} VELDAGENTEN ACTIEF // LEADERBOARD ONLINE!`;
           summaryEl.style.color = "var(--hud-amber)";
         } else {
@@ -1968,8 +1978,10 @@
 
       if (chipsEl) {
         chipsEl.innerHTML = all.map(p => {
-          if (p.disabled || p.isGamemaster || p.id === "vicce") return "";
-          return `<span class="chip-mini ${p.unlocked ? "unlocked" : ""}">${p.unlocked ? "✓ " : ""}${p.naam}</span>`;
+          if (p.disabled || p.isGamemaster || p.isExternalTester || p.id === "vicce" || p.id === "lander") return "";
+          const cls = p.debriefed ? "debriefed" : p.unlocked ? "unlocked" : "";
+          const prefix = p.debriefed ? "🔒 " : p.unlocked ? "✓ " : "";
+          return `<span class="chip-mini ${cls}">${prefix}${p.naam}</span>`;
         }).join("");
       }
     }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dossier #99 - Lander (Externe Tester)</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body data-player-id="lander">
+  <main class="container">
+    <nav class="dossier-nav">
+      <a href="../index.html" class="back-link">&larr; Terug naar portaal</a>
+      <button type="button" id="lock-dossier-btn" class="back-link" style="cursor:pointer;">🔒 Vergrendel dossier</button>
+    </nav>
+
+    <!-- Vergrendeld scherm (wordt voor Lander direct overgeslagen) -->
+    <section id="dossier-lock-screen" class="modal-box" style="margin: 3rem auto; display: none;">
+      <div class="modal-tag">DOSSIER #99 // EXTERNE TESTER</div>
+      <h1 class="modal-title">Lander</h1>
+      <p class="modal-desc">Dit dossier is speciaal aangemaakt voor Lander om het spel volledig te bekijken.</p>
+      <form id="dossier-lock-form" autocomplete="off">
+        <input type="password" id="dossier-code-input" class="code-input" placeholder="9999" value="9999" required />
+        <div id="dossier-error-msg" class="error-msg" role="alert"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Ontgrendel Dossier</button>
+      </form>
+    </section>
+
+    <!-- GEHEIME INHOUD VAN LANDER (VOLLEDIG ONTGRENDELD) -->
+    <article id="dossier-content" class="dossier-card unlocked">
+      <header class="dossier-header">
+        <div>
+          <div class="modal-tag" style="background: rgba(16,185,129,0.18); border-color: #10b981; color: #6ee7b7;">
+            TEST-DOSSIER #99 // VOLLEDIG UNLOCKED
+          </div>
+          <h1 class="portal-title" style="margin-bottom: 0;">Agent Lander</h1>
+        </div>
+        <span class="stamp" style="border-color: #10b981; color: #6ee7b7;">EXTERNAL ACCESS</span>
+      </header>
+
+      <div class="mission-block" style="border-left-color: #10b981;">
+        <h2 style="color: #6ee7b7;">&gt;_ Welkom Lander (Externe Testmodus)</h2>
+        <p>
+          Welkom <strong>Lander</strong>! Dit mapje is speciaal voor jou ingesteld als externe tester.
+          Alle <strong>6 locaties</strong> en alle <strong>geheime opdrachten</strong> zijn in dit dossier automatisch <strong>volledig ontgrendeld</strong>.
+          Zo kan je rustig doorklikken om te zien hoe het spel, de documenten, de tools en de opdrachten er voor de agenten uitzien!
+        </p>
+      </div>
+
+      <div class="clue-grid">
+        <div class="clue-box">
+          <div class="clue-label">Status</div>
+          <div id="player-live-score-status" class="clue-value" style="color: #10b981;">TESTER (UNLOCKED)</div>
+        </div>
+        <div class="clue-box">
+          <div class="clue-label">Modus</div>
+          <div id="player-live-team-status" class="clue-value">Volledig Toegankelijk</div>
+        </div>
+        <div class="clue-box">
+          <div class="clue-label">Test-Code</div>
+          <div class="clue-value" style="font-family: var(--font-mono); color: var(--accent);">9999</div>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/mqtt.min.js"></script>
+  <script src="../js/score-service.js"></script>
+  <script src="../js/dossier.js"></script>
+</body>
+</html>

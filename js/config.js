@@ -348,6 +348,7 @@ const SPEL_CONFIG = {
     { id: "rosan",     naam: "Rosan",     dossierNr: "23", code: "5836" },
     { id: "siebe",     naam: "Siebe",     dossierNr: "24", code: "6947" },
     { id: "tobias",    naam: "Tobias",    dossierNr: "25", code: "7158" },
-    { id: "vicce",     naam: "Vicce",     dossierNr: "26", code: "8269", isGamemaster: true, role: "Gamemaster HQ" }
+    { id: "vicce",     naam: "Vicce",     dossierNr: "26", code: "8269", isGamemaster: true, role: "Gamemaster HQ" },
+    { id: "lander",    naam: "Lander",    dossierNr: "99", code: "9999", isExternalTester: true, isGamemaster: false, role: "Externe Tester (Volledig Unlocked)" }
   ]
 };

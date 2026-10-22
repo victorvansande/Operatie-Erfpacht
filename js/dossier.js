@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function isLocationUnlocked(locId) {
-    if (playerId === "vicce") {
+    if (playerId === "vicce" || playerId === "lander") {
       return true;
     }
     if (
@@ -150,6 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const isCloudUnlocked = Boolean(latestPlayerInfo && latestPlayerInfo.unlocked);
     const unlocked =
       playerId === "vicce" ||
+      playerId === "lander" ||
       isCloudUnlocked ||
       sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
       localStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
@@ -2630,9 +2631,300 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPlayerMessageBoard(info);
         ensureBonusFolders(info);
         refreshAllLocationFolders();
+        handleDebriefingState(state, info);
       }
     });
     ScoreService.startRealtimeSync();
+  }
+
+  // =========================================================================
+  // CINEMATIC EINDE SPEL // DEBRIEFING & COMMENDATION SCREEN
+  // =========================================================================
+  function handleDebriefingState(state, info) {
+    if (!state) return;
+    const isDebriefedLocally = localStorage.getItem(`jb_debriefed_${playerId}`) === "true";
+    const isDebriefedCloud = Boolean(info && info.debriefed);
+
+    // Als speler reeds afgemeld is: toon direct het bedankingsscherm
+    if (isDebriefedLocally || isDebriefedCloud) {
+      renderCinematicThankYouScreen(speler, info);
+      return;
+    }
+
+    // Als spelleiding debriefing actief heeft gezet en speler is nog niet afgemeld:
+    if (state.debriefingActive) {
+      showDebriefBanner(speler, info);
+    } else {
+      const existing = document.getElementById("dossier-debrief-banner");
+      if (existing) existing.remove();
+    }
+  }
+
+  function showDebriefBanner(speler, info) {
+    if (document.getElementById("dossier-debrief-banner")) return;
+    const targetParent = document.querySelector(".dossier-card, main, .container");
+    if (!targetParent) return;
+
+    const banner = document.createElement("div");
+    banner.id = "dossier-debrief-banner";
+    banner.className = "debrief-banner-alert";
+    banner.innerHTML = `
+      <div class="debrief-banner-content">
+        <div class="debrief-beacon"></div>
+        <div>
+          <div class="debrief-banner-title">🚨 MISSIE BEËINDIGD DOOR HOOFDKWARTIER</div>
+          <div class="debrief-banner-desc">
+            Het spel is afgelopen! Voer jouw 4-cijferige agentencode in om je dossier definitief te verzegelen en je eervol ontslag te ontvangen.
+          </div>
+        </div>
+      </div>
+      <button type="button" id="btn-trigger-debrief-modal" class="btn-debrief-lock">
+        🔒 Dossier Verzegelen &amp; Afmelden
+      </button>
+    `;
+
+    targetParent.insertBefore(banner, targetParent.firstChild);
+
+    const btn = banner.querySelector("#btn-trigger-debrief-modal");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        showDebriefVerificationModal(speler, info);
+      });
+    }
+  }
+
+  function showDebriefVerificationModal(speler, info) {
+    const existing = document.getElementById("debrief-auth-modal");
+    if (existing) existing.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "debrief-auth-modal";
+    modal.className = "modal-backdrop active";
+    modal.style.display = "flex";
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width: 440px; text-align: center; border-color: #ef4444; box-shadow: 0 0 35px rgba(239, 68, 68, 0.45);">
+        <div class="modal-tag" style="background: rgba(239,68,68,0.15); color: #fca5a5; border-color: #ef4444;">
+          HQ BEVEILIGINGSPROTOCOL // DOSSIER VERZEGELEN
+        </div>
+        <h2 class="modal-title" style="color: #ffffff; font-size: 1.35rem; margin: 0.35rem 0 0.5rem;">
+          Afmelden Agent ${speler ? speler.naam : ""}
+        </h2>
+        <p class="modal-desc" style="font-size: 0.84rem; line-height: 1.5; margin-bottom: 1rem;">
+          Voer jouw persoonlijke 4-cijferige code in om je dossier definitief af te sluiten. Hiermee stop je je actieve verbinding en ontvang je je debriefing.
+        </p>
+        <form id="debrief-auth-form" autocomplete="off">
+          <input
+            type="password"
+            id="debrief-code-input"
+            class="code-input"
+            placeholder="4-cijferige code..."
+            maxlength="8"
+            required
+            autofocus
+            style="text-align: center; letter-spacing: 0.2em; font-size: 1.4rem;"
+          />
+          <div id="debrief-auth-error" class="error-msg" style="margin-top: 0.5rem;" role="alert"></div>
+          <div class="modal-actions" style="margin-top: 1.1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="button" id="btn-cancel-debrief" class="btn btn-secondary">Annuleren</button>
+            <button type="submit" id="btn-confirm-debrief" class="btn" style="background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 800;">
+              🔒 Verzegel Dossier
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector("#debrief-code-input");
+    const errorEl = modal.querySelector("#debrief-auth-error");
+    const form = modal.querySelector("#debrief-auth-form");
+    const cancelBtn = modal.querySelector("#btn-cancel-debrief");
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => modal.remove());
+    }
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const entered = input.value.trim();
+        if (!entered) return;
+
+        const res = await ScoreService.recordPlayerDebrief(playerId, entered);
+        if (res && res.success) {
+          modal.remove();
+          localStorage.setItem(`jb_debriefed_${playerId}`, "true");
+          sessionStorage.removeItem(`dossier_unlocked_${playerId}`);
+          localStorage.removeItem(`dossier_unlocked_${playerId}`);
+          if (contentEl) contentEl.classList.remove("unlocked");
+          const banner = document.getElementById("dossier-debrief-banner");
+          if (banner) banner.remove();
+
+          playDebriefAudioFanfare();
+          renderCinematicThankYouScreen(speler, info);
+        } else {
+          errorEl.textContent = res ? res.reason : "Onjuiste code ingevoerd. Probeer opnieuw.";
+          input.select();
+        }
+      });
+    }
+  }
+
+  function playDebriefAudioFanfare() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === "suspended") ctx.resume();
+
+      const notes = [
+        { f: 392.00, t: 0.0, d: 0.18 }, // G4
+        { f: 523.25, t: 0.18, d: 0.18 }, // C5
+        { f: 659.25, t: 0.36, d: 0.22 }, // E5
+        { f: 783.99, t: 0.58, d: 0.45 }, // G5
+        { f: 659.25, t: 1.05, d: 0.18 }, // E5
+        { f: 783.99, t: 1.25, d: 0.65 }  // G5 (Long finale)
+      ];
+
+      notes.forEach((n) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(n.f, ctx.currentTime + n.t);
+
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + n.t);
+        gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + n.t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.t + n.d);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + n.t);
+        osc.stop(ctx.currentTime + n.t + n.d + 0.1);
+      });
+    } catch (_) {}
+  }
+
+  function renderCinematicThankYouScreen(speler, info) {
+    if (document.getElementById("cinematic-debrief-screen")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "cinematic-debrief-screen";
+    overlay.className = "cinematic-debrief-overlay";
+
+    const pName = speler ? speler.naam : "Agent";
+    const dNr = speler ? speler.dossierNr : "??";
+    const pts = info ? (info.totalPoints || 0) : 0;
+    const grp = info && (info.groupName || info.adminGroupName) ? (info.groupName || info.adminGroupName) : "Veldoperatie Herentals";
+
+    overlay.innerHTML = `
+      <canvas id="debrief-confetti-canvas" class="debrief-confetti-canvas"></canvas>
+      <div class="cinematic-debrief-card">
+        <div class="debrief-stamp-seal">DECLASSIFIED // VOLBRACHT</div>
+        <div class="debrief-card-inner">
+          <div class="debrief-top-badge">
+            <span>★</span> KSA HERENTALS // NATIONAAL VEILIGHEIDSARCHIEF <span>★</span>
+          </div>
+
+          <h1 class="debrief-title">MISSIE VOLBRACHT</h1>
+          <div class="debrief-sub-agent">EERVOL ONTSLAG // AGENT ${pName.toUpperCase()} (DOSSIER #${dNr})</div>
+
+          <div class="debrief-letter-body">
+            <p style="margin-top: 0; color: #fde047; font-weight: 800; font-size: 0.95rem;">
+              Aan Veldagent ${pName},
+            </p>
+            <p>
+              Namens Gamemaster Vicce, de leiding en het voltallige Hoofdkwartier van KSA: <strong>ONTZETTEND BEDANKT VOOR JE MOEDIGE INZET!</strong>
+            </p>
+            <p>
+              Dankzij jouw infiltratie in de historische sectoren van Herentals, het ontcijferen van de geheime codewoorden en het veiligstellen van cruciaal bewijsmateriaal is het corrupte complot rond de erfpacht van onze lokalen definitief ontmaskerd.
+            </p>
+            <p style="margin-bottom: 0;">
+              Jouw missiedossier is conform veiligheidsprotocol Level-4 met succes <strong>definitief verzegeld en gearchiveerd</strong>. Rust uit, agent. Je hebt het verdiend!
+            </p>
+          </div>
+
+          <div class="debrief-stats-grid">
+            <div class="debrief-stat-cell">
+              <div class="debrief-stat-val">${pts} PT</div>
+              <div class="debrief-stat-lbl">Behaalde Punten</div>
+            </div>
+            <div class="debrief-stat-cell">
+              <div class="debrief-stat-val" style="color: #38bdf8; font-size: 0.95rem;">${grp}</div>
+              <div class="debrief-stat-lbl">Toegewezen Team</div>
+            </div>
+            <div class="debrief-stat-cell">
+              <div class="debrief-stat-val" style="color: #f59e0b;">VERZEGELD</div>
+              <div class="debrief-stat-lbl">Dossier Status</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+            <a href="../index.html" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem; text-decoration: none;">
+              🏠 Terug naar Portaal
+            </a>
+            <a href="../beamer.html" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem; text-decoration: none; background: #f59e0b; border-color: #f59e0b; color: #000; font-weight: 800;">
+              🏆 Bekijk Einduitslag Beamer
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    initConfettiEngine("debrief-confetti-canvas");
+  }
+
+  function initConfettiEngine(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener("resize", () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const colors = ["#f59e0b", "#10b981", "#38bdf8", "#ec4899", "#fbbf24", "#ffffff"];
+    const particles = [];
+    for (let i = 0; i < 90; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height - height,
+        r: Math.random() * 5 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tilt: Math.random() * 10 - 5,
+        speedX: Math.random() * 2 - 1,
+        speedY: Math.random() * 2.5 + 1.2
+      });
+    }
+
+    let animId = null;
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.y > height) {
+          p.y = -10;
+          p.x = Math.random() * width;
+        }
+      });
+      animId = requestAnimationFrame(draw);
+    }
+    draw();
   }
 
   checkAccess();

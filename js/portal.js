@@ -804,8 +804,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (openAdminBtn) {
       openAdminBtn.textContent =
         photos.length > 0
-          ? `⚙ Leiding Paneel (📷 ${photos.length})`
-          : "⚙ Leiding Paneel";
+          ? `🛡️ HQ Control Panel (📷 ${photos.length})`
+          : "🛡️ HQ Control Panel";
     }
     if (!adminPhotosGrid || !adminPhotosCount) return;
 

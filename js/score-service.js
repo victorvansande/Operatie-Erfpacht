@@ -679,6 +679,8 @@ const ScoreService = (() => {
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
     let groupVisibilityMode = "auto"; // "auto" (pas na alle codes), "show" (forceer zichtbaar), "hide" (forceer verborgen)
+    let debriefingModeActive = false;
+    const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
 
     for (const ev of sortedEvents) {
       if (ev.type === "reset") {
@@ -689,6 +691,8 @@ const ScoreService = (() => {
         playerLocUnlocks.clear();
         bonusSolves.length = 0;
         groupVisibilityMode = "auto";
+        debriefingModeActive = false;
+        debriefedPlayersMap.clear();
         if (ev.resetGroups) {
           playerGroups.clear();
           groupCustomNames.clear();
@@ -698,6 +702,14 @@ const ScoreService = (() => {
         }
       } else if (ev.type === "set_groups_visibility" && ev.mode) {
         groupVisibilityMode = ev.mode;
+      } else if (ev.type === "set_debriefing_mode") {
+        debriefingModeActive = Boolean(ev.active);
+      } else if (ev.type === "player_debrief" && ev.playerId) {
+        debriefedPlayersMap.set(ev.playerId, {
+          playerId: ev.playerId,
+          ts: ev.ts || Date.now(),
+          eventId: ev.eventId
+        });
       } else if (ev.type === "revoke" && ev.playerId) {
         unlocks.delete(ev.playerId);
       } else if (ev.type === "unlock" && ev.playerId) {
@@ -799,11 +811,11 @@ const ScoreService = (() => {
       }
     }
 
-    // Alleen actieve veldspelers (niet-gamemaster en niet-uitgeschakeld) tellen mee
+    // Alleen actieve veldspelers (niet-gamemaster, niet-tester en niet-uitgeschakeld) tellen mee
     const isStaffPlayer = (id) => {
-      if (id === "vicce") return true;
+      if (id === "vicce" || id === "lander") return true;
       const sp = SPEL_CONFIG.spelers.find((s) => s.id === id);
-      return Boolean(sp && sp.isGamemaster);
+      return Boolean(sp && (sp.isGamemaster || sp.isExternalTester));
     };
 
     const unlockOrder = Array.from(unlocks.values())
@@ -913,7 +925,10 @@ const ScoreService = (() => {
         adminGroupName: configuredGroupName,
         adminGroupColor: configuredGroupColor,
         photos: playerPhotos,
-        active: Boolean(unlockInfo) || bonusPoints !== 0
+        active: Boolean(unlockInfo) || bonusPoints !== 0,
+        // Debriefing & checkout status op het einde van de missie:
+        debriefed: Boolean(debriefedPlayersMap.has(speler.id)),
+        debriefedAt: debriefedPlayersMap.get(speler.id) ? debriefedPlayersMap.get(speler.id).ts : null
       };
     });
 
@@ -1094,7 +1109,10 @@ const ScoreService = (() => {
       unlockedCount: unlockOrder.length,
       totalCount: enabledPlayerScores.length,
       nextRank,
-      nextPoints
+      nextPoints,
+      debriefingActive: debriefingModeActive,
+      debriefedCount: enabledPlayerScores.filter((p) => p.debriefed).length,
+      debriefedPlayersMap
     };
   }
 
@@ -1871,6 +1889,38 @@ const ScoreService = (() => {
     };
   }
 
+  async function setDebriefingMode(active) {
+    return publishEvent({
+      type: "set_debriefing_mode",
+      active: Boolean(active),
+      ts: Date.now()
+    });
+  }
+
+  async function recordPlayerDebrief(playerId, enteredCode) {
+    const sp = SPEL_CONFIG.spelers.find((s) => s.id === playerId);
+    if (!sp) return { success: false, reason: "Speler niet gevonden in dossierregister." };
+
+    const expected = String(sp.code).trim().toLowerCase();
+    const entered = String(enteredCode || "").trim().toLowerCase();
+    const master = String(SPEL_CONFIG.masterCode || "leiding2026").trim().toLowerCase();
+
+    if (entered !== expected && entered !== master) {
+      return { success: false, reason: "Verkeerde 4-cijferige agentencode. Controleer je kaartje/dossier." };
+    }
+
+    // Stop GPS tracking voor deze agent
+    stopLiveGpsTracking();
+
+    await publishEvent({
+      type: "player_debrief",
+      playerId,
+      ts: Date.now()
+    });
+
+    return { success: true };
+  }
+
   function subscribe(callback) {
     listeners.add(callback);
     callback(computeScoreState());
@@ -1897,6 +1947,8 @@ const ScoreService = (() => {
     addGroupBonusPoints,
     revokePlayerUnlock,
     resetAllScores,
+    setDebriefingMode,
+    recordPlayerDebrief,
     setAllGroups,
     assignPlayerGroup,
     renameGroup,

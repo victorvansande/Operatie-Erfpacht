@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
         authModal.style.display = "none";
         authModal.classList.remove("active");
       } else {
-        authError.textContent = "Ongeldige mastercode. Hint: leiding2026";
+        authError.textContent = "Ongeldige autorisatiecode. Toegang geweigerd.";
         authInput.select();
       }
     });
@@ -423,8 +423,8 @@ document.addEventListener("DOMContentLoaded", () => {
     attendanceChips.innerHTML = "";
 
     const all = state.allPlayers || [];
-    const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && p.id !== "vicce").length;
-    const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && p.id !== "vicce").length;
+    const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && !p.isExternalTester && p.id !== "vicce" && p.id !== "lander").length;
+    const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && !p.isExternalTester && p.id !== "vicce" && p.id !== "lander").length;
 
     if (attendanceCountsBadge) {
       attendanceCountsBadge.innerHTML = `
@@ -440,10 +440,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     all.forEach((p) => {
       const chip = document.createElement("div");
+      const isTester = p.isExternalTester || p.id === "lander";
       const isStaff = p.isGamemaster || p.id === "vicce";
-      const isOff = p.disabled && !isStaff;
-      const isUnlocked = p.unlocked;
-      const gpsPos = liveGpsPositions.find((g) => g.playerId === p.id);
 
       if (isStaff) {
         chip.className = "gm-attend-chip is-staff";
@@ -466,6 +464,10 @@ document.addEventListener("DOMContentLoaded", () => {
               #${p.dossierNr}
             </span>
           </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; background: rgba(0,0,0,0.35); padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid rgba(245,158,11,0.25);">
+            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;">PIN / CODE:</span>
+            <span style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 900; color: #fde047; letter-spacing: 0.08em;">${p.code}</span>
+          </div>
           <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
             <span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: #f59e0b;">
               👑 COMMANDANT HOOFDKWARTIER
@@ -480,10 +482,47 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (isTester) {
+        chip.className = "gm-attend-chip is-tester";
+        chip.style.cssText = `
+          background: rgba(16, 185, 129, 0.12);
+          border: 1.5px solid rgba(16, 185, 129, 0.6);
+          border-radius: 8px;
+          padding: 0.55rem 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        `;
+        chip.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.35rem;">
+            <strong style="font-size: 0.95rem; color: #6ee7b7;">
+              🧪 ${p.naam} (Externe Tester)
+            </strong>
+            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #10b981;">
+              #${p.dossierNr}
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; background: rgba(0,0,0,0.35); padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid rgba(16,185,129,0.25);">
+            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;">TEST CODE:</span>
+            <span style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 900; color: #6ee7b7; letter-spacing: 0.08em;">${p.code}</span>
+          </div>
+          <div style="font-size: 0.72rem; color: #cbd5e1; font-style: italic;">
+            Volledig ontgrendeld mapje om te testen &bull; telt niet mee in spel.
+          </div>
+        `;
+        attendanceChips.appendChild(chip);
+        return;
+      }
+
+      const isOff = p.disabled;
+      const isUnlocked = p.unlocked;
+      const isDebriefed = p.debriefed;
+      const gpsPos = liveGpsPositions.find((g) => g.playerId === p.id);
+
       chip.className = `gm-attend-chip ${isOff ? "is-off" : isUnlocked ? "is-unlocked" : "is-active"}`;
       chip.style.cssText = `
-        background: ${isOff ? "rgba(239, 68, 68, 0.12)" : isUnlocked ? "rgba(16, 185, 129, 0.14)" : "rgba(15, 23, 42, 0.88)"};
-        border: 1.5px solid ${isOff ? "rgba(239, 68, 68, 0.65)" : isUnlocked ? "rgba(16, 185, 129, 0.65)" : "#334155"};
+        background: ${isDebriefed ? "rgba(245, 158, 11, 0.14)" : isOff ? "rgba(239, 68, 68, 0.12)" : isUnlocked ? "rgba(16, 185, 129, 0.14)" : "rgba(15, 23, 42, 0.88)"};
+        border: 1.5px solid ${isDebriefed ? "rgba(245, 158, 11, 0.7)" : isOff ? "rgba(239, 68, 68, 0.65)" : isUnlocked ? "rgba(16, 185, 129, 0.65)" : "#334155"};
         border-radius: 8px;
         padding: 0.55rem 0.75rem;
         display: flex;
@@ -496,11 +535,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #10b981; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🛰️ GPS ±${gpsPos.accuracy || 8}m</span>`
         : "";
 
+      const debriefBadge = isDebriefed
+        ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #f59e0b; background: rgba(245,158,11,0.22); border: 1px solid rgba(245,158,11,0.6); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🔒 AFGEMELD &amp; VERZEGELD</span>`
+        : "";
+
       const statusBadge = isOff
         ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: #f87171;">🔴 INACTIEF (AFWEZIG)</span>`
         : isUnlocked
-        ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: var(--accent);">🟢 AANWEZIG // INGELOGD #${p.unlockRank}</span> ${gpsBadge}`
-        : `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: #38bdf8;">🟢 AANWEZIG // WACHT OP PIN</span> ${gpsBadge}`;
+        ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: var(--accent);">🟢 AANWEZIG // INGELOGD #${p.unlockRank}</span> ${gpsBadge} ${debriefBadge}`
+        : `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: #38bdf8;">🟢 AANWEZIG // WACHT OP PIN</span> ${gpsBadge} ${debriefBadge}`;
 
       chip.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.35rem;">
@@ -510,6 +553,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">
             #${p.dossierNr}
           </span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; background: rgba(0,0,0,0.4); padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08);">
+          <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;">PIN / CODE:</span>
+          <span style="font-family: var(--font-mono); font-size: 0.9rem; font-weight: 900; color: #fde047; letter-spacing: 0.08em;">${p.code || "----"}</span>
         </div>
         <div>${statusBadge}</div>
         <div style="display: flex; gap: 0.4rem; margin-top: 0.2rem; flex-wrap: wrap;">
@@ -1331,7 +1378,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!txt) return;
 
       const rawTarget = broadcastTargetSelect ? broadcastTargetSelect.value : "all";
-      const category = broadcastCategorySelect ? broadcastCategorySelect.value : "tip";
+      const category = "broadcast";
 
       let targetType = "all";
       let targetId = "";
@@ -1385,6 +1432,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // 8. Einde Missie & Debriefing Beheer (Fase 3)
+  const btnToggleDebrief = document.getElementById("gm-btn-toggle-debrief");
+  const debriefStatusPill = document.getElementById("gm-debrief-status-pill");
+  const debriefCountSub = document.getElementById("gm-debrief-count-sub");
+
+  function renderDebriefStatus(state) {
+    if (!state) return;
+    const isActive = Boolean(state.debriefingActive);
+    const count = state.debriefedCount || 0;
+    const total = state.totalCount || 25;
+
+    if (debriefStatusPill) {
+      debriefStatusPill.textContent = isActive
+        ? `🟢 DEBRIEFING VRIJGEGEVEN (${count}/${total} AFGEMELD)`
+        : "DEBRIEFING INACTIEF (SPEL BEZIG)";
+      debriefStatusPill.style.background = isActive ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.08)";
+      debriefStatusPill.style.borderColor = isActive ? "#10b981" : "rgba(255, 255, 255, 0.15)";
+      debriefStatusPill.style.color = isActive ? "#6ee7b7" : "#94a3b8";
+    }
+
+    if (debriefCountSub) {
+      debriefCountSub.textContent = `Voortgang: ${count} / ${total} veldagenten afgemeld & verzegeld`;
+      debriefCountSub.style.color = count >= total && total > 0 ? "var(--accent)" : "var(--amber)";
+    }
+
+    if (btnToggleDebrief) {
+      btnToggleDebrief.textContent = isActive
+        ? "🔒 Debriefing Stopzetten / Spel Hervatten"
+        : "🚨 Activeer Einde Spel & Debriefing";
+      btnToggleDebrief.style.background = isActive ? "rgba(239, 68, 68, 0.2)" : "rgba(245, 158, 11, 0.2)";
+      btnToggleDebrief.style.borderColor = isActive ? "#ef4444" : "var(--amber)";
+      btnToggleDebrief.style.color = isActive ? "#fca5a5" : "#fde047";
+    }
+  }
+
+  if (btnToggleDebrief) {
+    btnToggleDebrief.addEventListener("click", async () => {
+      const isCurrentlyActive = Boolean(latestState && latestState.debriefingActive);
+      const confirmMsg = !isCurrentlyActive
+        ? "⚠️ MISSIE BEËINDIGEN // DEBRIEFING PROTOCOL VRIJGEVEN\n\nWeet je zeker dat het spel ten einde is?\n\nHierdoor verschijnt bij alle actieve agenten op hun gsm de knop om hun dossier definitief te verzegelen en hun bedanking / eervol ontslag te zien."
+        : "Weet je zeker dat je de debriefing-modus wilt DEACTIVEREN en het spel wilt hervatten?";
+
+      if (!window.confirm(confirmMsg)) return;
+
+      await ScoreService.setDebriefingMode(!isCurrentlyActive);
+      showToast(
+        !isCurrentlyActive
+          ? "🚨 EINDE SPEL GESTART: Debriefing & uitlog-prompt live verstuurd naar alle agenten!"
+          : "ℹ️ Debriefing stopgezet. Spelers kunnen weer gewoon navigeren."
+      );
+    });
+  }
+
   // Start Realtime Synchronisatie & GPS Radar Tracking
   ScoreService.startRealtimeSync();
   ScoreService.subscribe((state) => {
@@ -1396,6 +1496,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderUploadsStream(state);
     renderLocationOccupancy(state);
     updateBroadcastGroupsOptions(state);
+    renderDebriefStatus(state);
   });
 
   if (typeof ScoreService.onGpsPositionChange === "function") {
