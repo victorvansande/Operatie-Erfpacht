@@ -51,6 +51,61 @@ const SPEL_CONFIG = {
     lng: 4.82938
   },
 
+  // BONUSOPDRACHTEN & INTERCEPTIES (Verschijnen in elk spelersmapje):
+  bonusRiddles: [
+    {
+      id: "burner_sms",
+      type: "riddle",
+      titel: "ONDERSCHEPTE SMS BURNER-PHONE",
+      subtitel: "SIGINT INTERCEPTIE // STADSARCHIEF HERENTALS",
+      punten: 75,
+      codewoord: "hangjongeren",
+      toetsaanslagen: "44 - 2 - 66 - 4 - 5 - 666 - 66 - 4 - 33 - 777 - 33 - 66",
+      verhaal: "Onze SIGINT-afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige communicatie géén traceerbare smartphones gebruikt, maar een oude, ongeregistreerde burner-phone (een retro Nokia met numerieke fysieke druktoetsen). Onze antenne heeft zojuist een uitgaande SMS kunnen onderscheppen die verstuurd werd via het klassieke T9 multi-tap toetsenbord.",
+      instructie: "Ontcijfer het onderschepte woord via de T9 multi-tap toetsen en voer het hieronder in om het direct naar Gamemaster HQ te sturen voor bonuspunten!"
+    },
+    {
+      id: "ad_fundum",
+      type: "video_challenge",
+      titel: "OPERATIE AD FUNDUM // CAFÉ INFILTRATIE",
+      subtitel: "HUMINT VELDTEST // SNELSTE 'AT' WINT",
+      punten: 100,
+      verhaal: "Een echte veldagent moet te allen tijde alert en paraat zijn, maar moet ook bliksemsnel zijn glas kunnen leegdrinken wanneer de plicht roept en HQ plots het evacuatie-signaal geeft!",
+      instructie: "Infiltreer undercover een café in Herentals en bestel aan de toog een pint (of een frisdrank voor wie geen alcohol drinkt). Trek een adje ('at')! Film het adje van start tot finish op video met een lopende stopwatch (bv. op een tweede gsm) duidelijk zichtbaar in beeld. De snelste tijd pakt de maximale bonus!",
+      uploadHint: "Film het adje met stopwatch en upload de video hier direct naar Gamemaster HQ."
+    },
+    {
+      id: "snack_vicce",
+      type: "physical_delivery",
+      titel: "OPERATIE SNACK ATTACK // RED GAMEMASTER VICCE",
+      subtitel: "LOGISTIEKE NOODMISSIE // PROVIAND VOOR HQ",
+      punten: 100,
+      verhaal: "Gamemaster Vicce is al dagen- en nachtenlang onafgebroken bezig met het uitpluizen van deze duistere samenzwering, het bouwen van het commandoportaal en het bewaken van de satellietverbindingen. Zijn energiepeil staat op 1% en zijn maag knort luid over de frequenties. Hij heeft acute honger!",
+      instructie: "Zorg dat Gamemaster Vicce niet bezwijkt: breng hem op het einde van de tocht een snack mee terug naar het Hoofdkwartier (Kapucijnenstraat 7) die hij écht lust (bv. frituur, bakkerij, nachtwinkel of café). De beste snack levert koninklijke bonuspunten op!",
+      uploadHint: "Optioneel: maak alvast een teaser-foto van de snack bij aankoop en upload die hieronder."
+    },
+    {
+      id: "derde_partij_koor",
+      type: "video_challenge",
+      titel: "OPERATIE VOLKSSTEM // OVERTUIG DE DERDE PARTIJ",
+      subtitel: "PSY-OPS STRATEGIE // MINIMAAL 6 VREEMDEN TEGELIJK",
+      punten: 150,
+      verhaal: "Om de louche derde partij definitief af te schrikken en te bewijzen dat heel Herentals achter de KSA staat, hebben we een overweldigende, massale volksgetuigenis nodig. Eén getuige is niet genoeg; we moeten tonen dat de straat achter ons staat!",
+      instructie: "Krijg minstens 6 volslagen vreemden (voorbijgangers in Herentals) tegelijkertijd voor jullie camera en laat ze in koor, luid en overtuigend roepen: 'Redt de KSA, de ware eigenaars van de erfpacht!'.",
+      uploadHint: "Film de 6 vreemden die de leuze in koor roepen en upload de video hier direct voor HQ (+150 pt)."
+    },
+    {
+      id: "speurhond_k9",
+      type: "photo_challenge",
+      titel: "OPERATIE SPEURHOND // K9 REKRUTERINGSBUREAU",
+      subtitel: "K9 TACTICAL SQUAD // VIERVOETIGE INLICHTINGENDIENST",
+      punten: 50,
+      verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
+      instructie: "Vind in de stad een potentiële viervoetige kandidaat-speurhond (een hond die uitgelaten wordt, op een terras ligt of waakzaam achter een vensterbank zit). Neem een foto met deze kandidaat als officieel sollicitatiedossier voor Gamemaster HQ!",
+      uploadHint: "Upload hier de foto met de potentiële kandidaat-speurhond (+50 pt)."
+    }
+  ],
+
   // LOCATIE-MAPJES (De 1e code per locatie geldt voor iedereen; elk groepje krijgt een andere volgorde!):
   // Pas hier eenvoudig de 'code', 'opdracht', 'bonusOpdracht', 'gelektDocument' en 'veldTool' per locatie aan!
   locaties: [

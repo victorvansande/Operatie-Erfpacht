@@ -3761,3 +3761,63 @@ a,
   text-transform: uppercase;
 }
 
+/* =========================================================================
+   BONUSDOSSIERS & RETRO BURNER-PHONE STYLES
+   ========================================================================= */
+.bonus-folder {
+  border-left-color: var(--amber) !important;
+}
+
+.bonus-folder .location-folder-header {
+  border-left: 4px solid var(--amber);
+}
+
+.retro-burner-phone-box {
+  background: #060e08;
+  border: 1.5px solid #10b981;
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  margin: 1rem 0;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.12);
+  font-family: var(--font-mono);
+}
+
+.burner-screen-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed rgba(16, 185, 129, 0.35);
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.72rem;
+  color: #6ee7b7;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.burner-keystrokes {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #34d399;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 0.85rem 0.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.burner-hint {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  line-height: 1.55;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+

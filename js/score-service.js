@@ -677,6 +677,7 @@ const ScoreService = (() => {
     const photosMap = new Map(); // eventId -> photo object
     const messagesMap = new Map(); // eventId -> message board object
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
+    const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
     let groupVisibilityMode = "auto"; // "auto" (pas na alle codes), "show" (forceer zichtbaar), "hide" (forceer verborgen)
 
     for (const ev of sortedEvents) {
@@ -686,6 +687,7 @@ const ScoreService = (() => {
         photosMap.clear();
         messagesMap.clear();
         playerLocUnlocks.clear();
+        bonusSolves.length = 0;
         groupVisibilityMode = "auto";
         if (ev.resetGroups) {
           playerGroups.clear();
@@ -782,6 +784,18 @@ const ScoreService = (() => {
         });
       } else if (ev.type === "delete_message" && ev.targetEventId) {
         messagesMap.delete(ev.targetEventId);
+      } else if (ev.type === "bonus_submission") {
+        bonusSolves.push({
+          eventId: ev.eventId,
+          playerId: ev.playerId,
+          playerName: ev.playerName || ev.playerId,
+          groupId: ev.groupId || null,
+          riddleId: ev.riddleId,
+          answer: ev.answer,
+          status: ev.status,
+          reward: ev.reward,
+          ts: ev.ts
+        });
       }
     }
 
@@ -1020,10 +1034,16 @@ const ScoreService = (() => {
 
         const memberIds = new Set(grp.leden.map((m) => m.id));
         p.sharedPhotos = allPhotos.filter((ph) => memberIds.has(ph.playerId));
+        p.bonusSolves = bonusSolves.filter(
+          (s) => (s.playerId === p.id || memberIds.has(s.playerId)) && s.status === "correct"
+        );
       } else {
         p.groupMembers = [];
         p.sharedUnlockedLocations = new Set(playerLocUnlocks.get(p.id) || []);
         p.sharedPhotos = allPhotos.filter((ph) => ph.playerId === p.id);
+        p.bonusSolves = bonusSolves.filter(
+          (s) => s.playerId === p.id && s.status === "correct"
+        );
       }
     });
 
@@ -1056,6 +1076,7 @@ const ScoreService = (() => {
       hasGroups: groupsList.length > 0,
       allPhotos,
       allMessages,
+      bonusSolves: bonusSolves.sort((a, b) => (b.ts || 0) - (a.ts || 0)),
       playerScoresMap: playerLookup,
       unlockedCount: unlockOrder.length,
       totalCount: enabledPlayerScores.length,
@@ -1471,6 +1492,67 @@ const ScoreService = (() => {
     });
   }
 
+  /**
+   * Valideer een bonusraadsel en stuur het antwoord live door naar HQ met toekenning van bonuspunten.
+   */
+  async function submitBonusRiddle(playerId, riddleId, rawAnswer) {
+    const configRiddle = (SPEL_CONFIG.bonusRiddles || []).find((r) => r.id === riddleId);
+    if (!configRiddle) {
+      return { success: false, message: "Onbekend raadsel." };
+    }
+    const cleanAnswer = String(rawAnswer || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const cleanExpected = String(configRiddle.codewoord || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    if (cleanAnswer !== cleanExpected) {
+      return {
+        success: false,
+        message: "❌ ONJUIST WOORD: De interceptie kon niet geverifieerd worden. Controleer je T9-toetsaanslagen en probeer opnieuw!"
+      };
+    }
+
+    const state = computeScoreState();
+    const speler = SPEL_CONFIG.spelers.find((s) => s.id === playerId);
+    const spelerNaam = speler ? speler.naam : playerId;
+    const playerInfo = state.playerScoresMap.get(playerId);
+    const groupId = playerInfo ? (playerInfo.adminGroupId || playerInfo.groupId || null) : null;
+
+    // Check of dit raadsel al correct is opgelost door deze speler of groep
+    const alreadySolved = (state.bonusSolves || []).some(
+      (s) =>
+        (s.playerId === playerId || (groupId && s.groupId === groupId)) &&
+        s.riddleId === riddleId &&
+        s.status === "correct"
+    );
+
+    if (!alreadySolved) {
+      // 1. Registreer submission event
+      await publishEvent({
+        type: "bonus_submission",
+        playerId,
+        playerName: spelerNaam,
+        groupId,
+        riddleId,
+        answer: cleanAnswer,
+        status: "correct",
+        reward: configRiddle.punten || 75
+      });
+
+      // 2. Ken bonuspunten toe
+      await addBonusPoints(
+        playerId,
+        configRiddle.punten || 75,
+        `⭐ Bonusopdracht Burner-Phone SMS ontcijferd ('${configRiddle.codewoord}')`
+      );
+    }
+
+    return {
+      success: true,
+      alreadySolved,
+      reward: configRiddle.punten || 75,
+      codewoord: configRiddle.codewoord
+    };
+  }
+
   function subscribe(callback) {
     listeners.add(callback);
     callback(computeScoreState());
@@ -1497,6 +1579,7 @@ const ScoreService = (() => {
     uploadPlayerPhoto,
     deletePlayerPhoto,
     openPhotoLightbox,
+    submitBonusRiddle,
     postBoardMessage,
     deleteBoardMessage,
     refresh: fetchCloudHistory,

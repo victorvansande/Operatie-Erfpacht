@@ -680,6 +680,718 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
+  // BONUSDOSSIERS (5 GEHEIME NEVENMISSIES)
+  // =========================================================================
+  function setupBonusUploadForm(folderEl, bonusLocId, bonusLocName) {
+    const photoForm = folderEl.querySelector(".loc-photo-form");
+    const photoInput = folderEl.querySelector(".loc-photo-input");
+    const photoFilename = folderEl.querySelector(".loc-photo-filename");
+    const photoCaption = folderEl.querySelector(".loc-photo-caption");
+    const photoSubmit = folderEl.querySelector(".loc-photo-submit");
+    const photoStatus = folderEl.querySelector(".loc-photo-status");
+
+    if (!photoForm || !photoInput) return;
+
+    photoInput.addEventListener("change", () => {
+      if (photoInput.files && photoInput.files[0]) {
+        photoFilename.textContent = photoInput.files[0].name;
+      } else {
+        photoFilename.textContent = "Geen bestand gekozen";
+      }
+    });
+
+    photoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!photoInput.files || !photoInput.files[0]) return;
+      const file = photoInput.files[0];
+
+      photoSubmit.disabled = true;
+      photoSubmit.textContent = "Uploaden...";
+      photoStatus.textContent = `Bewijs wordt verstuurd naar HQ...`;
+
+      try {
+        await ScoreService.uploadPlayerPhoto(
+          playerId,
+          file,
+          photoCaption ? photoCaption.value : "",
+          bonusLocId,
+          bonusLocName
+        );
+        photoInput.value = "";
+        if (photoCaption) photoCaption.value = "";
+        photoFilename.textContent = "Geen bestand gekozen";
+        photoStatus.textContent = "✓ Bewijsmateriaal succesvol verzonden naar HQ!";
+        setTimeout(() => {
+          if (photoStatus.textContent.startsWith("✓")) {
+            photoStatus.textContent = "";
+          }
+        }, 4500);
+      } catch (err) {
+        photoStatus.textContent = "Fout bij uploaden. Probeer opnieuw.";
+      } finally {
+        photoSubmit.disabled = false;
+        photoSubmit.textContent = "Upload naar HQ";
+      }
+    });
+  }
+
+  function renderBonusGallery(folderEl, bonusLocId, info) {
+    const gallery = folderEl.querySelector(".loc-photos-gallery");
+    if (!gallery) return;
+
+    const teamPhotos =
+      info && info.sharedPhotos ? info.sharedPhotos : (latestPlayerInfo && latestPlayerInfo.sharedPhotos) || [];
+    const photos = teamPhotos.filter((ph) => ph.locationId === bonusLocId);
+
+    const sig = photos.map((p) => p.eventId).join("|");
+    if (folderEl.dataset.bonusSig === sig) return;
+    folderEl.dataset.bonusSig = sig;
+
+    gallery.innerHTML = "";
+    photos.forEach((ph) => {
+      const card = document.createElement("div");
+      card.className = "photo-card";
+      const timeStr = ph.ts
+        ? new Date(ph.ts).toLocaleTimeString("nl-BE", {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
+        : "";
+
+      const isVid =
+        ph.mediaType === "video" ||
+        (ph.photoUrl && (ph.photoUrl.startsWith("data:video/") || /\.(mp4|mov|webm)(\?|$)/i.test(ph.photoUrl)));
+      const mediaHtml = isVid
+        ? `<video src="${ph.photoUrl}" controls playsinline preload="metadata" style="width:100%; height:145px; object-fit:cover; background:#000; display:block;"></video>`
+        : `<img src="${ph.photoUrl}" alt="Bewijs ${bonusLocId}" title="Tik om op volledig scherm te bekijken" />`;
+
+      card.innerHTML = `
+        ${mediaHtml}
+        <div class="photo-card-body">
+          <div style="color: var(--amber); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;">
+            Door ${ph.playerName} ${ph.groupName ? `(${ph.groupName})` : ""} // ${timeStr}
+          </div>
+          ${ph.caption ? `<div class="photo-card-caption">${ph.caption}</div>` : ""}
+        </div>
+      `;
+
+      if (!isVid) {
+        const img = card.querySelector("img");
+        if (img) {
+          img.addEventListener("click", () => {
+            if (ScoreService.openPhotoLightbox) {
+              ScoreService.openPhotoLightbox(ph.photoUrl, ph.caption, ph.playerName, timeStr);
+            }
+          });
+        }
+      }
+      gallery.appendChild(card);
+    });
+  }
+
+  function ensureBonusFolders(info) {
+    if (!contentEl) return;
+    const container = document.getElementById("bonus-folders-container");
+    if (!container) return;
+
+    const AGENCY_SEAL_SMALL_SVG = `
+      <svg class="intel-doc-seal" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" stroke="#0f172a" stroke-width="2.5" fill="#f1ede2"/>
+        <circle cx="32" cy="32" r="24" stroke="#0f172a" stroke-width="1.2" stroke-dasharray="2 2"/>
+        <path d="M32 10 L37 25 L52 25 L40 34 L44 49 L32 40 L20 49 L24 34 L12 25 L27 25 Z" fill="#0f172a"/>
+        <circle cx="32" cy="32" r="6" fill="#f8f6f0" stroke="#0f172a" stroke-width="1.5"/>
+      </svg>
+    `;
+
+    const isBurnerSolved =
+      Boolean(
+        info &&
+        info.bonusSolves &&
+        info.bonusSolves.some(
+          (s) => s.riddleId === "burner_sms" && s.status === "correct"
+        )
+      ) || localStorage.getItem(`jb_solved_burner_sms_${playerId}`) === "true";
+
+    let wrapper = document.getElementById("bonus-folders-wrapper");
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = "bonus-folders-wrapper";
+      wrapper.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin: 1.25rem 0 0.55rem; padding-bottom: 0.35rem; border-bottom: 1px dashed rgba(245, 158, 11, 0.35);">
+          <div class="live-toast-tag" style="color: var(--amber);">&gt;_ GEHEIME BONUSDOSSIERS // 5 NEVENMISSIES VOOR EXTRA PUNTEN</div>
+          <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber); font-weight: 700;">★ OPTIONEEL VOOR VASTE PUNTEN</span>
+        </div>
+        <div id="bonus-folders-list" class="locations-list"></div>
+      `;
+      container.appendChild(wrapper);
+
+      const list = wrapper.querySelector("#bonus-folders-list");
+
+      // -------------------------------------------------------------
+      // BONUS 1: Onderschepte SMS Burner-Phone (T9 Decryptie)
+      // -------------------------------------------------------------
+      const b1 = document.createElement("div");
+      b1.className = "location-folder bonus-folder";
+      b1.id = "loc-folder-bonus-burner";
+      b1.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon">📁</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #01:</span>
+            <span>Onderschepte SMS Burner-Phone</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ T9 CODEWOORD (+75 PT)
+            </span>
+            <span class="loc-lock-badge b1-status-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              ${isBurnerSolved ? "✅ VOLBRACHT (+75 PT)" : "🔓 OPENSTAAND"}
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">BIJLAGE SIGINT // AFGELUISTERDE OUDE BURNER-PHONE</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">SIGINT COMMUNICATIE-AFLUISTERING // ARCHIEF HERENTALS</div>
+                  <div class="intel-doc-main-title">ONDERSCHEPTE BURNER-PHONE SMS</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">KLASSIEK T9 MULTI-TAP PROTOCOL // CODENAAM: RETRO-CELL</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                CLASSIFIED INTEL
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>INTERCEPTIE-VERSLAG:</strong> Onze afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige afspraken géén traceerbare smartphones of officiële e-mails gebruikt, maar een oude, anonieme <em>burner-phone</em> (een fysieke Nokia met numerieke druktoetsen).
+              </p>
+              <p>
+                Zojuist heeft onze antenne een uitgaande SMS kunnen onderscheppen die verstuurd werd via het klassieke <strong>T9 multi-tap toetsenbord</strong>.
+              </p>
+
+              <div class="retro-burner-phone-box">
+                <div class="burner-screen-top">
+                  <span>📟 NOKIA BUFFER // INTERCEPTED SMS-STREAM</span>
+                  <span>MULTI-TAP T9 PROTOCOL</span>
+                </div>
+                <div class="burner-keystrokes">
+                  44 &bull; 2 &bull; 66 &bull; 4 &bull; 5 &bull; 666 &bull; 66 &bull; 4 &bull; 33 &bull; 777 &bull; 33 &bull; 66
+                </div>
+                <div class="burner-hint">
+                  💡 <strong>DECODEER-HANDLEIDING (Cijfertoetsen op een klassieke GSM):</strong><br>
+                  <span style="color: #94a3b8;">
+                    <code>[2: A-B-C]</code> &bull; <code>[3: D-E-F]</code> &bull; <code>[4: G-H-I]</code> &bull; <code>[5: J-K-L]</code><br>
+                    <code>[6: M-N-O]</code> &bull; <code>[7: P-Q-R-S]</code> &bull; <code>[8: T-U-V]</code> &bull; <code>[9: W-X-Y-Z]</code>
+                  </span><br>
+                  <em>(Voorbeeld: toets 4 tweemaal = <strong>H</strong>, toets 2 eenmaal = <strong>A</strong>, toets 6 tweemaal = <strong>N</strong>, ...)</em>
+                </div>
+              </div>
+
+              <!-- Formulier of Opgelost Scherm -->
+              <div class="b1-form-area" style="${isBurnerSolved ? "display: none;" : "display: block;"}">
+                <p style="font-size: 0.82rem; color: #475569; margin-bottom: 0.5rem; font-weight: 700;">
+                  Voer het ontcijferde woord hieronder in. Zodra het klopt, wordt het direct naar Gamemaster HQ gestuurd en ontvangt je team <strong>+75 bonuspunten</strong>:
+                </p>
+                <form class="b1-submit-form" autocomplete="off" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                  <input
+                    type="text"
+                    class="loc-code-input b1-input"
+                    placeholder="Typ het ontcijferde woord..."
+                    autocapitalize="none"
+                    autocorrect="off"
+                    spellcheck="false"
+                    enterkeyhint="go"
+                    required
+                    style="flex: 1; min-width: 190px; text-transform: uppercase;"
+                  />
+                  <button type="submit" class="btn btn-primary b1-btn" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800;">
+                    📡 VERZEND NAAR HQ (+75 PT)
+                  </button>
+                </form>
+                <div class="b1-feedback-msg" style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; min-height: 1.2rem;"></div>
+              </div>
+
+              <div class="b1-solved-card" style="${isBurnerSolved ? "display: block;" : "display: none;"} background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 6px; padding: 1rem; text-align: center; margin-top: 0.85rem;">
+                <div style="font-size: 1.4rem; margin-bottom: 0.2rem;">✅</div>
+                <div style="font-family: var(--font-mono); font-weight: 800; color: #34d399; font-size: 1.05rem;">
+                  INTERCEPTIE SUCCESVOL ONTRAADSELD // VERZONDEN NAAR HQ
+                </div>
+                <div style="font-size: 0.88rem; color: #ecfdf5; margin-top: 0.35rem;">
+                  Gedecodeerd codewoord: <strong style="letter-spacing: 0.1em; color: var(--amber);">"HANGJONGEREN"</strong>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 0.78rem; color: #a7f3d0; margin-top: 0.5rem;">
+                  ⭐ +75 BONUSPUNTEN BIJGESCHREVEN OP HET LIVE SCOREBORD!
+                </div>
+              </div>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: SIGINT DIRECTORATE // CLASSIFIED TRANSMISSION</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+        </div>
+      `;
+      list.appendChild(b1);
+
+      // Accordion toggle & form submit event for Bonus 1
+      const b1Header = b1.querySelector(".location-folder-header");
+      b1Header.addEventListener("click", () => b1.classList.toggle("expanded"));
+
+      const b1Form = b1.querySelector(".b1-submit-form");
+      const b1Input = b1.querySelector(".b1-input");
+      const b1Msg = b1.querySelector(".b1-feedback-msg");
+      const b1Btn = b1.querySelector(".b1-btn");
+      const b1FormArea = b1.querySelector(".b1-form-area");
+      const b1SolvedCard = b1.querySelector(".b1-solved-card");
+      const b1Badge = b1.querySelector(".b1-status-badge");
+
+      if (b1Form) {
+        b1Form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const val = b1Input.value.trim();
+          if (!val) return;
+
+          b1Btn.disabled = true;
+          b1Btn.textContent = "Verifiëren met HQ...";
+          b1Msg.style.color = "var(--text-muted)";
+          b1Msg.textContent = "Verbinding maken met Gamemaster HQ...";
+
+          try {
+            const res = await ScoreService.submitBonusRiddle(playerId, "burner_sms", val);
+            if (res.success) {
+              localStorage.setItem(`jb_solved_burner_sms_${playerId}`, "true");
+              b1Msg.textContent = "";
+              b1FormArea.style.display = "none";
+              b1SolvedCard.style.display = "block";
+              b1Badge.textContent = "✅ VOLBRACHT (+75 PT)";
+              b1Badge.style.color = "var(--accent)";
+              b1Badge.style.borderColor = "var(--accent)";
+              if (ScoreService.triggerIntelPopup) {
+                ScoreService.triggerIntelPopup(
+                  "🎯 BONUS VOLBRACHT! Het codewoord 'HANGJONGEREN' is geverifieerd door Gamemaster HQ (+75 PT).",
+                  "VELDAGENT"
+                );
+              }
+            } else {
+              b1Msg.style.color = "var(--danger)";
+              b1Msg.textContent = res.message || "❌ ONJUIST WOORD: Probeer opnieuw!";
+              b1Btn.disabled = false;
+              b1Btn.textContent = "📡 VERZEND NAAR HQ (+75 PT)";
+              b1Input.select();
+            }
+          } catch (err) {
+            b1Msg.style.color = "var(--danger)";
+            b1Msg.textContent = "Verbindingsfout met HQ: " + err.message;
+            b1Btn.disabled = false;
+            b1Btn.textContent = "📡 VERZEND NAAR HQ (+75 PT)";
+          }
+        });
+      }
+
+      // -------------------------------------------------------------
+      // BONUS 2: Operatie Ad Fundum (Café Infiltratie)
+      // -------------------------------------------------------------
+      const b2 = document.createElement("div");
+      b2.className = "location-folder bonus-folder";
+      b2.id = "loc-folder-bonus-adfundum";
+      b2.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon">📁</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #02:</span>
+            <span>Operatie Ad Fundum (Café Infiltratie)</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ SNELSTE AT WINT (+100 PT)
+            </span>
+            <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              📹 VIDEO VEREIST
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0.85rem;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">HUMINT VELDTEST // TACTISCHE REACTIESNELHEID</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">HUMINT COMMUNICATIE-DIRECTIE // HORECA SECTOR HERENTALS</div>
+                  <div class="intel-doc-main-title">OPERATIE AD FUNDUM // CAFÉ INFILTRATIE</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">SNELSTE AT WINT // PROEF VAN PARAATHEID</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                ACTIVE CHALLENGE
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>TACTISCHE BRIEFING:</strong> Een echte veldagent moet te allen tijde alert en paraat zijn, maar moet ook <strong>bliksemsnel zijn glas kunnen leegdrinken</strong> wanneer de plicht roept en HQ plots het evacuatie-signaal geeft!
+              </p>
+              <p>
+                <strong>DE OPDRACHT:</strong> Infiltreer undercover een café in Herentals en bestel aan de toog een pint (of een glas frisdrank/water voor wie geen alcohol drinkt). Trek een <strong>adje ('at') van start tot finish</strong>!
+              </p>
+              <p>
+                <strong>HET BEWIJS:</strong> Film het adje van start tot finish op video met een <strong>lopende stopwatch</strong> (bv. op een tweede gsm) duidelijk zichtbaar in beeld. De agent of groep met de allersnelste tijd pakt de maximale bonuspunten van Gamemaster Vicce!
+              </p>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: HUMINT DIRECTORATE // OPERATION AD FUNDUM</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+
+          <!-- Uploadzone voor Ad Fundum Video -->
+          <div style="background: rgba(14, 20, 28, 0.92); border: 2px solid var(--amber); border-radius: 8px; padding: 1.05rem;">
+            <div class="clue-label" style="color: var(--amber); margin-bottom: 0.35rem; font-size: 0.82rem;">
+              📹 BEWIJSMATERIAAL UPLOAD // OPERATIE AD FUNDUM VIDEO
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.55rem;">
+              Upload hier jullie video met de stopwatch duidelijk in beeld. Vermeld jullie chrono-tijd in de beschrijving!
+            </p>
+            <form class="photo-upload-form loc-photo-form" autocomplete="off" style="margin-top: 0.5rem;">
+              <label class="file-input-label">
+                <span>📹 Kies of maak Ad Fundum video</span>
+                <input type="file" class="loc-photo-input" accept="video/*,image/*" style="display: none;" required />
+              </label>
+              <span class="loc-photo-filename" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-main);">Geen bestand gekozen</span>
+              <input
+                type="text"
+                class="admin-input loc-photo-caption"
+                placeholder="bv. Chrono: 3.84s - Café Den Beiaard - Agent Daan"
+                style="margin-bottom: 0; flex: 1; min-width: 170px;"
+                required
+              />
+              <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
+                Upload Video naar HQ
+              </button>
+            </form>
+            <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
+            <div class="photos-grid loc-photos-gallery"></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(b2);
+
+      const b2Header = b2.querySelector(".location-folder-header");
+      b2Header.addEventListener("click", () => b2.classList.toggle("expanded"));
+      setupBonusUploadForm(b2, "bonus_ad_fundum", "Bonus #02: Operatie Ad Fundum");
+
+      // -------------------------------------------------------------
+      // BONUS 3: Operatie Snack Attack (Red Gamemaster Vicce)
+      // -------------------------------------------------------------
+      const b3 = document.createElement("div");
+      b3.className = "location-folder bonus-folder";
+      b3.id = "loc-folder-bonus-snack";
+      b3.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon">📁</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #03:</span>
+            <span>Operatie Snack Attack (Red Gamemaster Vicce)</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ PROVIAND HQ (+100 PT)
+            </span>
+            <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              🍟 FYSIEKE LEVERING
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0.85rem;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">LOGISTIEKE NOODMISSIE // COMMANDOPOST KAPUCIJNENSTRAAT 7</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">LOGISTIEKE DIENST HQ // BEVOORRADING COMMANDOCENTRUM</div>
+                  <div class="intel-doc-main-title">OPERATIE SNACK ATTACK // RED GAMEMASTER VICCE</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">BATTERIJ VICCE: 1% // ACUTE HONGER</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                URGENT MISSION
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>NOODSITUATIE OP HQ:</strong> Gamemaster Vicce is al dagen- en nachtenlang onafgebroken bezig met het uitpluizen van deze duistere samenzwering, het coderen van het commandoportaal en het bewaken van de satellietverbindingen.
+              </p>
+              <p>
+                Zijn energiepeil staat op 1% en zijn maag knort inmiddels luider dan de afluisterantennes. <strong>Hij heeft acute honger!</strong>
+              </p>
+              <p>
+                <strong>DE OPDRACHT:</strong> Zorg dat Gamemaster Vicce niet omvalt van de honger: breng hem op het einde van de tocht een snack mee terug naar het Hoofdkwartier (Kapucijnenstraat 7) die hij écht lust (bv. van de frituur, bakkerij, nachtwinkel of café). De lekkerste snack levert koninklijke bonuspunten op van de Gamemaster!
+              </p>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: GAMEMASTER VICCE // HQ PROVIAND PROTOCOL</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+
+          <!-- Optionele Teaser Foto Upload voor Snack -->
+          <div style="background: rgba(14, 20, 28, 0.92); border: 2px solid var(--amber); border-radius: 8px; padding: 1.05rem;">
+            <div class="clue-label" style="color: var(--amber); margin-bottom: 0.35rem; font-size: 0.82rem;">
+              📷 OPTIONELE PREVIEW // FOTO VAN DE SNACK
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.55rem;">
+              Hebben jullie al een snack geregeld voor Vicce? Upload hier alvast een teaser-foto om HQ warm te maken!
+            </p>
+            <form class="photo-upload-form loc-photo-form" autocomplete="off" style="margin-top: 0.5rem;">
+              <label class="file-input-label">
+                <span>📷 Kies of maak foto van de snack</span>
+                <input type="file" class="loc-photo-input" accept="image/*,video/*" style="display: none;" required />
+              </label>
+              <span class="loc-photo-filename" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-main);">Geen bestand gekozen</span>
+              <input
+                type="text"
+                class="admin-input loc-photo-caption"
+                placeholder="bv. Frituur 't Hoekske - Bicky Burger voor Vicce"
+                style="margin-bottom: 0; flex: 1; min-width: 170px;"
+              />
+              <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
+                Upload Teaser naar HQ
+              </button>
+            </form>
+            <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
+            <div class="photos-grid loc-photos-gallery"></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(b3);
+
+      const b3Header = b3.querySelector(".location-folder-header");
+      b3Header.addEventListener("click", () => b3.classList.toggle("expanded"));
+      setupBonusUploadForm(b3, "bonus_snack_vicce", "Bonus #03: Operatie Snack Attack");
+
+      // -------------------------------------------------------------
+      // BONUS 4: Operatie Volksstem (Overtuig de Derde Partij)
+      // -------------------------------------------------------------
+      const b4 = document.createElement("div");
+      b4.className = "location-folder bonus-folder";
+      b4.id = "loc-folder-bonus-volksstem";
+      b4.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon">📁</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #04:</span>
+            <span>Operatie Volksstem (Overtuig de Derde Partij)</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ PSY-OP (+150 PT)
+            </span>
+            <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              📢 6 VREEMDEN IN KOOR
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0.85rem;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">PSY-OPS STRATEGIE // MASSA-GETUIGENIS</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">PSYCHOLOGISCHE OORLOGSVOERING // OVERTUIG DERDE PARTIJ</div>
+                  <div class="intel-doc-main-title">OPERATIE VOLKSSTEM // MASSALE GETUIGENIS</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">VEREISTE: MINIMAAL 6 VOLSLAGEN VREEMDEN TEGELIJK</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                TOP VALUE (+150 PT)
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>TACTISCH DOELWIT:</strong> Om de louche derde partij definitief af te schrikken en te bewijzen dat heel Herentals pal achter de KSA staat, hebben we een overweldigende, massale volksgetuigenis nodig. Eén getuige is niet genoeg; we moeten tonen dat de hele stad in opstand komt!
+              </p>
+              <p>
+                <strong>DE OPDRACHT:</strong> Verzamel <strong>minstens 6 volslagen vreemden</strong> (voorbijgangers op straat in Herentals) tegelijkertijd voor jullie smartphone-camera en laat hen synchroon, luid en vol overgave roepen:
+              </p>
+              <div class="intel-codeword-banner" style="background: #fef3c7; border: 2px dashed #d97706; margin: 0.75rem 0; padding: 0.85rem; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #b45309; text-transform: uppercase;">📢 VERPLICHTE SLOGAN (WOORD VOOR WOORD):</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #78350f; margin-top: 0.25rem;">
+                  "Redt de KSA, de ware eigenaars van de erfpacht!"
+                </div>
+              </div>
+              <p>
+                <strong>HET BEWIJS:</strong> Film de 6 vreemden die dit tegelijk in koor scanderen en upload de video hier direct voor Gamemaster HQ. Succesvol volbrengen levert maar liefst <strong>+150 bonuspunten</strong> op!
+              </p>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: PSY-OPS STRATEGY // SECTOR HERENTALS</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+
+          <!-- Video Uploadzone voor Koor -->
+          <div style="background: rgba(14, 20, 28, 0.92); border: 2px solid var(--amber); border-radius: 8px; padding: 1.05rem;">
+            <div class="clue-label" style="color: var(--amber); margin-bottom: 0.35rem; font-size: 0.82rem;">
+              📹 BEWIJSMATERIAAL UPLOAD // VIDEO 6 VREEMDEN IN KOOR
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.55rem;">
+              Upload hier jullie video waarop de 6 vreemden tegelijkertijd de leuze roepen!
+            </p>
+            <form class="photo-upload-form loc-photo-form" autocomplete="off" style="margin-top: 0.5rem;">
+              <label class="file-input-label">
+                <span>📹 Kies of maak koor-video</span>
+                <input type="file" class="loc-photo-input" accept="video/*,image/*" style="display: none;" required />
+              </label>
+              <span class="loc-photo-filename" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-main);">Geen bestand gekozen</span>
+              <input
+                type="text"
+                class="admin-input loc-photo-caption"
+                placeholder="bv. 7 voorbijgangers aan de kiosk - Groep Rood"
+                style="margin-bottom: 0; flex: 1; min-width: 170px;"
+                required
+              />
+              <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
+                Upload Video naar HQ (+150 PT)
+              </button>
+            </form>
+            <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
+            <div class="photos-grid loc-photos-gallery"></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(b4);
+
+      const b4Header = b4.querySelector(".location-folder-header");
+      b4Header.addEventListener("click", () => b4.classList.toggle("expanded"));
+      setupBonusUploadForm(b4, "bonus_volksstem", "Bonus #04: Operatie Volksstem");
+
+      // -------------------------------------------------------------
+      // BONUS 5: Operatie Speurhond (K9 Rekruteringsbureau)
+      // -------------------------------------------------------------
+      const b5 = document.createElement("div");
+      b5.className = "location-folder bonus-folder";
+      b5.id = "loc-folder-bonus-speurhond";
+      b5.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon">📁</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #05:</span>
+            <span>Operatie Speurhond (K9 Rekrutering)</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ K9-REKRUUT (+50 PT)
+            </span>
+            <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              🐕 FOTO VEREIST
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0.85rem;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">K9 TACTICAL SQUAD // VIERVOETIGE INLICHTINGENDIENST</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">K9 REKRUTERINGSBUREAU HQ // TACTISCHE SPEURDIENST</div>
+                  <div class="intel-doc-main-title">OPERATIE SPEURHOND // K9 REKRUTERINGSSELECTIE</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">VIERVOETIGE VERSTERKING VOOR HQ HERENTALS</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                K9 SQUAD
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>CAPACITEITSTEKORT OP HQ:</strong> De inlichtingendienst kampt met een acuut gebrek aan getrainde speurhonden om geursporen van het stadsbestuur te volgen en de geheime documenten op HQ te bewaken.
+              </p>
+              <p>
+                <strong>DE OPDRACHT:</strong> Vind tijdens jullie tocht door Herentals een potentiële <strong>kandidaat-speurhond</strong> (een hond die uitgelaten wordt, op een terras ligt of waakzaam achter een vensterbank zit).
+              </p>
+              <p>
+                <strong>HET BEWIJS:</strong> Neem een undercover foto met deze viervoetige kandidaat als officieel sollicitatiedossier voor Gamemaster Vicce!
+              </p>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: K9 DIRECTORATE // AGENT RECRUITMENT</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+
+          <!-- Foto Uploadzone voor Speurhond -->
+          <div style="background: rgba(14, 20, 28, 0.92); border: 2px solid var(--amber); border-radius: 8px; padding: 1.05rem;">
+            <div class="clue-label" style="color: var(--amber); margin-bottom: 0.35rem; font-size: 0.82rem;">
+              📷 BEWIJSMATERIAAL UPLOAD // FOTO KANDIDAAT-SPEURHOND
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.55rem;">
+              Upload hier jullie foto met de kandidaat-speurhond en vermeld zijn/haar 'codenaam'!
+            </p>
+            <form class="photo-upload-form loc-photo-form" autocomplete="off" style="margin-top: 0.5rem;">
+              <label class="file-input-label">
+                <span>📷 Kies of maak foto van speurhond</span>
+                <input type="file" class="loc-photo-input" accept="image/*,video/*" style="display: none;" required />
+              </label>
+              <span class="loc-photo-filename" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-main);">Geen bestand gekozen</span>
+              <input
+                type="text"
+                class="admin-input loc-photo-caption"
+                placeholder="bv. Kandidaat 'Bobi' aan de Zandstraat - Groep Geel"
+                style="margin-bottom: 0; flex: 1; min-width: 170px;"
+                required
+              />
+              <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
+                Upload Sollicitatie (+50 PT)
+              </button>
+            </form>
+            <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
+            <div class="photos-grid loc-photos-gallery"></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(b5);
+
+      const b5Header = b5.querySelector(".location-folder-header");
+      b5Header.addEventListener("click", () => b5.classList.toggle("expanded"));
+      setupBonusUploadForm(b5, "bonus_speurhond", "Bonus #05: Operatie Speurhond");
+    }
+
+    // Refresh galleries for bonus uploads if info has updated photos
+    const b2 = document.getElementById("loc-folder-bonus-adfundum");
+    if (b2) renderBonusGallery(b2, "bonus_ad_fundum", info);
+
+    const b3 = document.getElementById("loc-folder-bonus-snack");
+    if (b3) renderBonusGallery(b3, "bonus_snack_vicce", info);
+
+    const b4 = document.getElementById("loc-folder-bonus-volksstem");
+    if (b4) renderBonusGallery(b4, "bonus_volksstem", info);
+
+    const b5 = document.getElementById("loc-folder-bonus-speurhond");
+    if (b5) renderBonusGallery(b5, "bonus_speurhond", info);
+  }
+
+  // =========================================================================
   // 6 LOCATIE-MAPJES (Gedeeld binnen het team + unieke route-volgorde per groep!)
   // =========================================================================
   function ensureLocationsSection() {
@@ -687,6 +1399,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let section = document.getElementById("player-locations-section");
     if (section) {
       ensureBriefingFolder();
+      ensureBonusFolders(latestPlayerInfo);
       return;
     }
 
@@ -704,12 +1417,16 @@ document.addEventListener("DOMContentLoaded", () => {
       <!-- MAP 0: INTRO / BRIEFING (ALTIJD ONTGRENDELD, GEEN APARTE PIN) -->
       <div id="briefing-folder-container"></div>
 
+      <!-- BONUSDOSSIERS (5 GEHEIME NEVENMISSIES) -->
+      <div id="bonus-folders-container"></div>
+
       <!-- DE 6 LOCATIE-MAPPEN (UNIEKE ROUTE PER GROEP) -->
       <div id="locations-list" class="locations-list"></div>
     `;
 
     contentEl.appendChild(section);
     ensureBriefingFolder();
+    ensureBonusFolders(latestPlayerInfo);
     const listEl = section.querySelector("#locations-list");
 
     locaties.forEach((loc, idx) => {
@@ -1803,6 +2520,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (info) {
         renderPlayerMessageBoard(info);
+        ensureBonusFolders(info);
         refreshAllLocationFolders();
       }
     });
