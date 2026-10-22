@@ -373,3 +373,10 @@ const SPEL_CONFIG = {
     { id: "lander",    naam: "Lander",    dossierNr: "27", code: "1234" }
   ]
 };
+
+if (typeof window !== "undefined") {
+  window.SPEL_CONFIG = SPEL_CONFIG;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = SPEL_CONFIG;
+}

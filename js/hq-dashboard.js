@@ -942,7 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
               <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${grp.kleur};"></span>
               <span>📂 Groepsmap: ${grp.naam}</span>
-              <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 800;">(${grp.totalPoints} PT)</span>
+              <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 800;">(${grp.totalPoints} PT • ${grp.leden.length} spelers)</span>
             </div>
             <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
               📷🎬 ${allGrpPhotos.length} bestand(en) ingezonden • <strong style="color: var(--accent);">${locsWithUploads.size} / 6 locaties</strong> voorzien van bewijs

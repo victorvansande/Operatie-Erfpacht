@@ -324,7 +324,12 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="group-color-dot"></span>
             <span>#${idx + 1} ${grp.naam}</span>
           </div>
-          <span class="group-card-pts">${grp.totalPoints} PT</span>
+          <div style="text-align: right;">
+            <span class="group-card-pts" title="Eerlijke Teamscore (Gemiddelde score per lid)">${grp.totalPoints} PT</span>
+            <div style="font-size: 0.62rem; color: var(--text-muted); font-family: var(--font-mono);">
+              ${grp.leden.length} spelers • som ${grp.sumPoints || 0}
+            </div>
+          </div>
         </div>
         ${startLocHtml}
         <div class="group-members-wrap">

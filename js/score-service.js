@@ -988,7 +988,8 @@ const ScoreService = (() => {
       // Afronding op 1 decimaal (bv. 142.5), en afgerond op heel getal voor overzicht
       grp.averagePoints = Math.round(rawAvg * 10) / 10;
       grp.roundedAverage = Math.round(rawAvg);
-      // Leidende score voor alle klassementen
+      // De officiële teamscore is het gemiddelde per lid (eerlijk tussen 4 en 5 spelers!):
+      grp.totalPoints = grp.averagePoints;
       grp.score = grp.averagePoints;
     });
 
@@ -1098,7 +1099,8 @@ const ScoreService = (() => {
         const grp = adminGroupsMap.get(p.groupId);
         p.groupMembers = grp.leden.map((m) => m.naam);
         p.groupAveragePoints = grp.averagePoints;
-        p.groupTotalPoints = grp.sumPoints;
+        p.groupTotalPoints = grp.averagePoints;
+        p.groupSumPoints = grp.sumPoints;
         p.groupRank = adminGroupsList.findIndex((g) => g.id === grp.id) + 1;
 
         grp.leden.forEach((member) => {
@@ -2118,4 +2120,8 @@ if (typeof window !== "undefined") {
       ScoreService.refresh();
     });
   }
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = ScoreService;
 }
