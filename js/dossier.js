@@ -713,11 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!photoInput.files || !photoInput.files[0]) return;
       const file = photoInput.files[0];
 
-      if (file.size > 18 * 1024 * 1024) {
-        photoStatus.textContent = "⚠️ Bestand is te groot (max 18 MB). Maak een kortere video (10-15s) of stuur via WhatsApp naar Gamemaster Vicce!";
-        return;
-      }
-
       photoSubmit.disabled = true;
       photoSubmit.textContent = "Uploaden...";
       photoStatus.textContent = `Bewijs wordt verstuurd naar HQ...`;
@@ -1957,11 +1952,6 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         if (!photoInput.files || !photoInput.files[0]) return;
         const file = photoInput.files[0];
-
-        if (file.size > 18 * 1024 * 1024) {
-          photoStatus.textContent = "⚠️ Bestand is te groot (max 18 MB). Maak een kortere video (10-15s) of stuur via WhatsApp naar Gamemaster Vicce!";
-          return;
-        }
 
         photoSubmit.disabled = true;
         photoSubmit.textContent = "Uploaden...";
