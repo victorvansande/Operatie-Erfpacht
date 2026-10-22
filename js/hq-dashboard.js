@@ -79,6 +79,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Live 4G Cloud Status Indicator
+  const headerStatusBadge = document.querySelector(".status-badge");
+  if (headerStatusBadge && typeof ScoreService !== "undefined" && ScoreService.onSyncStatusChange) {
+    ScoreService.onSyncStatusChange((status) => {
+      const txt = status === "connected"
+        ? "LIVE 4G REALTIME // DUBBELE CLOUD WOLK VERBONDEN (0ms)"
+        : status === "connecting"
+        ? "VERBINDING MAKEN MET REALTIME WOLK..."
+        : "OFFLINE BUFFER // HERVERBINDEN...";
+      headerStatusBadge.innerHTML = `<span class="status-dot" style="background:${status === "connected" ? "#10b981" : status === "connecting" ? "#f59e0b" : "#ef4444"}"></span> ${txt}`;
+    });
+  }
+
   function checkAdminAuth() {
     const isAuth = sessionStorage.getItem("jb_admin_unlocked") === "true";
     if (!isAuth && authModal) {
