@@ -1300,7 +1300,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       await ScoreService.setAllGroups(assignments);
-      showToast(`✓ ${shuffled.length} aanwezige spelers verdeeld over de ${numGroups} unieke startgroepen!`);
+      showToast(`✓ ${shuffled.length} spelers verdeeld op HQ (blijft verborgen op beamer tot je op 'Onthul' klikt)!`);
     });
   }
 

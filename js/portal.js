@@ -1071,12 +1071,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (adminToggleRevealBtn) {
     adminToggleRevealBtn.addEventListener("click", async () => {
-      const nextMode = latestScoreState.groupsRevealed ? "auto" : "show";
+      const nextMode = latestScoreState.groupsRevealed ? "hide" : "show";
       await ScoreService.setGroupsVisibilityMode(nextMode);
       showAdminFeedback(
         nextMode === "show"
-          ? "Groepen zijn nu handmatig zichtbaar gemaakt voor alle spelers!"
-          : "Groepen staan weer op automatisch (pas zichtbaar na alle codes)."
+          ? "Groepen zijn nu zichtbaar gemaakt voor alle spelers & beamer!"
+          : "Groepen zijn weer verborgen voor alle spelers & beamer."
       );
     });
   }

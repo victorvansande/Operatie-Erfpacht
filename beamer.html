@@ -1818,9 +1818,9 @@
       if (addrEl) addrEl.textContent = `📍 ${target.adres}`;
       if (coordsEl) coordsEl.textContent = `Coördinaten: ${target.lat.toFixed(4)}° N, ${target.lng.toFixed(4)}° E`;
 
-      // Zoek of er een team start op deze locatie
+      // Zoek of er een team start op deze locatie (enkel als groepen onthuld zijn!)
       let assignedTeamName = "Gereed voor infiltratie";
-      if (latestState && latestState.groups) {
+      if (latestState && latestState.groupsRevealed && latestState.groups) {
         const matchingGroup = latestState.groups.find(g => {
           if (!g.orderedLocations || g.orderedLocations.length === 0) return false;
           return g.orderedLocations[0].id === target.id;
@@ -1869,7 +1869,8 @@
       positions.forEach((pos) => {
         if (!pos || typeof pos.lat !== "number" || typeof pos.lng !== "number") return;
         const isVicce = pos.playerId === "vicce" || pos.isGamemaster;
-        const color = isVicce ? "#f59e0b" : (pos.groupColor || "#38bdf8");
+        const isRevealed = Boolean(latestState && latestState.groupsRevealed);
+        const color = isVicce ? "#f59e0b" : (isRevealed && pos.groupColor ? pos.groupColor : "#38bdf8");
         const coreLabel = isVicce ? "★" : (pos.dossierNr ? `#${pos.dossierNr}` : "●");
         const tagLabel = isVicce ? "★ VICCE (HQ)" : (pos.playerName || `Agent #${pos.dossierNr || ""}`);
 
@@ -1890,7 +1891,7 @@
           <div style="font-family:'JetBrains Mono',monospace; min-width:140px; color:#e2e8f0; font-size:0.8rem;">
             <strong style="color:${color}; font-size:0.9rem;">${isVicce ? "★ VICCE (HQ COMMANDO)" : (pos.playerName || "Veldagent")}</strong>
             <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
-              ${isVicce ? "Gamemaster / Hoofdkwartier" : (pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
+              ${isVicce ? "Gamemaster / Hoofdkwartier" : (isRevealed && pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
             </div>
             <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
               GPS Nauwkeurigheid: ±${pos.accuracy || 8}m<br>
@@ -2009,7 +2010,7 @@
       }, 12000);
     }
 
-    // Render Groepen & Leaderboard (Reageert direct wanneer Victor groepen verdeelt op gsm!)
+    // Render Groepen & Leaderboard (Enkel zichtbaar zodra Victor op 'Onthul groepen nu aan iedereen' klikt!)
     function renderLeaderboardContent(state) {
       latestState = state;
       const container = document.getElementById("war-groups-body");
@@ -2019,12 +2020,13 @@
       if (!container || !state) return;
 
       const isRevealed = Boolean(state.groupsRevealed);
-      // Haal alle groepen op (bevat altijd de 6 teams zodra leiding ze verdeelt op mobiel)
-      const groups = state.groups || state.adminGroupsList || [];
-      const hasAssignedGroups = Boolean(state.hasAssignedGroups);
+      // Haal alle groepen op (bevat enkel groepen indien officieel onthuld)
+      const groups = state.groups || [];
 
-      // SCENARIO 1: VOLLEDIG SCOREBORD ONTGRENDELD (Alle 26 ingelogd of GM forceert)
-      if (isRevealed) {
+      // ========================================================
+      // SCENARIO 1: GROEPEN ZIJN OFFICIEEL ONTHULD DOOR VICTOR OP HQ
+      // ========================================================
+      if (isRevealed && groups.length > 0) {
         if (badge) {
           badge.textContent = "LIVE RANKING";
           badge.style.color = "var(--hud-green)";
@@ -2081,7 +2083,7 @@
               ${leaderboard.map((p, idx) => {
                 const rowClass = idx === 0 ? "top-1" : idx === 1 ? "top-2" : idx === 2 ? "top-3" : "";
                 const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
-                const grpName = p.groupName || p.adminGroupName ? ` • ${p.groupName || p.adminGroupName}` : "";
+                const grpName = p.groupName ? ` • ${p.groupName}` : "";
 
                 return `
                   <div class="player-lb-row ${rowClass}">
@@ -2102,49 +2104,10 @@
         return;
       }
 
-      // SCENARIO 2: GROEPEN ZIJN VERDEELD OP GSM (Toon direct de 6 teams en hun leden!)
-      if (hasAssignedGroups) {
-        if (badge) {
-          badge.textContent = "TEAMS TOEGEWEZEN";
-          badge.style.color = "var(--hud-cyan)";
-        }
-        if (tabsWrap) tabsWrap.style.display = "none";
-        if (panelTitle) panelTitle.textContent = "🎯 6 OPERATIE-TEAMS TOEGEWEZEN";
-
-        container.innerHTML = `
-          <div style="font-family:'JetBrains Mono', monospace; font-size:0.68rem; color:var(--hud-cyan); background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); padding:0.4rem 0.6rem; border-radius:4px; margin-bottom:0.4rem;">
-            ✓ GROEPSINDELING LIVE ONTVANGEN VAN HOOFDKWARTIER
-          </div>
-          <div class="groups-live-list">
-            ${groups.map((grp, idx) => {
-              const startLoc = grp.startLocationName || (grp.orderedLocations && grp.orderedLocations[0] ? grp.orderedLocations[0].naam : `Sector ${idx + 1}`);
-              const membersStr = grp.leden.map(m => m.naam).join(", ");
-
-              return `
-                <div class="group-war-card" style="--grp-color: ${grp.kleur || '#38bdf8'};">
-                  <div class="group-war-header">
-                    <div class="group-war-title">
-                      <span class="group-color-dot"></span>
-                      <span>${grp.naam}</span>
-                    </div>
-                    <div style="font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--hud-green); font-weight:800; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:0.1rem 0.4rem; border-radius:3px;">
-                      ${grp.leden.length} AGENTEN
-                    </div>
-                  </div>
-                  <div class="group-war-location" style="color:#fde047;">📍 Startlocatie: ${startLoc}</div>
-                  <div class="group-war-members"><strong>Leden:</strong> ${membersStr || 'Nog geen leden'}</div>
-                </div>
-              `;
-            }).join("")}
-          </div>
-          <div style="margin-top:0.4rem; font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--hud-muted); text-align:center;">
-            🔒 Scorebord ontgrendelt zodra alle 25 veldagenten inloggen (${state.unlockedCount || 0}/${state.totalCount || 25})
-          </div>
-        `;
-        return;
-      }
-
-      // SCENARIO 3: NOG GEEN GROEPEN VERDEELD & NIET ONTGRENDELD (Of spel is zojuist gereset!)
+      // ========================================================
+      // SCENARIO 2: GROEPEN ZIJN NOG VERSLEUTELD / VERBORGEN
+      // (Blijft ALTIJD versleuteld totdat Victor op 'Onthul groepen nu aan iedereen' klikt!)
+      // ========================================================
       if (badge) {
         badge.textContent = "VERSLEUTELD";
         badge.style.color = "var(--hud-amber)";
@@ -2157,10 +2120,11 @@
           <div class="locked-icon">🔒</div>
           <div class="locked-title">LEADERBOARD &amp; GROEPEN VERSLEUTELD</div>
           <p class="locked-sub">
-            Verdeel de groepen via het HQ Dashboard op gsm of wacht tot alle 25 veldagenten hun dossier hebben geactiveerd!
+            De spelleiding bereidt de groepsindeling en startroutes voor op HQ.<br>
+            Wacht op het officiële startschot en de onthulling van de teams!
           </p>
           <div style="margin-top: 1rem; font-family:'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--hud-cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-            ${state.unlockedCount || 0} / ${state.totalCount || 25} AGENTEN INGELOGD
+            ${state.unlockedCount || 0} / ${state.totalCount || 25} AGENTEN GEACTIVEERD
           </div>
         </div>
       `;

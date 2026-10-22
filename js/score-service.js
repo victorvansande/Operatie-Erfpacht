@@ -678,7 +678,7 @@ const ScoreService = (() => {
     const messagesMap = new Map(); // eventId -> message board object
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
-    let groupVisibilityMode = "auto"; // "auto" (pas na alle codes), "show" (forceer zichtbaar), "hide" (forceer verborgen)
+    let groupVisibilityMode = "hide"; // "hide" (standaard verborgen tot leiding onthult), "show" (leiding onthult aan iedereen)
     let debriefingModeActive = false;
     const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
 
@@ -690,7 +690,7 @@ const ScoreService = (() => {
         messagesMap.clear();
         playerLocUnlocks.clear();
         bonusSolves.length = 0;
-        groupVisibilityMode = "auto";
+        groupVisibilityMode = "hide";
         debriefingModeActive = false;
         debriefedPlayersMap.clear();
         if (ev.resetGroups) {
@@ -855,12 +855,8 @@ const ScoreService = (() => {
     const allPresentUnlocked =
       enabledCount > 0 && unlockOrder.length >= enabledCount;
 
-    const groupsRevealed =
-      groupVisibilityMode === "show"
-        ? true
-        : groupVisibilityMode === "hide"
-        ? false
-        : allPresentUnlocked;
+    // Groepen worden ENKEL onthuld als de spelleiding expliciet op 'Onthul groepen nu aan iedereen' klikt!
+    const groupsRevealed = groupVisibilityMode === "show";
 
     // Als groepen onthuld worden en de admin had nog geen groepen klaargezet,
     // verdeel de aanwezige spelers dan automatisch in groepen van ~4:
