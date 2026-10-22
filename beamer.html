@@ -442,113 +442,46 @@
       font-weight: 700;
     }
 
-    /* CYBER TERMINAL & CCTV WEBCAM WIDGET */
+    /* CYBER TERMINAL WIDGET */
     .hud-terminal-card {
-      background: #040811;
-      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: #030712;
+      border: 1px solid rgba(16, 185, 129, 0.4);
       border-radius: 6px;
       display: flex;
       flex-direction: column;
       flex: 1;
-      min-height: 200px;
+      min-height: 0;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(16, 185, 129, 0.08);
-    }
-
-    .terminal-cctv-header {
-      background: rgba(10, 20, 20, 0.95);
-      padding: 0.3rem 0.6rem;
-      border-bottom: 1px solid rgba(16, 185, 129, 0.25);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-    }
-
-    .cctv-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      color: #ef4444;
-      font-weight: 800;
-    }
-
-    .cctv-rec-dot {
-      width: 7px;
-      height: 7px;
-      background: #ef4444;
-      border-radius: 50%;
-      box-shadow: 0 0 6px #ef4444;
-      animation: beaconBlink 1.2s infinite;
-    }
-
-    .cctv-fps {
-      color: var(--hud-green);
-      font-size: 0.58rem;
-    }
-
-    .cctv-img-wrapper {
-      position: relative;
-      height: 105px;
-      background: #000;
-      overflow: hidden;
-      border-bottom: 1px solid rgba(16, 185, 129, 0.25);
-    }
-
-    .cctv-cam-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: contrast(115%) brightness(90%) hue-rotate(5deg);
-      opacity: 0.88;
-    }
-
-    .cctv-scanline {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(rgba(16, 185, 129, 0.05) 50%, rgba(0, 0, 0, 0.4) 50%);
-      background-size: 100% 4px;
-      pointer-events: none;
-    }
-
-    .cctv-time-stamp {
-      position: absolute;
-      bottom: 4px;
-      right: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
-      color: #38bdf8;
-      background: rgba(0, 0, 0, 0.65);
-      padding: 0.1rem 0.3rem;
-      border-radius: 2px;
-      pointer-events: none;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.85), inset 0 0 20px rgba(16, 185, 129, 0.08);
     }
 
     .terminal-console-header {
-      background: rgba(12, 24, 20, 0.95);
-      padding: 0.25rem 0.6rem;
-      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+      background: rgba(8, 18, 16, 0.98);
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.3);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.68rem;
       color: var(--hud-green);
       display: flex;
       justify-content: space-between;
-      font-weight: 700;
+      align-items: center;
+      font-weight: 800;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
     }
 
     .terminal-body {
       flex: 1;
-      padding: 0.45rem 0.6rem;
+      padding: 0.6rem 0.75rem;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      line-height: 1.45;
+      font-size: 0.72rem;
+      line-height: 1.55;
       color: #34d399;
       overflow-y: hidden;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      text-shadow: 0 0 4px rgba(52, 211, 153, 0.5);
+      text-shadow: 0 0 4px rgba(52, 211, 153, 0.4);
       position: relative;
     }
 
@@ -561,12 +494,12 @@
     .terminal-line.cyan { color: #38bdf8; }
     .terminal-line.amber { color: #f59e0b; }
     .terminal-line.red { color: #f87171; }
-    .terminal-line.dim { color: #059669; opacity: 0.7; }
+    .terminal-line.dim { color: #059669; opacity: 0.75; }
 
     .terminal-cursor {
       display: inline-block;
       width: 7px;
-      height: 12px;
+      height: 13px;
       background: #34d399;
       vertical-align: middle;
       margin-left: 2px;
@@ -1295,22 +1228,13 @@
           </div>
         </div>
 
-        <!-- LIVE CYBER TERMINAL & CCTV WEBCAM -->
+        <!-- LIVE CYBER TERMINAL -->
         <div class="hud-terminal-card">
-          <div class="terminal-cctv-header">
-            <div class="cctv-badge">
-              <span class="cctv-rec-dot"></span> REC ● CAM-01 // COMMAND CELL
-            </div>
-            <span class="cctv-fps">30 FPS // ENCRYPTED</span>
-          </div>
-          <div class="cctv-img-wrapper">
-            <img src="img/hq-webcam.jpg" alt="HQ Surveillance" class="cctv-cam-img" onerror="this.src='img/hq-webcam.png'" />
-            <div class="cctv-scanline"></div>
-            <div class="cctv-time-stamp" id="cctv-time-stamp">HERENTALS 19:00:00 UTC+2</div>
-          </div>
           <div class="terminal-console-header">
-            <span>CYBERCOM // SIGINT REALTIME DECRYPTOR</span>
-            <span style="color:var(--hud-green);">ONLINE</span>
+            <span>💻 CYBERCOM // SIGINT REALTIME DECRYPTOR</span>
+            <span style="color:var(--hud-green); display:flex; align-items:center; gap:0.35rem;">
+              <span class="spotlight-pulse-dot" style="background:var(--hud-green); box-shadow:0 0 6px var(--hud-green);"></span> STREAMING
+            </span>
           </div>
           <div class="terminal-body" id="hud-terminal-body">
             <!-- Wordt live gevuld met typende spy telemetry -->
@@ -1366,10 +1290,7 @@
         <div class="hud-panel-title">
           <span>🏆</span> <span id="war-right-panel-title">LEADERBOARD &amp; GROEPEN</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.4rem;">
-          <button type="button" id="btn-toggle-cycle" class="war-btn" style="padding: 0.15rem 0.45rem; font-size: 0.62rem; font-family: 'JetBrains Mono', monospace;" title="Automatisch wisselen tussen Teams en Individueel">
-            🔄 AUTO (12s)
-          </button>
+        <div>
           <span id="war-groups-state-badge" style="color: var(--hud-amber); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;">VERSLEUTELD</span>
         </div>
       </div>
@@ -1621,11 +1542,15 @@
     // 4. Fake Cybercom Hacker Code Terminal (Continu Typende Spy Telemetrie)
     const TERMINAL_LOGS = [
       { text: "root@cybercom:~$ ./sigint_scan.sh --carrier=proximus,orange,telenet", cls: "cyan" },
-      { text: "[SIGINT] Scanning 26 registered agent IMEI transceivers...", cls: "" },
+      { text: "[SIGINT] Scanning 26 registered agent IMEI transceivers in Herentals...", cls: "" },
       { text: "[RADIO] Intercepting 433.920 MHz encrypted burst transmission...", cls: "dim" },
       { text: "[DECRYPT] AES-256 handshake OK with GM-NODE: Vicce (Kapucijnenstraat 7)", cls: "cyan" },
       { text: "[GPS] Triangulating Sector 01 (Zandpoort) lat=51.1764, lng=4.8361 [LOCK]", cls: "" },
       { text: "[GPS] Triangulating Sector 02 (Begijnhof) lat=51.1782, lng=4.8355 [LOCK]", cls: "" },
+      { text: "[GPS] Sector 03 (Bovenpoort): lat=51.1738, lng=4.8398 - telemetry active", cls: "" },
+      { text: "[GPS] Sector 04 (Stadspark): lat=51.1812, lng=4.8340 - perimeter secured", cls: "" },
+      { text: "[GPS] Sector 05 (Kerkplein): lat=51.1755, lng=4.8360 - code locks online", cls: "" },
+      { text: "[GPS] Sector 06 (Nieuw Lokaal): lat=51.1770, lng=4.8250 - awaiting teams", cls: "" },
       { text: "[ALERT] Corrupt city council erfpacht memo intercepted: DOCKET #2026-B", cls: "red" },
       { text: "[DUMP] 0x7FFF8B10: 45 52 46 50 41 43 48 54 20 4B 53 41 [ERFPACHT KSA]", cls: "dim" },
       { text: "[SIGINT] Monitoring 6 monument security sensors... Status: NORMAL", cls: "" },
@@ -1634,6 +1559,12 @@
       { text: "[RADAR] Target spotlight cycling enabled across 6 historical sectors", cls: "amber" },
       { text: "[DIRECTIVE] Rule 01: All agents must wear cap + sunglasses at monuments", cls: "amber" },
       { text: "[AUTH] Dossier security tokens armed for 26 covert operatives", cls: "" },
+      { text: "[SIGINT] Proximus tower CID-4836 ping verified... 18ms latency", cls: "dim" },
+      { text: "[SIGINT] Orange carrier band B20 listening... packets incoming", cls: "dim" },
+      { text: "[SIGINT] Telenet cell tower handshake confirmed", cls: "dim" },
+      { text: "[FIREWALL] City hall unauthorized port scanner intercepted & blocked", cls: "red" },
+      { text: "[CRYPTO] SHA-256 integrity hash verification: MATCH", cls: "cyan" },
+      { text: "[UPLINK] 6 sectors ready for clandestine field investigation", cls: "amber" },
       { text: "[TRACE] Packet payload: {\"cmd\":\"sync_state\",\"sector\":\"2200\"}", cls: "dim" },
       { text: "[SIGINT] Radio silence maintained. Awaiting agent field check-ins...", cls: "" }
     ];
@@ -1645,20 +1576,20 @@
       const container = document.getElementById("hud-terminal-body");
       if (!container) return;
 
-      // Start met de eerste paar regels
-      terminalLines = TERMINAL_LOGS.slice(0, 5);
+      // Start direct met voldoende regels zodat de terminal direct mooi gevuld is
+      terminalLines = TERMINAL_LOGS.slice(0, 16);
       renderTerminal();
 
-      // Voeg elke 1.8 seconden een nieuwe telemetrieregel toe
+      // Voeg elke 1.2 seconden een nieuwe telemetrieregel toe en scroll continu omhoog
       setInterval(() => {
         termIndex = (termIndex + 1) % TERMINAL_LOGS.length;
         const line = TERMINAL_LOGS[termIndex];
         terminalLines.push(line);
-        if (terminalLines.length > 7) {
+        if (terminalLines.length > 26) {
           terminalLines.shift();
         }
         renderTerminal();
-      }, 1800);
+      }, 1200);
     }
 
     function renderTerminal() {
@@ -1673,6 +1604,8 @@
           </div>
         `;
       }).join("");
+
+      container.scrollTop = container.scrollHeight;
     }
 
     // 5. Tactische Leaflet Kaart & Rotating Spotlight Engine
@@ -1922,19 +1855,10 @@
       if (latestState) renderLeaderboardContent(latestState);
     }
 
-    function toggleAutoCycle() {
-      autoCycleEnabled = !autoCycleEnabled;
-      const btn = document.getElementById("btn-toggle-cycle");
-      if (btn) {
-        btn.textContent = autoCycleEnabled ? "🔄 AUTO (12s)" : "⏸️ VAST";
-        btn.style.color = autoCycleEnabled ? "var(--hud-cyan)" : "var(--hud-muted)";
-      }
-    }
-
     function startAutoCycle() {
       if (autoCycleTimer) clearInterval(autoCycleTimer);
       autoCycleTimer = setInterval(() => {
-        if (!autoCycleEnabled || !latestState || !latestState.groupsRevealed) return;
+        if (!latestState || !latestState.groupsRevealed) return;
         setLeaderboardTab(currentTab === "teams" ? "players" : "teams");
       }, 12000);
     }
@@ -1951,7 +1875,7 @@
       const isRevealed = Boolean(state.groupsRevealed);
       // Haal alle groepen op (bevat altijd de 6 teams zodra leiding ze verdeelt op mobiel)
       const groups = state.groups || state.adminGroupsList || [];
-      const hasAssignedGroups = groups.length > 0 && groups.some(g => g.leden && g.leden.length > 0);
+      const hasAssignedGroups = Boolean(state.hasAssignedGroups);
 
       // SCENARIO 1: VOLLEDIG SCOREBORD ONTGRENDELD (Alle 26 ingelogd of GM forceert)
       if (isRevealed) {
@@ -2074,7 +1998,7 @@
         return;
       }
 
-      // SCENARIO 3: NOG GEEN GROEPEN VERDEELD & NIET ONTGRENDELD
+      // SCENARIO 3: NOG GEEN GROEPEN VERDEELD & NIET ONTGRENDELD (Of spel is zojuist gereset!)
       if (badge) {
         badge.textContent = "VERSLEUTELD";
         badge.style.color = "var(--hud-amber)";
@@ -2105,7 +2029,6 @@
       document.getElementById("war-clock-btn").addEventListener("click", openClockModal);
       document.getElementById("btn-fullscreen").addEventListener("click", toggleFullscreen);
       document.getElementById("btn-audio-toggle").addEventListener("click", toggleSound);
-      document.getElementById("btn-toggle-cycle").addEventListener("click", toggleAutoCycle);
 
       // Klik ergens op de pagina om AudioContext te ontgrendelen conform browser audio-policy
       document.addEventListener("click", () => initAudio(), { once: true });

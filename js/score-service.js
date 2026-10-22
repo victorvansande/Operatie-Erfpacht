@@ -866,13 +866,14 @@ const ScoreService = (() => {
       let configuredGroupId = !isDisabled
         ? playerGroups.get(speler.id) || null
         : null;
-      if (!isDisabled && !configuredGroupId && playerGroups.size === 0) {
+      // Auto-fallback groepen ALLEEN genereren als het spel onthuld is én de admin nooit groepen heeft ingesteld
+      if (!isDisabled && !configuredGroupId && groupsRevealed && playerGroups.size === 0) {
         const autoGrp =
           defaultGroupList[enabledIdx % numAutoGroups] ||
           `Groep ${(enabledIdx % numAutoGroups) + 1}`;
         configuredGroupId = autoGrp;
       }
-      if (!isDisabled) enabledIdx++;
+      if (!isDisabled && configuredGroupId) enabledIdx++;
 
       const configuredGroupName = configuredGroupId
         ? groupCustomNames.get(configuredGroupId) || configuredGroupId
@@ -1076,8 +1077,8 @@ const ScoreService = (() => {
       groupsRevealed,
       groupVisibilityMode,
       groupCustomNames,
-      hasGroups: adminGroupsList.length > 0 && adminGroupsList.some(g => g.leden && g.leden.length > 0),
-      hasAssignedGroups: adminGroupsList.some(g => g.leden && g.leden.length > 0),
+      hasGroups: groupsRevealed && adminGroupsList.length > 0,
+      hasAssignedGroups: playerGroups.size > 0,
       allPhotos,
       allMessages,
       bonusSolves: bonusSolves.sort((a, b) => (b.ts || 0) - (a.ts || 0)),
