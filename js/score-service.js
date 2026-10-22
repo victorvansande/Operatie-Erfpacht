@@ -799,9 +799,15 @@ const ScoreService = (() => {
       }
     }
 
-    // Alleen ingeschakelde spelers tellen mee voor de ontgrendel-volgorde
+    // Alleen actieve veldspelers (niet-gamemaster en niet-uitgeschakeld) tellen mee
+    const isStaffPlayer = (id) => {
+      if (id === "vicce") return true;
+      const sp = SPEL_CONFIG.spelers.find((s) => s.id === id);
+      return Boolean(sp && sp.isGamemaster);
+    };
+
     const unlockOrder = Array.from(unlocks.values())
-      .filter((item) => !disabledPlayers.has(item.playerId))
+      .filter((item) => !disabledPlayers.has(item.playerId) && !isStaffPlayer(item.playerId))
       .sort((a, b) => a.ts - b.ts);
 
     const unlockRankMap = new Map();
@@ -830,9 +836,9 @@ const ScoreService = (() => {
         photosByPlayer.get(ph.playerId).push(ph);
       });
 
-    // Bepaal of ALLE aanwezige spelers hun code al hebben ingevuld
+    // Bepaal of ALLE aanwezige spelers hun code al hebben ingevuld (exclusief Vicce / Gamemaster)
     const enabledCount = SPEL_CONFIG.spelers.filter(
-      (s) => !disabledPlayers.has(s.id)
+      (s) => !disabledPlayers.has(s.id) && !isStaffPlayer(s.id)
     ).length;
     const allPresentUnlocked =
       enabledCount > 0 && unlockOrder.length >= enabledCount;
@@ -854,10 +860,11 @@ const ScoreService = (() => {
     const numAutoGroups = Math.min(maxLocCount, Math.max(1, Math.min(enabledCount, 6)));
     let enabledIdx = 0;
 
-    // Bouw volledige spelerslijst
+    // Bouw volledige spelerslijst (Vicce wordt nooit meegenomen in groepsverdeling of klassement)
     const allPlayerScores = SPEL_CONFIG.spelers.map((speler) => {
-      const isDisabled = disabledPlayers.has(speler.id);
-      const unlockInfo = !isDisabled ? unlockRankMap.get(speler.id) || null : null;
+      const isStaff = isStaffPlayer(speler.id);
+      const isDisabled = disabledPlayers.has(speler.id) || isStaff;
+      const unlockInfo = !isStaff && !disabledPlayers.has(speler.id) ? unlockRankMap.get(speler.id) || null : null;
       const bonusInfo = bonuses.get(speler.id) || { totalDelta: 0, history: [] };
       const basePoints = unlockInfo ? unlockInfo.basePoints : 0;
       const bonusPoints = !isDisabled ? bonusInfo.totalDelta : 0;
@@ -888,10 +895,11 @@ const ScoreService = (() => {
 
       return {
         ...speler,
+        isGamemaster: isStaff,
         disabled: isDisabled,
-        unlocked: Boolean(unlockInfo),
+        unlocked: Boolean(unlockInfo) || Boolean(unlocks.get(speler.id)),
         unlockRank: unlockInfo ? unlockInfo.rank : null,
-        unlockedAt: unlockInfo ? unlockInfo.unlockedAt : null,
+        unlockedAt: unlockInfo ? unlockInfo.unlockedAt : (unlocks.get(speler.id) ? unlocks.get(speler.id).ts : null),
         basePoints,
         bonusPoints,
         bonusHistory: !isDisabled ? bonusInfo.history : [],
@@ -909,7 +917,7 @@ const ScoreService = (() => {
       };
     });
 
-    const enabledPlayerScores = allPlayerScores.filter((p) => !p.disabled);
+    const enabledPlayerScores = allPlayerScores.filter((p) => !p.disabled && !p.isGamemaster);
 
     // Bereken groepen & groepsscores (op basis van adminGroupId, en zichtbaarheid op basis van groupsRevealed)
     const adminGroupsMap = new Map();
@@ -1156,6 +1164,113 @@ const ScoreService = (() => {
   const TOPIC_EVENTS = `${MQTT_BASE_TOPIC}/events`;
   const TOPIC_STATE = `${MQTT_BASE_TOPIC}/state`;
   const TOPIC_REQ = `${MQTT_BASE_TOPIC}/req`;
+  const TOPIC_GPS = `${MQTT_BASE_TOPIC}/gps`;
+
+  // =========================================================================
+  // LIVE GPS AGENT TRACKER ENGINE (Realtime Veldcoördinaten via MQTT)
+  // =========================================================================
+  const agentGpsPositions = new Map(); // playerId -> gps object
+  const gpsListeners = new Set();
+  let gpsWatchId = null;
+  let lastGpsSendTs = 0;
+  let activeTrackingPlayerId = null;
+  let activeTrackingPlayerName = null;
+
+  function ingestGpsPing(data) {
+    if (!data || !data.playerId || typeof data.lat !== "number" || typeof data.lng !== "number") return;
+    const existing = agentGpsPositions.get(data.playerId);
+    if (existing && existing.ts && data.ts && data.ts < existing.ts) return;
+
+    agentGpsPositions.set(data.playerId, {
+      ...data,
+      receivedAt: Date.now()
+    });
+    notifyGpsListeners();
+  }
+
+  function notifyGpsListeners() {
+    const list = Array.from(agentGpsPositions.values());
+    gpsListeners.forEach((fn) => {
+      try { fn(list); } catch (_) {}
+    });
+  }
+
+  function startLiveGpsTracking(playerId, playerName) {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      console.warn("Geen geolocatie ondersteuning in deze browser.");
+      return false;
+    }
+
+    activeTrackingPlayerId = playerId;
+    activeTrackingPlayerName = playerName;
+
+    stopLiveGpsTracking();
+
+    const options = {
+      enableHighAccuracy: true,
+      maximumAge: 8000,
+      timeout: 15000
+    };
+
+    const handlePos = (position) => {
+      if (!position || !position.coords) return;
+      const now = Date.now();
+      // Throttle naar maximaal 1 ping per 10 seconden om batterij en mobiele data te sparen
+      if (now - lastGpsSendTs < 10000) return;
+      lastGpsSendTs = now;
+
+      const currentState = computeScoreState();
+      const pInfo = currentState.playerScoresMap.get(playerId);
+      const groupId = pInfo ? (pInfo.groupId || pInfo.adminGroupId || null) : null;
+      const groupName = pInfo ? (pInfo.groupName || pInfo.adminGroupName || null) : null;
+      const groupColor = pInfo ? (pInfo.groupColor || pInfo.adminGroupColor || "#38bdf8") : "#38bdf8";
+
+      const ping = {
+        type: "gps_ping",
+        playerId,
+        playerName: playerName || (pInfo ? pInfo.naam : playerId),
+        dossierNr: pInfo ? pInfo.dossierNr : "??",
+        groupId,
+        groupName,
+        groupColor,
+        lat: Number(position.coords.latitude.toFixed(6)),
+        lng: Number(position.coords.longitude.toFixed(6)),
+        accuracy: Math.round(position.coords.accuracy || 0),
+        heading: position.coords.heading,
+        speed: position.coords.speed,
+        ts: now
+      };
+
+      ingestGpsPing(ping);
+
+      // Realtime live broadcast naar Beamer en HQ Dashboard via MQTT WebSockets
+      if (mqttClient && mqttClient.connected) {
+        try {
+          mqttClient.publish(TOPIC_GPS, JSON.stringify(ping), { qos: 0 });
+        } catch (_) {}
+      }
+    };
+
+    const handleErr = (err) => {
+      console.warn("GPS tracking status:", err.message);
+    };
+
+    try {
+      navigator.geolocation.getCurrentPosition(handlePos, handleErr, options);
+      gpsWatchId = navigator.geolocation.watchPosition(handlePos, handleErr, options);
+      return true;
+    } catch (e) {
+      console.warn("GPS watchPosition start mislukt:", e);
+      return false;
+    }
+  }
+
+  function stopLiveGpsTracking() {
+    if (gpsWatchId !== null && typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+  }
 
   let mqttClient = null;
   let currentBrokerIdx = 0;
@@ -1273,7 +1388,7 @@ const ScoreService = (() => {
         isConnecting = false;
         updateSyncStatus("connected");
 
-        mqttClient.subscribe([TOPIC_EVENTS, TOPIC_STATE, TOPIC_REQ], { qos: 1 }, (err) => {
+        mqttClient.subscribe([TOPIC_EVENTS, TOPIC_STATE, TOPIC_REQ, TOPIC_GPS], { qos: 1 }, (err) => {
           if (!err) {
             broadcastStateRequest();
             flushOutbox();
@@ -1307,6 +1422,10 @@ const ScoreService = (() => {
           } else if (topic === TOPIC_REQ) {
             if (data && data.from !== myClientId && eventsMap.size > 0) {
               publishCurrentStateSnapshot();
+            }
+          } else if (topic === TOPIC_GPS) {
+            if (data && data.playerId && typeof data.lat === "number" && typeof data.lng === "number") {
+              ingestGpsPing(data);
             }
           }
         } catch (err) {
@@ -1762,6 +1881,15 @@ const ScoreService = (() => {
     startRealtimeSync,
     subscribe,
     getState: computeScoreState,
+    startLiveGpsTracking,
+    stopLiveGpsTracking,
+    onGpsPositionChange: (cb) => {
+      gpsListeners.add(cb);
+      try { cb(Array.from(agentGpsPositions.values())); } catch (_) {}
+      return () => gpsListeners.delete(cb);
+    },
+    getLiveAgentPositions: () => Array.from(agentGpsPositions.values()),
+    ingestGpsPing,
     getOrderedLocationsForGroup,
     recordUnlock,
     unlockLocation,

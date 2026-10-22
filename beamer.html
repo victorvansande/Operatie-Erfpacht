@@ -769,6 +769,73 @@
       background: rgba(255, 42, 61, 0.3) !important;
     }
 
+    /* LIVE AGENT GPS MAP PINS */
+    .live-agent-pin {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .live-agent-pin-ring {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--agent-color, #38bdf8);
+      opacity: 0.35;
+      animation: pinBeaconPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    .live-agent-pin-core {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0b1329;
+      border: 2px solid var(--agent-color, #38bdf8);
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--agent-color, #38bdf8);
+      z-index: 2;
+    }
+
+    .live-agent-pin-tag {
+      position: absolute;
+      top: 26px;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 800;
+      background: rgba(8, 14, 26, 0.95);
+      border: 1px solid var(--agent-color, #38bdf8);
+      color: #ffffff;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .live-agent-pin.is-hq .live-agent-pin-core {
+      border-color: #f59e0b;
+      box-shadow: 0 0 16px #f59e0b;
+    }
+
+    .live-agent-pin.is-hq .live-agent-pin-tag {
+      border-color: #f59e0b;
+      color: #fde047;
+    }
+
     /* 6 SECTOREN ONDERBALK */
     .sectors-bar {
       height: 72px;
@@ -1206,7 +1273,7 @@
           <div class="premise-heading">SAMENZWERING ROND DE ERFPACHT</div>
           <p class="premise-text">
             Het stadsbestuur wil de erfpacht van KSA afnemen voor een projectontwikkelaar.
-            <strong>26 Veldagenten</strong> zijn geactiveerd om in <strong>6 sectoren</strong> bewijzen en codewoorden veilig te stellen!
+            <strong>25 Veldagenten</strong> zijn geactiveerd om in <strong>6 sectoren</strong> bewijzen en codewoorden veilig te stellen!
           </p>
         </div>
 
@@ -1214,7 +1281,7 @@
         <div class="agent-status-card" id="war-agent-status-box">
           <div class="agent-status-kpi">
             <span class="agent-kpi-sub">Geactiveerde Agenten:</span>
-            <span class="agent-kpi-val" id="war-agents-count">0 / 26</span>
+            <span class="agent-kpi-val" id="war-agents-count">0 / 25</span>
           </div>
           <div class="agent-progress-bar">
             <div class="agent-progress-fill" id="war-agents-progress"></div>
@@ -1224,7 +1291,7 @@
           </div>
 
           <div class="agent-chips-mini" id="war-agent-chips">
-            <!-- Mini status indicators voor alle 26 agenten -->
+            <!-- Mini status indicators voor alle 25 veldagenten -->
           </div>
         </div>
 
@@ -1301,7 +1368,7 @@
           🏆 Teams Stand (6)
         </button>
         <button type="button" class="hud-tab-btn" id="tab-players-btn" onclick="setLeaderboardTab('players')">
-          🎖️ Individueel (26)
+          🎖️ Individueel (25)
         </button>
       </div>
 
@@ -1542,7 +1609,7 @@
     // 4. Fake Cybercom Hacker Code Terminal (Continu Typende Spy Telemetrie)
     const TERMINAL_LOGS = [
       { text: "root@cybercom:~$ ./sigint_scan.sh --carrier=proximus,orange,telenet", cls: "cyan" },
-      { text: "[SIGINT] Scanning 26 registered agent IMEI transceivers in Herentals...", cls: "" },
+      { text: "[SIGINT] Scanning 25 registered agent IMEI transceivers in Herentals...", cls: "" },
       { text: "[RADIO] Intercepting 433.920 MHz encrypted burst transmission...", cls: "dim" },
       { text: "[DECRYPT] AES-256 handshake OK with GM-NODE: Vicce (Kapucijnenstraat 7)", cls: "cyan" },
       { text: "[GPS] Triangulating Sector 01 (Zandpoort) lat=51.1764, lng=4.8361 [LOCK]", cls: "" },
@@ -1558,7 +1625,7 @@
       { text: "[NET] Carrier NAT traversal active: 4G/5G persistent keepalive OK", cls: "" },
       { text: "[RADAR] Target spotlight cycling enabled across 6 historical sectors", cls: "amber" },
       { text: "[DIRECTIVE] Rule 01: All agents must wear cap + sunglasses at monuments", cls: "amber" },
-      { text: "[AUTH] Dossier security tokens armed for 26 covert operatives", cls: "" },
+      { text: "[AUTH] Dossier security tokens armed for 25 covert operatives (+1 HQ Node)", cls: "" },
       { text: "[SIGINT] Proximus tower CID-4836 ping verified... 18ms latency", cls: "dim" },
       { text: "[SIGINT] Orange carrier band B20 listening... packets incoming", cls: "dim" },
       { text: "[SIGINT] Telenet cell tower handshake confirmed", cls: "dim" },
@@ -1772,6 +1839,60 @@
       }, 5500);
     }
 
+    // 5B. Live GPS Agent Tracking Markers op Satelliet Kaart
+    let liveAgentMarkers = new Map();
+
+    function renderLiveAgentMarkers(positions) {
+      if (!warMap || typeof L === "undefined") return;
+      if (!Array.isArray(positions)) return;
+
+      positions.forEach((pos) => {
+        if (!pos || typeof pos.lat !== "number" || typeof pos.lng !== "number") return;
+        const isVicce = pos.playerId === "vicce" || pos.isGamemaster;
+        const color = isVicce ? "#f59e0b" : (pos.groupColor || "#38bdf8");
+        const coreLabel = isVicce ? "★" : (pos.dossierNr ? `#${pos.dossierNr}` : "●");
+        const tagLabel = isVicce ? "★ VICCE (HQ)" : (pos.playerName || `Agent #${pos.dossierNr || ""}`);
+
+        const icon = L.divIcon({
+          className: "",
+          html: `
+            <div class="live-agent-pin ${isVicce ? 'is-hq' : ''}" style="--agent-color: ${color};">
+              <div class="live-agent-pin-ring"></div>
+              <div class="live-agent-pin-core">${coreLabel}</div>
+              <div class="live-agent-pin-tag">${tagLabel}</div>
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+
+        const popupContent = `
+          <div style="font-family:'JetBrains Mono',monospace; min-width:140px; color:#e2e8f0; font-size:0.8rem;">
+            <strong style="color:${color}; font-size:0.9rem;">${isVicce ? "★ VICCE (HQ COMMANDO)" : (pos.playerName || "Veldagent")}</strong>
+            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
+              ${isVicce ? "Gamemaster / Hoofdkwartier" : (pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
+            </div>
+            <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
+              GPS Nauwkeurigheid: ±${pos.accuracy || 8}m<br>
+              Tijdstip: ${new Date(pos.ts || Date.now()).toLocaleTimeString("nl-BE")}
+            </div>
+          </div>
+        `;
+
+        if (liveAgentMarkers.has(pos.playerId)) {
+          const m = liveAgentMarkers.get(pos.playerId);
+          m.setLatLng([pos.lat, pos.lng]);
+          m.setIcon(icon);
+          m.setPopupContent(popupContent);
+        } else {
+          const m = L.marker([pos.lat, pos.lng], { icon, zIndexOffset: isVicce ? 1000 : 500 })
+            .addTo(warMap)
+            .bindPopup(popupContent);
+          liveAgentMarkers.set(pos.playerId, m);
+        }
+      });
+    }
+
     // 6. Render Sectoren Balk onder de kaart
     function renderSectorsBar(state) {
       const bar = document.getElementById("war-sectors-bar");
@@ -1811,7 +1932,7 @@
       const boxEl = document.getElementById("war-agent-status-box");
 
       const all = state.allPlayers || [];
-      const total = state.totalCount || 26;
+      const total = state.totalCount || 25;
       const unlocked = state.unlockedCount || 0;
       const allDone = unlocked >= total && total > 0;
 
@@ -1824,7 +1945,7 @@
 
       if (summaryEl) {
         if (allDone) {
-          summaryEl.textContent = "✓ ALLE 26 AGENTEN ACTIEF // LEADERBOARD ONLINE!";
+          summaryEl.textContent = `✓ ALLE ${total} VELDAGENTEN ACTIEF // LEADERBOARD ONLINE!`;
           summaryEl.style.color = "var(--hud-amber)";
         } else {
           summaryEl.textContent = `Nog ${total - unlocked} agent(en) moeten inloggen...`;
@@ -1834,7 +1955,7 @@
 
       if (chipsEl) {
         chipsEl.innerHTML = all.map(p => {
-          if (p.disabled) return "";
+          if (p.disabled || p.isGamemaster || p.id === "vicce") return "";
           return `<span class="chip-mini ${p.unlocked ? "unlocked" : ""}">${p.unlocked ? "✓ " : ""}${p.naam}</span>`;
         }).join("");
       }
@@ -1927,7 +2048,7 @@
           `;
         } else {
           // INDIVIDUEEL SPELERS LEADERBOARD
-          if (panelTitle) panelTitle.textContent = "🎖️ AGENTEN LEADERBOARD (26)";
+          if (panelTitle) panelTitle.textContent = "🎖️ AGENTEN LEADERBOARD (25)";
           const leaderboard = state.leaderboard || [];
 
           container.innerHTML = `
@@ -1992,7 +2113,7 @@
             }).join("")}
           </div>
           <div style="margin-top:0.4rem; font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--hud-muted); text-align:center;">
-            🔒 Scorebord ontgrendelt zodra alle 26 agenten inloggen (${state.unlockedCount || 0}/26)
+            🔒 Scorebord ontgrendelt zodra alle 25 veldagenten inloggen (${state.unlockedCount || 0}/${state.totalCount || 25})
           </div>
         `;
         return;
@@ -2011,10 +2132,10 @@
           <div class="locked-icon">🔒</div>
           <div class="locked-title">LEADERBOARD &amp; GROEPEN VERSLEUTELD</div>
           <p class="locked-sub">
-            Verdeel de groepen via het HQ Dashboard op gsm of wacht tot alle 26 agenten hun dossier hebben geactiveerd!
+            Verdeel de groepen via het HQ Dashboard op gsm of wacht tot alle 25 veldagenten hun dossier hebben geactiveerd!
           </p>
           <div style="margin-top: 1rem; font-family:'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--hud-cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
-            ${state.unlockedCount || 0} / ${state.totalCount || 26} AGENTEN INGELOGD
+            ${state.unlockedCount || 0} / ${state.totalCount || 25} AGENTEN INGELOGD
           </div>
         </div>
       `;
@@ -2062,6 +2183,12 @@
           renderSectorsBar(state);
           renderLeaderboardContent(state);
         });
+
+        if (typeof ScoreService.onGpsPositionChange === "function") {
+          ScoreService.onGpsPositionChange((positions) => {
+            renderLiveAgentMarkers(positions);
+          });
+        }
 
         ScoreService.onSyncStatusChange((status) => {
           const statusTxt = document.getElementById("war-status-txt");

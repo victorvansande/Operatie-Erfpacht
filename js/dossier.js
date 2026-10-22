@@ -156,12 +156,109 @@ document.addEventListener("DOMContentLoaded", () => {
     if (unlocked) {
       if (lockScreen) lockScreen.style.display = "none";
       if (contentEl) contentEl.classList.add("unlocked");
+      initPlayerGpsTracking();
     } else {
       if (contentEl) contentEl.classList.remove("unlocked");
       if (lockScreen) {
         lockScreen.style.display = "block";
         setTimeout(() => lockInput && lockInput.focus(), 50);
       }
+    }
+  }
+
+  // =========================================================================
+  // REALTIME GPS AGENT LOCATIETRACKING // SATELLIET KOPPELING NAAR HQ
+  // =========================================================================
+  function initPlayerGpsTracking() {
+    if (typeof ScoreService === "undefined" || !navigator.geolocation) return;
+
+    // Al eerder geautoriseerd in deze sessie? Direct starten!
+    if (sessionStorage.getItem(`jb_gps_granted_${playerId}`) === "true") {
+      ScoreService.startLiveGpsTracking(playerId, speler ? speler.naam : playerId);
+      updateGpsHeaderBadge(true);
+      return;
+    }
+
+    // Al eerder geweigerd/overgeslagen in deze sessie? Niet opnieuw storen
+    if (sessionStorage.getItem(`jb_gps_prompted_${playerId}`) === "true") {
+      return;
+    }
+
+    sessionStorage.setItem(`jb_gps_prompted_${playerId}`, "true");
+
+    // Toon de thematische secret agent GPS-prompt modal
+    const modalId = "jb-gps-auth-modal";
+    if (document.getElementById(modalId)) return;
+
+    const modal = document.createElement("div");
+    modal.id = modalId;
+    modal.style.cssText = "position:fixed; inset:0; background:rgba(4,8,16,0.88); backdrop-filter:blur(6px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:1.2rem;";
+    modal.innerHTML = `
+      <div style="background:#0f172a; border:2px solid #38bdf8; border-radius:12px; max-width:440px; width:100%; padding:1.4rem; box-shadow:0 20px 50px rgba(0,0,0,0.95); font-family:'Space Grotesk',sans-serif; text-align:left;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:#38bdf8; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.4); padding:0.2rem 0.5rem; border-radius:4px; font-weight:800; display:inline-flex; align-items:center; gap:0.35rem;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#38bdf8; box-shadow:0 0 6px #38bdf8; display:inline-block;"></span>
+            SATELLIET GPS PROTOCOL // 2200
+          </span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:#ef4444; font-weight:800;">HQ UPLINK</span>
+        </div>
+        <h3 style="color:#ffffff; font-size:1.15rem; font-weight:800; margin-bottom:0.5rem; line-height:1.2;">
+          🛰️ Locatietoegang Autoriseren
+        </h3>
+        <p style="color:#cbd5e1; font-size:0.84rem; line-height:1.45; margin-bottom:0.85rem;">
+          Om undercover agenten in Herentals live te coördineren en te zien op de radar, vereist Hoofdkwartier (Gamemaster Vicce) realtime GPS-positietracking.
+        </p>
+        <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:0.65rem 0.85rem; font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:#94a3b8; margin-bottom:1.1rem; line-height:1.5;">
+          <div style="color:#10b981;">✓ Live zichtbaar op de HQ radar & beamer</div>
+          <div style="color:#38bdf8;">✓ Batterijvriendelijk (slimme 10s interval)</div>
+          <div>✓ Alleen actief zolang je dossier openstaat</div>
+        </div>
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+          <button type="button" id="btn-gps-skip" style="background:transparent; border:1px solid #475569; color:#94a3b8; padding:0.5rem 0.85rem; border-radius:6px; cursor:pointer; font-size:0.8rem; font-family:'Space Grotesk',sans-serif;">
+            Overslaan
+          </button>
+          <button type="button" id="btn-gps-allow" style="background:#10b981; border:1px solid #10b981; color:#000; font-weight:800; padding:0.5rem 1.1rem; border-radius:6px; cursor:pointer; font-size:0.84rem; font-family:'Space Grotesk',sans-serif; box-shadow:0 0 15px rgba(16,185,129,0.4);">
+            🟢 GPS Vrijgeven
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const btnSkip = document.getElementById("btn-gps-skip");
+    const btnAllow = document.getElementById("btn-gps-allow");
+
+    if (btnSkip) {
+      btnSkip.addEventListener("click", () => {
+        modal.remove();
+      });
+    }
+
+    if (btnAllow) {
+      btnAllow.addEventListener("click", () => {
+        modal.remove();
+        sessionStorage.setItem(`jb_gps_granted_${playerId}`, "true");
+        const ok = ScoreService.startLiveGpsTracking(playerId, speler ? speler.naam : playerId);
+        if (ok) {
+          updateGpsHeaderBadge(true);
+        }
+      });
+    }
+  }
+
+  function updateGpsHeaderBadge(active) {
+    let badge = document.getElementById("agent-gps-live-badge");
+    if (!badge) {
+      const headerMeta = document.querySelector(".dossier-hero-meta, .header-meta, .dossier-header, header");
+      if (headerMeta) {
+        badge = document.createElement("div");
+        badge.id = "agent-gps-live-badge";
+        badge.style.cssText = "display:inline-flex; align-items:center; gap:0.35rem; font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:#10b981; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.4); padding:0.2rem 0.5rem; border-radius:4px; margin-top:0.4rem; font-weight:800;";
+        headerMeta.appendChild(badge);
+      }
+    }
+    if (badge) {
+      badge.innerHTML = `<span style="width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981; animation:beaconBlink 1.2s infinite; display:inline-block;"></span> 🛰️ GPS SATELLIET ONLINE // HQ GEKOPPELD`;
     }
   }
 

@@ -279,6 +279,60 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initRadarMap();
 
+  // 3B. Live GPS Agent Tracking Markers op Gamemaster HQ Radar-Kaart
+  let gmAgentMarkers = new Map();
+
+  function renderGmRadarAgentMarkers(positions) {
+    if (!mapInstance || typeof L === "undefined") return;
+    if (!Array.isArray(positions)) return;
+
+    positions.forEach((pos) => {
+      if (!pos || typeof pos.lat !== "number" || typeof pos.lng !== "number") return;
+      const isVicce = pos.playerId === "vicce" || pos.isGamemaster;
+      const color = isVicce ? "#f59e0b" : (pos.groupColor || "#38bdf8");
+      const coreLabel = isVicce ? "★" : (pos.dossierNr ? `#${pos.dossierNr}` : "●");
+      const tagLabel = isVicce ? "★ VICCE (HQ)" : (pos.playerName || `Agent #${pos.dossierNr || ""}`);
+
+      const icon = L.divIcon({
+        className: "live-agent-pin-wrap",
+        html: `
+          <div class="live-agent-pin ${isVicce ? 'is-hq' : ''}" style="--agent-color: ${color};">
+            <div class="live-agent-pin-ring"></div>
+            <div class="live-agent-pin-core">${coreLabel}</div>
+            <div class="live-agent-pin-tag">${tagLabel}</div>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      const popup = `
+        <div style="font-family: var(--font-mono, monospace); font-size: 0.8rem; color: #e2e8f0; min-width: 140px;">
+          <strong style="color: ${color}; font-size: 0.9rem;">${isVicce ? "★ VICCE (HQ COMMANDO)" : (pos.playerName || "Veldagent")}</strong>
+          <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 2px;">
+            ${isVicce ? "Gamemaster HQ" : (pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
+          </div>
+          <div style="color: #64748b; font-size: 0.7rem; margin-top: 4px;">
+            GPS Nauwkeurigheid: ±${pos.accuracy || 8}m<br>
+            Laatste update: ${new Date(pos.ts || Date.now()).toLocaleTimeString("nl-BE")}
+          </div>
+        </div>
+      `;
+
+      if (gmAgentMarkers.has(pos.playerId)) {
+        const m = gmAgentMarkers.get(pos.playerId);
+        m.setLatLng([pos.lat, pos.lng]);
+        m.setIcon(icon);
+        m.setPopupContent(popup);
+      } else {
+        const m = L.marker([pos.lat, pos.lng], { icon, zIndexOffset: isVicce ? 1000 : 500 })
+          .addTo(mapInstance)
+          .bindPopup(popup);
+        gmAgentMarkers.set(pos.playerId, m);
+      }
+    });
+  }
+
   // 4. Render KPI's & Top Controls
   function renderKPIs(state) {
     const groups = state.adminGroupsList || [];
@@ -369,21 +423,62 @@ document.addEventListener("DOMContentLoaded", () => {
     attendanceChips.innerHTML = "";
 
     const all = state.allPlayers || [];
-    const activeCount = all.filter((p) => !p.disabled).length;
-    const inactiveCount = all.filter((p) => p.disabled).length;
+    const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && p.id !== "vicce").length;
+    const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && p.id !== "vicce").length;
 
     if (attendanceCountsBadge) {
       attendanceCountsBadge.innerHTML = `
-        <span style="color: var(--accent); font-weight: 700;">🟢 ${activeCount} Aanwezig (Actief)</span>
+        <span style="color: var(--accent); font-weight: 700;">🟢 ${activeCount} Veldagenten Aanwezig</span>
         &nbsp;|&nbsp;
-        <span style="color: ${inactiveCount > 0 ? "var(--danger)" : "var(--text-muted)"}; font-weight: 700;">🔴 ${inactiveCount} Inactief (Afwezig)</span>
+        <span style="color: ${inactiveCount > 0 ? "var(--danger)" : "var(--text-muted)"}; font-weight: 700;">🔴 ${inactiveCount} Afwezig</span>
+        &nbsp;|&nbsp;
+        <span style="color: #f59e0b; font-weight: 700;">★ 1 Gamemaster HQ</span>
       `;
     }
 
+    const liveGpsPositions = ScoreService.getLiveAgentPositions ? ScoreService.getLiveAgentPositions() : [];
+
     all.forEach((p) => {
       const chip = document.createElement("div");
-      const isOff = p.disabled;
+      const isStaff = p.isGamemaster || p.id === "vicce";
+      const isOff = p.disabled && !isStaff;
       const isUnlocked = p.unlocked;
+      const gpsPos = liveGpsPositions.find((g) => g.playerId === p.id);
+
+      if (isStaff) {
+        chip.className = "gm-attend-chip is-staff";
+        chip.style.cssText = `
+          background: rgba(245, 158, 11, 0.12);
+          border: 1.5px solid rgba(245, 158, 11, 0.65);
+          border-radius: 8px;
+          padding: 0.55rem 0.75rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+          box-shadow: 0 0 14px rgba(245, 158, 11, 0.15);
+        `;
+        chip.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.35rem;">
+            <strong style="font-size: 0.95rem; color: #fde047;">
+              ★ ${p.naam} (Gamemaster HQ)
+            </strong>
+            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #f59e0b;">
+              #${p.dossierNr}
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            <span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: #f59e0b;">
+              👑 COMMANDANT HOOFDKWARTIER
+            </span>
+            ${gpsPos ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #10b981; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🛰️ GPS LIVE (±${gpsPos.accuracy || 5}m)</span>` : '<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #94a3b8;">Kapucijnenstraat 7</span>'}
+          </div>
+          <div style="font-size: 0.72rem; color: #cbd5e1; font-style: italic;">
+            Blijft in HQ &bull; telt niet mee in groepsverdeling of klassement.
+          </div>
+        `;
+        attendanceChips.appendChild(chip);
+        return;
+      }
 
       chip.className = `gm-attend-chip ${isOff ? "is-off" : isUnlocked ? "is-unlocked" : "is-active"}`;
       chip.style.cssText = `
@@ -397,11 +492,15 @@ document.addEventListener("DOMContentLoaded", () => {
         transition: all 0.15s ease;
       `;
 
+      const gpsBadge = gpsPos
+        ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #10b981; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🛰️ GPS ±${gpsPos.accuracy || 8}m</span>`
+        : "";
+
       const statusBadge = isOff
         ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: #f87171;">🔴 INACTIEF (AFWEZIG)</span>`
         : isUnlocked
-        ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: var(--accent);">🟢 AANWEZIG // INGELOGD #${p.unlockRank}</span>`
-        : `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: #38bdf8;">🟢 AANWEZIG // WACHT OP PIN</span>`;
+        ? `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: var(--accent);">🟢 AANWEZIG // INGELOGD #${p.unlockRank}</span> ${gpsBadge}`
+        : `<span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; color: #38bdf8;">🟢 AANWEZIG // WACHT OP PIN</span> ${gpsBadge}`;
 
       chip.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.35rem;">
@@ -1118,6 +1217,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnRandomGroups) {
     btnRandomGroups.addEventListener("click", async () => {
       const presentPlayers = SPEL_CONFIG.spelers.filter((s) => {
+        if (s.id === "vicce" || s.isGamemaster) return false;
         const sInfo = latestState.playerScoresMap.get(s.id);
         return !(sInfo && sInfo.disabled);
       });
@@ -1285,7 +1385,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Start Realtime Synchronisatie
+  // Start Realtime Synchronisatie & GPS Radar Tracking
   ScoreService.startRealtimeSync();
   ScoreService.subscribe((state) => {
     latestState = state;
@@ -1297,4 +1397,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderLocationOccupancy(state);
     updateBroadcastGroupsOptions(state);
   });
+
+  if (typeof ScoreService.onGpsPositionChange === "function") {
+    ScoreService.onGpsPositionChange((positions) => {
+      renderGmRadarAgentMarkers(positions);
+      if (latestState) {
+        renderAttendanceDrawer(latestState);
+      }
+    });
+  }
 });

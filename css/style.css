@@ -1362,6 +1362,78 @@ body::after {
   }
 }
 
+/* LIVE AGENT GPS MAP PINS (HQ Radar & Leaflet) */
+.live-agent-pin {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.live-agent-pin-ring {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--agent-color, #38bdf8);
+  opacity: 0.35;
+  animation: liveAgentPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.live-agent-pin-core {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0b1329;
+  border: 2px solid var(--agent-color, #38bdf8);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px var(--agent-color, #38bdf8);
+  z-index: 2;
+}
+
+.live-agent-pin-tag {
+  position: absolute;
+  top: 26px;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.58rem;
+  font-weight: 800;
+  background: rgba(8, 14, 26, 0.95);
+  border: 1px solid var(--agent-color, #38bdf8);
+  color: #ffffff;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.live-agent-pin.is-hq .live-agent-pin-core {
+  border-color: #f59e0b;
+  box-shadow: 0 0 16px #f59e0b;
+}
+
+.live-agent-pin.is-hq .live-agent-pin-tag {
+  border-color: #f59e0b;
+  color: #fde047;
+}
+
+@keyframes liveAgentPulse {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
 /* Rood Headquarters (HQ) icoon dat zich duidelijk onderscheidt van de groene dots */
 .hq-pin {
   position: relative;
