@@ -1127,8 +1127,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const ok = window.confirm(
-        `🎲 BEVESTIGING: WILLEKEURIGE GROEPSVERDELING\n\n` +
-        `Weet je zeker dat je de ${presentPlayers.length} aanwezige spelers willekeurig in groepen van 4 wilt verdelen?\n\n` +
+        `🎲 BEVESTIGING: WILLEKEURIGE GROEPSVERDELING (6 LOCATIES)\n\n` +
+        `Weet je zeker dat je de ${presentPlayers.length} aanwezige spelers willekeurig wilt verdelen over de 6 groepen (4 à 5 spelers per team)?\n\n` +
+        `✓ Elk van de 6 groepen start direct op een unieke locatie in Herentals!\n` +
         `⚠️ Let op: dit overschrijft eventuele eerder gemaakte groepsindelingen direct!`
       );
       if (!ok) return;
@@ -1139,7 +1140,9 @@ document.addEventListener("DOMContentLoaded", () => {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      const numGroups = Math.ceil(shuffled.length / 4);
+      // Maximaal 6 groepen zodat elk team op 1 van de 6 unieke locaties start
+      const maxLocs = (SPEL_CONFIG.locaties || []).length || 6;
+      const numGroups = Math.min(maxLocs, Math.max(1, Math.min(shuffled.length, 6)));
       const defaultNames = (SPEL_CONFIG.standaardGroepen || []).map(
         (g) => g.id || g.naam
       );
@@ -1150,7 +1153,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       await ScoreService.setAllGroups(assignments);
-      showToast(`✓ ${shuffled.length} aanwezige spelers verdeeld in ${numGroups} groepen!`);
+      showToast(`✓ ${shuffled.length} aanwezige spelers verdeeld over de ${numGroups} unieke startgroepen!`);
     });
   }
 

@@ -849,7 +849,9 @@ const ScoreService = (() => {
     const defaultGroupList = (SPEL_CONFIG.standaardGroepen || []).map(
       (g) => g.id || g.naam
     );
-    const numAutoGroups = Math.max(1, Math.ceil(enabledCount / 4));
+    // Maximaal 6 groepen zodat elk team aan 1 van de 6 unieke locaties begint
+    const maxLocCount = (SPEL_CONFIG.locaties || []).length || 6;
+    const numAutoGroups = Math.min(maxLocCount, Math.max(1, Math.min(enabledCount, 6)));
     let enabledIdx = 0;
 
     // Bouw volledige spelerslijst

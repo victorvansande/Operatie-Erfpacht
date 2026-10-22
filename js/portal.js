@@ -1034,7 +1034,9 @@ document.addEventListener("DOMContentLoaded", () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    const numGroups = Math.ceil(shuffled.length / groupSize);
+    // Maximaal 6 groepen zodat elke groep op 1 van de 6 unieke locaties start
+    const maxLocs = (SPEL_CONFIG.locaties || []).length || 6;
+    const numGroups = Math.min(maxLocs, Math.max(1, Math.min(shuffled.length, 6)));
     const defaultNames = (SPEL_CONFIG.standaardGroepen || []).map(
       (g) => g.id || g.naam
     );

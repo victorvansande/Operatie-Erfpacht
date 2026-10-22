@@ -29,16 +29,20 @@ const SPEL_CONFIG = {
     minimumPunten: 10
   },
 
-  // STANDAARD GROEPEN & KLEUREN (Kleur-groepen die spelers zelf een eigen teamnaam kunnen geven):
+  // STANDAARD GROEPEN & KLEUREN (EXACT 6 GROEPEN: ELK TEAM START OP EEN UNIEKE LOCATIE):
+  // Groep 1 (Blauw) -> Zandpoort
+  // Groep 2 (Rood)  -> Begijnhof
+  // Groep 3 (Geel)  -> Bovenpoort
+  // Groep 4 (Groen) -> Stadspark
+  // Groep 5 (Paars) -> Kerkplein
+  // Groep 6 (Oranje)-> Nieuw Lokaal
   standaardGroepen: [
-    { id: "Groep Blauw",  naam: "Groep Blauw",  kleur: "#3b82f6" }, // Blauw
-    { id: "Groep Rood",   naam: "Groep Rood",   kleur: "#ef4444" }, // Rood
-    { id: "Groep Geel",   naam: "Groep Geel",   kleur: "#eab308" }, // Geel
-    { id: "Groep Groen",  naam: "Groep Groen",  kleur: "#10b981" }, // Groen
-    { id: "Groep Paars",  naam: "Groep Paars",  kleur: "#a855f7" }, // Paars
-    { id: "Groep Oranje", naam: "Groep Oranje", kleur: "#f97316" }, // Oranje
-    { id: "Groep Roze",   naam: "Groep Roze",   kleur: "#ec4899" }, // Roze
-    { id: "Groep Cyaan",  naam: "Groep Cyaan",  kleur: "#06b6d4" }  // Cyaan
+    { id: "Groep Blauw",  naam: "Groep Blauw",  kleur: "#3b82f6" }, // Start: Zandpoort
+    { id: "Groep Rood",   naam: "Groep Rood",   kleur: "#ef4444" }, // Start: Begijnhof
+    { id: "Groep Geel",   naam: "Groep Geel",   kleur: "#eab308" }, // Start: Bovenpoort
+    { id: "Groep Groen",  naam: "Groep Groen",  kleur: "#10b981" }, // Start: Stadspark
+    { id: "Groep Paars",  naam: "Groep Paars",  kleur: "#a855f7" }, // Start: Kerkplein
+    { id: "Groep Oranje", naam: "Groep Oranje", kleur: "#f97316" }  // Start: Nieuw Lokaal
   ],
 
   // HEADQUARTERS (Centrale commandopost op de radar-kaart met rood HQ-icoon):

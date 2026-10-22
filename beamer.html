@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WAR ROOM // BEAMER PROJECTOR HUD — Operatie Erfpacht</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root {
+      --hud-bg: #070a10;
+      --hud-panel: rgba(13, 19, 31, 0.88);
+      --hud-border: rgba(56, 189, 248, 0.28);
+      --hud-cyan: #38bdf8;
+      --hud-green: #10b981;
+      --hud-amber: #f59e0b;
+      --hud-red: #ef4444;
+      --hud-text: #f1f5f9;
+      --hud-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--hud-bg);
+      color: var(--hud-text);
+      font-family: 'Space Grotesk', sans-serif;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      position: relative;
+    }
+
+    /* Subtiel CRT Scanline & Vignette Effect voor Beamer */
+    .beamer-scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+      background-size: 100% 3px, 6px 100%;
+      z-index: 999;
+      opacity: 0.65;
+    }
+
+    .beamer-vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 100px rgba(0,0,0,0.85);
+      z-index: 998;
+    }
+
+    /* 1. TOP COMMAND BAR (Met Grote Aftelklok) */
+    .war-topbar {
+      height: 78px;
+      background: rgba(10, 15, 26, 0.96);
+      border-bottom: 2px solid var(--hud-cyan);
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(56, 189, 248, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      z-index: 100;
+      position: relative;
+    }
+
+    .war-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .war-seal-svg {
+      width: 46px;
+      height: 46px;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+    }
+
+    .war-title-block h1 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .war-title-block p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--hud-cyan);
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    /* DE GROTE AFTELKLOK IN HET MIDDEN */
+    .war-clock-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      border-radius: 8px;
+      padding: 0.25rem 1.75rem;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15), inset 0 0 12px rgba(56, 189, 248, 0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .war-clock-center:hover {
+      border-color: var(--hud-amber);
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);
+    }
+
+    .war-clock-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--hud-amber);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .war-countdown-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.35rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      text-shadow: 0 0 15px rgba(56, 189, 248, 0.6), 0 0 30px rgba(56, 189, 248, 0.3);
+    }
+
+    .war-countdown-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--hud-muted);
+      margin-top: 1px;
+    }
+
+    .war-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .war-telemetry-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .war-live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--hud-green);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .war-pulse-circle {
+      width: 8px;
+      height: 8px;
+      background: var(--hud-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--hud-green);
+      animation: statusPulse 1.6s infinite;
+    }
+
+    .war-clock-time {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .war-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #f1f5f9;
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .war-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--hud-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+    }
+
+    /* 2. HOOFDGRID (3 KOLOMMEN HUD) */
+    .war-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 310px 1fr 340px;
+      gap: 0.85rem;
+      padding: 0.85rem 1rem 0.5rem;
+      height: calc(100vh - 78px - 38px);
+      min-height: 0;
+    }
+
+    /* HUD PANELS */
+    .hud-panel {
+      background: var(--hud-panel);
+      border: 1px solid var(--hud-border);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(15, 23, 42, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Corner brackets */
+    .hud-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid var(--hud-cyan);
+      border-left: 2px solid var(--hud-cyan);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .hud-panel::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid var(--hud-cyan);
+      border-right: 2px solid var(--hud-cyan);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .hud-panel-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .hud-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .hud-panel-title span {
+      color: var(--hud-cyan);
+    }
+
+    .hud-panel-body {
+      padding: 0.85rem;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* LINKER KOLOM: BRIEFING & PREMISE */
+    .premise-card {
+      background: rgba(14, 23, 38, 0.9);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-left: 4px solid var(--hud-amber);
+      border-radius: 6px;
+      padding: 0.85rem;
+    }
+
+    .premise-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--hud-amber);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+
+    .premise-heading {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+      margin-bottom: 0.45rem;
+    }
+
+    .premise-text {
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+
+    .premise-text strong {
+      color: #fde047;
+    }
+
+    .directives-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px dashed rgba(245, 158, 11, 0.3);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .directives-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      color: #e2e8f0;
+    }
+
+    .directives-list li span {
+      color: var(--hud-amber);
+      font-weight: 800;
+    }
+
+    /* AANWEZIGHEIDS COUNTER CARD */
+    .agent-status-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 6px;
+      padding: 0.75rem;
+    }
+
+    .agent-status-kpi {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+    }
+
+    .agent-kpi-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--hud-cyan);
+    }
+
+    .agent-kpi-sub {
+      font-size: 0.74rem;
+      color: var(--hud-muted);
+    }
+
+    .agent-progress-bar {
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .agent-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--hud-cyan), var(--hud-green));
+      width: 0%;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .agent-chips-mini {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .chip-mini {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8;
+    }
+    .chip-mini.unlocked {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+      font-weight: 700;
+    }
+
+    /* MIDDELSTE KOLOM: RADAR SATELLIET KAART */
+    .war-center-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      min-height: 0;
+    }
+
+    .map-hud-box {
+      flex: 1;
+      border-radius: 8px;
+      border: 1.5px solid var(--hud-cyan);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.2), inset 0 0 30px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    #war-map {
+      width: 100%;
+      height: 100%;
+      background: #070d18;
+    }
+
+    /* Leaflet Dark Filter */
+    .leaflet-layer {
+      filter: invert(100%) hue-rotate(185deg) brightness(80%) contrast(120%);
+    }
+
+    /* Radar Sweep Animation Overlay */
+    .radar-sweep-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 500;
+      background: radial-gradient(circle at center, transparent 40%, rgba(56, 189, 248, 0.05) 70%, rgba(56, 189, 248, 0.15) 100%);
+    }
+
+    .radar-sweep-arm {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50vmax;
+      height: 50vmax;
+      transform-origin: 0 0;
+      background: linear-gradient(45deg, rgba(56, 189, 248, 0.15), transparent 60%);
+      animation: radarSweep 6s linear infinite;
+      pointer-events: none;
+      z-index: 501;
+    }
+
+    @keyframes radarSweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .map-corner-data {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      z-index: 510;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--hud-cyan);
+      background: rgba(8, 14, 24, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* 6 SECTOREN ONDERBALK */
+    .sectors-bar {
+      height: 68px;
+      background: rgba(13, 19, 31, 0.95);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.4rem;
+      padding: 0.4rem 0.55rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .sector-item {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 5px;
+      padding: 0.35rem 0.45rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .sector-item.active {
+      border-color: var(--hud-green);
+      background: rgba(16, 185, 129, 0.12);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .sector-name {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sector-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--hud-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* RECHTER KOLOM: GROEPEN OVERZICHT */
+    .groups-placeholder-locked {
+      background: rgba(239, 68, 68, 0.08);
+      border: 2px dashed rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .locked-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      animation: pulseAlert 2s infinite;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.8; }
+    }
+
+    .locked-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #f87171;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+    }
+
+    .locked-sub {
+      font-size: 0.78rem;
+      color: var(--hud-muted);
+      line-height: 1.4;
+      max-width: 250px;
+    }
+
+    /* GROEPEN LIJST EENS ONTHULD */
+    .groups-live-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      overflow-y: auto;
+      height: 100%;
+      padding-right: 0.2rem;
+    }
+
+    .group-war-card {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1.5px solid var(--grp-color, var(--hud-cyan));
+      border-radius: 6px;
+      padding: 0.65rem 0.8rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .group-war-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .group-war-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .group-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--grp-color, #38bdf8);
+      box-shadow: 0 0 8px var(--grp-color, #38bdf8);
+    }
+
+    .group-war-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: var(--hud-amber);
+    }
+
+    .group-war-location {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .group-war-members {
+      font-size: 0.7rem;
+      color: var(--hud-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 3. ONDERBALK: SCROLLING TICKER */
+    .war-ticker-bar {
+      height: 38px;
+      background: #05080f;
+      border-top: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--hud-cyan);
+      overflow: hidden;
+      position: relative;
+      z-index: 100;
+    }
+
+    .ticker-lead {
+      background: var(--hud-cyan);
+      color: #000;
+      font-weight: 900;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      margin-right: 0.85rem;
+      flex-shrink: 0;
+      letter-spacing: 0.05em;
+    }
+
+    .ticker-scroll {
+      display: flex;
+      gap: 2.5rem;
+      white-space: nowrap;
+      animation: tickerRun 45s linear infinite;
+    }
+
+    @keyframes tickerRun {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Modal voor het instellen van de Aftelklok */
+    #clock-settings-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .clock-modal-box {
+      background: #0f172a;
+      border: 2px solid var(--hud-amber);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 440px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Beamer CRT Scanlines & Vignette -->
+  <div class="beamer-scanlines"></div>
+  <div class="beamer-vignette"></div>
+
+  <!-- 1. TOP COMMAND BAR -->
+  <header class="war-topbar">
+    <div class="war-brand">
+      <svg class="war-seal-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="30" stroke="#38bdf8" stroke-width="2.5" fill="#0b1329"/>
+        <circle cx="32" cy="32" r="23" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <path d="M32 9 L37 25 L53 25 L40 35 L45 51 L32 41 L19 51 L24 35 L11 25 L27 25 Z" fill="#38bdf8"/>
+        <circle cx="32" cy="32" r="6" fill="#0b1329" stroke="#38bdf8" stroke-width="1.5"/>
+      </svg>
+      <div class="war-title-block">
+        <h1>OPERATIE ERFPACHT <span style="font-size: 0.72rem; color: var(--hud-amber); font-weight: 800; border: 1px solid var(--hud-amber); padding: 0.1rem 0.4rem; border-radius: 4px;">WAR ROOM HUD</span></h1>
+        <p>NATIONAAL INLICHTINGENCENTRUM // SECTOR HERENTALS // TOP SECRET</p>
+      </div>
+    </div>
+
+    <!-- DE GROTE AFTELKLOK IN HET MIDDEN -->
+    <div class="war-clock-center" id="war-clock-btn" title="Klik om de timer aan te passen">
+      <div class="war-clock-label">
+        <span>⏱️</span> <span id="clock-mode-label">T-MINUS // MISSIESTART</span>
+      </div>
+      <div class="war-countdown-display" id="war-countdown-digits">00:00:00</div>
+      <div class="war-countdown-sub" id="war-target-sub">Doeltijd: Zaterdag 19:00 (Klik om te wijzigen)</div>
+    </div>
+
+    <!-- RECHTS: STATUS & BEDIENING -->
+    <div class="war-topbar-right">
+      <div class="war-telemetry-badge">
+        <div class="war-live-status">
+          <span class="war-pulse-circle"></span>
+          <span id="war-status-txt">4G REALTIME CONNECTED</span>
+        </div>
+        <div class="war-clock-time" id="war-live-clock">--:--:--</div>
+      </div>
+
+      <button type="button" class="war-btn" id="btn-fullscreen" title="Volledig Scherm (F11)">
+        ⛶ Fullscreen
+      </button>
+      <a href="hq-dashboard.html" class="war-btn" style="text-decoration: none;">
+        &larr; HQ
+      </a>
+    </div>
+  </header>
+
+  <!-- 2. HOOFDGRID (3 KOLOMMEN HUD) -->
+  <main class="war-grid">
+
+    <!-- LINKER KOLOM: PREMISE & RECRUITMENT STATUS -->
+    <aside class="hud-panel">
+      <div class="hud-panel-header">
+        <div class="hud-panel-title">
+          <span>📁</span> OPERATIE DOSSIER
+        </div>
+        <span style="color: var(--hud-amber); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;">SEC-LVL 4</span>
+      </div>
+
+      <div class="hud-panel-body">
+        <!-- De Premise -->
+        <div class="premise-card">
+          <div class="premise-tag">CRISIS HERENTALS // DREIGINGSNIVEAU ROOD</div>
+          <div class="premise-heading">SAMENZWERING ROND DE ERFPACHT</div>
+          <p class="premise-text">
+            Het stadsbestuur van Herentals wil de erfpacht van KSA afnemen en het lokaal verpachten aan een louche projectontwikkelaar.
+            <strong>26 Veldagenten</strong> zijn geactiveerd om in <strong>6 geheime sectoren</strong> bewijzen en codewoorden veilig te stellen voordat de erfpacht definitief vervalt!
+          </p>
+
+          <ul class="directives-list">
+            <li><span>[01]</span> ONDERCOVER DRESSCODE: PET + ZONNEBRIL</li>
+            <li><span>[02]</span> KRAAK DE CODES BIJ DE 6 MONUMENTEN</li>
+            <li><span>[03]</span> UPLOAD FOTO- EN VIDEOBEWIJS NAAR HQ</li>
+            <li><span>[04]</span> OVERTUIG DE STAD EN RED DE KSA</li>
+          </ul>
+        </div>
+
+        <!-- Aanwezigheid & Dossier Unlock Progress -->
+        <div class="agent-status-card">
+          <div class="agent-status-kpi">
+            <span class="agent-kpi-sub">Geactiveerde Agenten:</span>
+            <span class="agent-kpi-val" id="war-agents-count">0 / 26</span>
+          </div>
+          <div class="agent-progress-bar">
+            <div class="agent-progress-fill" id="war-agents-progress"></div>
+          </div>
+          <div style="font-size: 0.68rem; color: var(--hud-muted); margin-bottom: 0.4rem; font-family: 'JetBrains Mono', monospace;">
+            STATUS: <span id="war-login-summary" style="color: var(--hud-amber);">Wachten op logins via gsm...</span>
+          </div>
+
+          <div class="agent-chips-mini" id="war-agent-chips">
+            <!-- Mini status indicators voor alle 26 agenten -->
+          </div>
+        </div>
+
+        <!-- Commandocentrale Adres -->
+        <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 0.6rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;">
+          <div style="color: var(--hud-cyan); font-weight: 800; margin-bottom: 0.2rem;">📍 HOOFDKWARTIER COMMANDOPOST</div>
+          <div style="color: #ffffff;">Kapucijnenstraat 7, 2200 Herentals</div>
+          <div style="color: var(--hud-muted); font-size: 0.65rem; margin-top: 0.2rem;">Coördinaten: 51.1764° N, 4.8361° E</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MIDDELSTE KOLOM: TACTISCHE SATELLIET RADAR KAART -->
+    <section class="war-center-col">
+      <div class="map-hud-box">
+        <div class="map-corner-data">
+          <span>SATELLITE RADAR VIEW // HERENTALS SECTOR 2200</span><br>
+          <span style="color: #64748b;">SURVEILLANCE MODE: REALTIME TARGET TRACKING</span>
+        </div>
+
+        <!-- Radar Sweep -->
+        <div class="radar-sweep-overlay">
+          <div class="radar-sweep-arm"></div>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div id="war-map"></div>
+      </div>
+
+      <!-- 6 Sectoren Voortgangsbalk onder de kaart -->
+      <div class="sectors-bar" id="war-sectors-bar">
+        <!-- 6 locaties worden hier dynamisch gevuld -->
+      </div>
+    </section>
+
+    <!-- RECHTER KOLOM: GROEPEN OVERZICHT (LIVE GESYNCT) -->
+    <aside class="hud-panel">
+      <div class="hud-panel-header">
+        <div class="hud-panel-title">
+          <span>👥</span> VELDGROEPEN &amp; TEAMS
+        </div>
+        <span id="war-groups-state-badge" style="color: var(--hud-amber); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;">VERBORGEN</span>
+      </div>
+
+      <div class="hud-panel-body" id="war-groups-body">
+        <!-- Wordt live gevuld of toont 'Versleuteld' indien groepen nog niet onthuld zijn -->
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- 3. ONDERBALK: SCROLLING TICKER -->
+  <footer class="war-ticker-bar">
+    <div class="ticker-lead">INCOMING INTEL FEED</div>
+    <div class="ticker-scroll" id="war-ticker-content">
+      <span>[SYSTEM] OPERATIE ERFPACHT COMMAND CENTER INITIALIZED //</span>
+      <span>[SIGINT] 4G MULTI-BROKER MQTT ENCRYPTION ONLINE //</span>
+      <span>[ALERT] DRESSCODE VOORSCHRIFT: PET EN ZONNEBRIL VERPLICHT BIJ INFILTRATIE //</span>
+      <span>[HQ] GAMEMASTER VICCE MONITORT LIVE ALLE BEWIJSSTUKKEN UIT HERENTALS //</span>
+      <span>[STATUS] 6 HISTORISCHE MONUMENTEN BESCHERMD MET BEVEILIGINGSCODES //</span>
+      <span>[SYSTEM] OPERATIE ERFPACHT COMMAND CENTER INITIALIZED //</span>
+      <span>[SIGINT] 4G MULTI-BROKER MQTT ENCRYPTION ONLINE //</span>
+      <span>[ALERT] DRESSCODE VOORSCHRIFT: PET EN ZONNEBRIL VERPLICHT BIJ INFILTRATIE //</span>
+      <span>[HQ] GAMEMASTER VICCE MONITORT LIVE ALLE BEWIJSSTUKKEN UIT HERENTALS //</span>
+      <span>[STATUS] 6 HISTORISCHE MONUMENTEN BESCHERMD MET BEVEILIGINGSCODES //</span>
+    </div>
+  </footer>
+
+  <!-- MODAL: TIMER AANPASSEN -->
+  <div id="clock-settings-modal" onclick="closeClockModal(event)">
+    <div class="clock-modal-box" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">
+        <h3 style="color:var(--hud-amber); font-size:1.1rem;">⏱️ Aftelklok Instellingen</h3>
+        <button type="button" onclick="closeClockModal()" style="background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <div>
+          <label style="font-size:0.75rem; color:var(--hud-muted); display:block; margin-bottom:0.3rem;">Kies snel een doeltijd voor zaterdag:</label>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button type="button" class="war-btn" onclick="setTargetHour(19, 0)">Zaterdag 19:00</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(19, 30)">19:30</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(20, 0)">20:00</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(20, 30)">20:30</button>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:0.75rem; color:var(--hud-muted); display:block; margin-bottom:0.3rem;">Of stel minuten vanaf nu in:</label>
+          <div style="display:flex; gap:0.4rem;">
+            <button type="button" class="war-btn" onclick="setMinutesFromNow(15)">+15 min</button>
+            <button type="button" class="war-btn" onclick="setMinutesFromNow(30)">+30 min</button>
+            <button type="button" class="war-btn" onclick="setMinutesFromNow(60)">+60 min</button>
+            <button type="button" class="war-btn" onclick="setMinutesFromNow(90)">+90 min</button>
+          </div>
+        </div>
+
+        <div style="margin-top:0.5rem; display:flex; justify-content:flex-end;">
+          <button type="button" class="war-btn" style="background:var(--hud-amber); color:#000; font-weight:800;" onclick="closeClockModal()">Sluiten</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="js/config.js"></script>
+  <script src="js/mqtt.min.js"></script>
+  <script src="js/score-service.js"></script>
+  <script>
+    // =========================================================================
+    // BEAMER / WAR ROOM PROJECTOR CONTROLLER
+    // =========================================================================
+
+    // 1. Aftelklok Logica
+    let targetTime = null;
+    const STORAGE_TARGET_KEY = "jb_beamer_target_time";
+
+    function initTargetTime() {
+      const saved = localStorage.getItem(STORAGE_TARGET_KEY);
+      if (saved) {
+        targetTime = new Date(parseInt(saved, 10));
+      } else {
+        // Standaard doel: Zaterdag om 19:00
+        const d = new Date();
+        const day = d.getDay();
+        const diff = (6 - day + 7) % 7; // dagen tot zaterdag
+        d.setDate(d.getDate() + diff);
+        d.setHours(19, 0, 0, 0);
+        targetTime = d;
+      }
+    }
+
+    function updateCountdown() {
+      const display = document.getElementById("war-countdown-digits");
+      const label = document.getElementById("clock-mode-label");
+      const sub = document.getElementById("war-target-sub");
+      if (!display) return;
+
+      const now = new Date();
+      const diffMs = targetTime.getTime() - now.getTime();
+
+      if (diffMs > 0) {
+        label.textContent = "⏱️ T-MINUS // AFTELKLOK MISSIESTART";
+        const totalSec = Math.floor(diffMs / 1000);
+        const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+        const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+        const secs = String(totalSec % 60).padStart(2, "0");
+        display.textContent = `${hrs}:${mins}:${secs}`;
+      } else {
+        label.textContent = "🚀 MISSIE BEZIG // VERSTREKEN TIJD";
+        const elapsedSec = Math.floor(Math.abs(diffMs) / 1000);
+        const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
+        const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, "0");
+        const secs = String(elapsedSec % 60).padStart(2, "0");
+        display.textContent = `+${hrs}:${mins}:${secs}`;
+      }
+
+      if (sub && targetTime) {
+        const timeStr = targetTime.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = targetTime.toLocaleDateString("nl-BE", { weekday: "short", day: "numeric", month: "short" });
+        sub.textContent = `Doeltijd: ${dateStr} ${timeStr} (Klik om te wijzigen)`;
+      }
+
+      // Live realtime klok in topbar
+      const clockEl = document.getElementById("war-live-clock");
+      if (clockEl) {
+        clockEl.textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      }
+    }
+
+    function setTargetHour(hr, min) {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = (6 - day + 7) % 7;
+      d.setDate(d.getDate() + diff);
+      d.setHours(hr, min, 0, 0);
+      targetTime = d;
+      localStorage.setItem(STORAGE_TARGET_KEY, targetTime.getTime());
+      updateCountdown();
+      closeClockModal();
+    }
+
+    function setMinutesFromNow(mins) {
+      targetTime = new Date(Date.now() + mins * 60 * 1000);
+      localStorage.setItem(STORAGE_TARGET_KEY, targetTime.getTime());
+      updateCountdown();
+      closeClockModal();
+    }
+
+    function openClockModal() {
+      document.getElementById("clock-settings-modal").style.display = "flex";
+    }
+
+    function closeClockModal() {
+      document.getElementById("clock-settings-modal").style.display = "none";
+    }
+
+    // 2. Fullscreen Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // 3. Tactische Leaflet Kaart
+    let warMap = null;
+    let markersMap = new Map();
+
+    function initWarMap() {
+      if (typeof L === "undefined" || !document.getElementById("war-map")) return;
+
+      warMap = L.map("war-map", {
+        center: [51.1782, 4.8355],
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      L.tileLayer("https://tile.openstreetmap.de/{z}/{x}/{y}.png", {
+        maxZoom: 19
+      }).addTo(warMap);
+
+      const locaties = SPEL_CONFIG.locaties || [];
+      const hq = SPEL_CONFIG.headquarters;
+      const bounds = [];
+
+      // HQ Marker
+      if (hq && hq.lat && hq.lng) {
+        bounds.push([hq.lat, hq.lng]);
+        const hqIcon = L.divIcon({
+          className: "",
+          html: `
+            <div class="hq-pin">
+              <span class="hq-pin-ring"></span>
+              <span class="hq-pin-diamond"><span class="hq-pin-label">HQ</span></span>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        L.marker([hq.lat, hq.lng], { icon: hqIcon })
+          .addTo(warMap)
+          .bindPopup(`<strong style="color:#ef4444;">HOOFDKWARTIER</strong><br>${hq.adres}`);
+      }
+
+      // 6 Locatie Markers
+      locaties.forEach((loc, idx) => {
+        if (loc.lat && loc.lng) {
+          bounds.push([loc.lat, loc.lng]);
+          const icon = L.divIcon({
+            className: "",
+            html: `
+              <div class="radar-pin" id="marker-pin-${loc.id}">
+                <span class="radar-pin-pulse" style="animation-delay: ${idx * 0.3}s;"></span>
+                <span class="radar-pin-core"></span>
+              </div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+          const m = L.marker([loc.lat, loc.lng], { icon })
+            .addTo(warMap)
+            .bindPopup(`<strong style="color:#38bdf8;">${loc.naam}</strong><br>${loc.adres || ""}`);
+          markersMap.set(loc.id, m);
+        }
+      });
+
+      if (bounds.length > 0) {
+        warMap.fitBounds(bounds, { padding: [40, 40] });
+      }
+    }
+
+    // 4. Render Sectoren Balk onder de kaart
+    function renderSectorsBar(state) {
+      const bar = document.getElementById("war-sectors-bar");
+      if (!bar) return;
+
+      const locaties = SPEL_CONFIG.locaties || [];
+      bar.innerHTML = locaties.map((loc) => {
+        // Hoeveel groepen hebben deze al voltooid?
+        let completedCount = 0;
+        let activeCount = 0;
+        if (state && state.groups) {
+          state.groups.forEach((g) => {
+            if (g.unlockedLocations && g.unlockedLocations.has(loc.id)) {
+              completedCount++;
+            }
+          });
+        }
+
+        const isDone = completedCount > 0;
+        return `
+          <div class="sector-item ${isDone ? "active" : ""}">
+            <div class="sector-name">${loc.naam}</div>
+            <div class="sector-status">
+              <span>${isDone ? "🟢" : "🔒"}</span>
+              <span>${completedCount} team(s)</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 5. Render Agenten Aanwezigheid & Chips
+    function renderAgentsStatus(state) {
+      if (!state) return;
+      const countEl = document.getElementById("war-agents-count");
+      const progEl = document.getElementById("war-agents-progress");
+      const summaryEl = document.getElementById("war-login-summary");
+      const chipsEl = document.getElementById("war-agent-chips");
+
+      const all = state.allPlayers || [];
+      const total = state.totalCount || 26;
+      const unlocked = state.unlockedCount || 0;
+
+      if (countEl) countEl.textContent = `${unlocked} / ${total}`;
+      if (progEl) progEl.style.width = `${Math.min(100, Math.round((unlocked / (total || 1)) * 100))}%`;
+
+      if (summaryEl) {
+        if (unlocked === total && total > 0) {
+          summaryEl.textContent = "✓ ALLE AGENTEN INGELOGD & ACTIEF!";
+          summaryEl.style.color = "var(--hud-green)";
+        } else {
+          summaryEl.textContent = `Nog ${total - unlocked} agent(en) moeten inloggen...`;
+          summaryEl.style.color = "var(--hud-amber)";
+        }
+      }
+
+      if (chipsEl) {
+        chipsEl.innerHTML = all.map(p => {
+          if (p.disabled) return "";
+          return `<span class="chip-mini ${p.unlocked ? "unlocked" : ""}">${p.unlocked ? "✓ " : ""}${p.naam}</span>`;
+        }).join("");
+      }
+    }
+
+    // 6. Render Groepen Overzicht (eens verdeeld / onthuld)
+    function renderGroupsOverview(state) {
+      const container = document.getElementById("war-groups-body");
+      const badge = document.getElementById("war-groups-state-badge");
+      if (!container || !state) return;
+
+      const isRevealed = state.groupsRevealed;
+      if (badge) {
+        badge.textContent = isRevealed ? `LIVE (${(state.groups || []).length} GROEPEN)` : "VERSLEUTELD";
+        badge.style.color = isRevealed ? "var(--hud-green)" : "var(--hud-amber)";
+      }
+
+      if (!isRevealed) {
+        container.innerHTML = `
+          <div class="groups-placeholder-locked">
+            <div class="locked-icon">🔒</div>
+            <div class="locked-title">GROEPSINDELING VERSLEUTELD</div>
+            <p class="locked-sub">
+              De teams en routes worden automatisch op dit scherm onthuld zodra alle agenten zijn aangemeld of wanneer de Gamemaster op HQ de onthulling activeert.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const groups = state.groups || [];
+      if (groups.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:1.5rem; color:var(--hud-muted); font-size:0.85rem;">
+            Nog geen groepen ingedeeld op HQ.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="groups-live-list">
+          ${groups.map(grp => {
+            const cur = grp.currentLocation;
+            let curTxt = "Startpunt...";
+            if (cur) {
+              if (cur.status === "voltooid") {
+                curTxt = "🏆 ALLE 6 LOCATIES KLAAR!";
+              } else if (cur.status === "bezig") {
+                curTxt = `📍 Nu bezig: ${cur.naam} (Stap ${cur.stepNr}/6)`;
+              } else {
+                curTxt = `🏃 Onderweg naar: ${cur.naam} (Stap ${cur.stepNr}/6)`;
+              }
+            }
+
+            const membersStr = grp.leden.map(m => m.naam).join(", ");
+            return `
+              <div class="group-war-card" style="--grp-color: ${grp.kleur || '#38bdf8'};">
+                <div class="group-war-header">
+                  <div class="group-war-title">
+                    <span class="group-color-dot"></span>
+                    <span>${grp.naam}</span>
+                  </div>
+                  <div class="group-war-score">${grp.totalPoints || 0} PT</div>
+                </div>
+                <div class="group-war-location">${curTxt}</div>
+                <div class="group-war-members">Leden: ${membersStr || 'Nog geen leden'}</div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    // 7. Initialisatie
+    document.addEventListener("DOMContentLoaded", () => {
+      initTargetTime();
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+
+      document.getElementById("war-clock-btn").addEventListener("click", openClockModal);
+      document.getElementById("btn-fullscreen").addEventListener("click", toggleFullscreen);
+
+      // F toets voor fullscreen
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "f" || e.key === "F") {
+          toggleFullscreen();
+        }
+      });
+
+      initWarMap();
+
+      // Koppel aan ScoreService Realtime Sync Engine (MQTT WebSockets)
+      if (typeof ScoreService !== "undefined") {
+        ScoreService.startRealtimeSync();
+
+        ScoreService.subscribe((state) => {
+          renderAgentsStatus(state);
+          renderSectorsBar(state);
+          renderGroupsOverview(state);
+        });
+
+        ScoreService.onSyncStatusChange((status) => {
+          const statusTxt = document.getElementById("war-status-txt");
+          if (statusTxt) {
+            statusTxt.textContent = status === "connected" ? "4G REALTIME CONNECTED" : status === "connecting" ? "CONNECTING..." : "OFFLINE BUFFER";
+            statusTxt.style.color = status === "connected" ? "var(--hud-green)" : status === "connecting" ? "var(--hud-amber)" : "var(--hud-red)";
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
