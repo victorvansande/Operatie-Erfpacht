@@ -768,9 +768,9 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
           <div class="gm-group-score-box">
-            <div class="gm-group-total-pts">${grp.totalPoints} PT</div>
+            <div class="gm-group-total-pts" title="Eerlijke Teamscore (Gemiddelde per lid)">${avgPts} PT</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">
-              Gem: ${avgPts} pt • 📷 ${(grp.photos || []).length}
+              Gemiddelde/lid • ${grp.leden.length} spelers (som: ${grp.sumPoints || grp.totalPoints}) • 📷 ${(grp.photos || []).length}
             </div>
           </div>
         </div>

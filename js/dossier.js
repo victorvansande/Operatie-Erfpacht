@@ -2213,10 +2213,6 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        `${loc.adres || loc.naam}, 2200 Herentals`
-      )}`;
-
       folder.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
@@ -2231,14 +2227,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
 
         <div class="location-folder-body">
-          <div class="loc-addr-block" style="margin-bottom: 0.9rem; padding-bottom: 0.75rem; border-bottom: 1px dashed var(--border-color); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem;">
-            <div>
-              <div class="loc-addr-text" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent);">📍 ${loc.adres || "2200 Herentals"}</div>
-              <div class="loc-desc-text" style="font-size: 0.8rem; color: var(--text-muted);">${loc.beschrijving || ""}</div>
-            </div>
-            <a href="${gmapsUrl}" target="_blank" rel="noopener" class="back-link loc-gmaps-link" style="font-size: 0.74rem; padding: 0.35rem 0.65rem;">
-              🗺️ Route in Google Maps &rarr;
-            </a>
+          <div class="loc-addr-block" style="margin-bottom: 0.9rem; padding-bottom: 0.75rem; border-bottom: 1px dashed var(--border-color);">
+            <div class="loc-addr-text" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent);">📍 ${loc.adres || "2200 Herentals"}</div>
+            <div class="loc-desc-text" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">${loc.beschrijving || ""}</div>
           </div>
 
           <!-- Locatie-specifieke berichten van het Message Board -->
@@ -2946,9 +2937,14 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!isTypingRename) {
             teamBox.innerHTML = `
               <div>
-                <span style="color: ${info.groupColor || "var(--accent)"}; font-size: 1.05rem;">
+                <span style="color: ${info.groupColor || "var(--accent)"}; font-size: 1.05rem; font-weight: 800;">
                   ● ${info.groupName}
                 </span>
+                ${
+                  typeof info.groupAveragePoints === "number"
+                    ? `<span style="font-family: var(--font-mono); font-size: 0.8rem; color: #10b981; margin-left: 0.5rem; font-weight: 700;">(Team: ${info.groupAveragePoints} PT${info.groupRank ? ` • Rang #${info.groupRank}` : ""})</span>`
+                    : ""
+                }
               </div>
               ${matesText}
               <form class="team-rename-form" autocomplete="off">

@@ -980,8 +980,21 @@ const ScoreService = (() => {
       if (p.unlocked) grp.unlockedCount += 1;
     });
 
+    // Bereken het eerlijke teamgemiddelde per groep (onafhankelijk van 4 of 5 spelers!)
+    adminGroupsMap.forEach((grp) => {
+      const activeLedenCount = grp.leden.length;
+      grp.sumPoints = grp.totalPoints; // de ruwe som van alle leden
+      const rawAvg = activeLedenCount > 0 ? grp.sumPoints / activeLedenCount : 0;
+      // Afronding op 1 decimaal (bv. 142.5), en afgerond op heel getal voor overzicht
+      grp.averagePoints = Math.round(rawAvg * 10) / 10;
+      grp.roundedAverage = Math.round(rawAvg);
+      // Leidende score voor alle klassementen
+      grp.score = grp.averagePoints;
+    });
+
     const adminGroupsList = Array.from(adminGroupsMap.values()).sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (b.averagePoints !== a.averagePoints) return b.averagePoints - a.averagePoints;
+      if (b.unlockedCount !== a.unlockedCount) return b.unlockedCount - a.unlockedCount;
       return a.naam.localeCompare(b.naam);
     });
 
@@ -1084,6 +1097,9 @@ const ScoreService = (() => {
       if (!p.disabled && p.groupId && adminGroupsMap.has(p.groupId)) {
         const grp = adminGroupsMap.get(p.groupId);
         p.groupMembers = grp.leden.map((m) => m.naam);
+        p.groupAveragePoints = grp.averagePoints;
+        p.groupTotalPoints = grp.sumPoints;
+        p.groupRank = adminGroupsList.findIndex((g) => g.id === grp.id) + 1;
 
         grp.leden.forEach((member) => {
           const mSet = playerLocUnlocks.get(member.id);

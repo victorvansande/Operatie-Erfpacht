@@ -158,10 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
           popupAnchor: [0, -14]
         });
 
-        const hqGmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${hq.adres}`
-        )}`;
-
         const hqMarker = L.marker([hq.lat, hq.lng], {
           icon: hqIcon,
           zIndexOffset: 1000
@@ -178,12 +174,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #fca5a5; margin-bottom: 0.25rem;">
               ${hq.adres}
             </div>
-            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.5rem;">
+            <div style="font-size: 0.78rem; color: #94a3b8;">
               ${hq.beschrijving || ""}
             </div>
-            <a href="${hqGmapsUrl}" target="_blank" rel="noopener" style="font-family: var(--font-mono); font-size: 0.74rem; color: #f87171; text-decoration: underline;">
-              Open route in Google Maps &rarr;
-            </a>
           </div>
         `);
 
@@ -243,10 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
           popupAnchor: [0, -10]
         });
 
-        const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${loc.adres || loc.naam}, 2200 Herentals`
-        )}`;
-
         const marker = L.marker([loc.lat, loc.lng], { icon }).addTo(map);
         marker.bindPopup(`
           <div style="padding: 0.2rem;">
@@ -259,12 +248,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); margin-bottom: 0.25rem;">
               ${loc.adres || ""}
             </div>
-            <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.5rem;">
+            <div style="font-size: 0.78rem; color: #94a3b8;">
               ${loc.beschrijving || ""}
             </div>
-            <a href="${gmapsUrl}" target="_blank" rel="noopener" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent); text-decoration: underline;">
-              Open route in Google Maps &rarr;
-            </a>
           </div>
         `);
 

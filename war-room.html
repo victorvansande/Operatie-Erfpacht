@@ -2078,7 +2078,12 @@
 
         if (currentTab === "teams") {
           if (panelTitle) panelTitle.textContent = "🏆 TEAMS LEADERBOARD (6)";
-          const sortedGroups = [...groups].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+          const sortedGroups = [...groups].sort((a, b) => {
+            const aScore = typeof a.averagePoints === "number" ? a.averagePoints : (a.totalPoints || 0);
+            const bScore = typeof b.averagePoints === "number" ? b.averagePoints : (b.totalPoints || 0);
+            if (bScore !== aScore) return bScore - aScore;
+            return a.naam.localeCompare(b.naam);
+          });
 
           container.innerHTML = `
             <div class="groups-live-list">
@@ -2098,6 +2103,9 @@
                 const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
                 const rankIcon = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
                 const membersStr = grp.leden.map(m => m.naam).join(", ");
+                const grpScore = typeof grp.averagePoints === "number" ? grp.averagePoints : (grp.leden.length > 0 ? Math.round((grp.totalPoints || 0) / grp.leden.length) : 0);
+                const memberCount = grp.leden.length;
+                const rawSum = grp.sumPoints || grp.totalPoints || 0;
 
                 return `
                   <div class="group-war-card ${rankClass}" style="--grp-color: ${grp.kleur || '#38bdf8'};">
@@ -2107,7 +2115,12 @@
                         <span class="group-color-dot"></span>
                         <span>${grp.naam}</span>
                       </div>
-                      <div class="group-war-score">${grp.totalPoints || 0} PT</div>
+                      <div style="text-align: right;">
+                        <div class="group-war-score" title="Eerlijke Teamscore (Gemiddelde score per lid)">${grpScore} PT</div>
+                        <div style="font-size:0.62rem; color:#94a3b8; font-family:'JetBrains Mono',monospace;">
+                          Gem: ${grpScore} pt • ${memberCount} spelers (som ${rawSum})
+                        </div>
+                      </div>
                     </div>
                     <div class="group-war-location">${curTxt}</div>
                     <div class="group-war-members">Leden: ${membersStr || 'Nog geen leden'}</div>
@@ -2118,8 +2131,8 @@
           `;
         } else {
           // INDIVIDUEEL SPELERS LEADERBOARD
-          if (panelTitle) panelTitle.textContent = "🎖️ AGENTEN LEADERBOARD (25)";
           const leaderboard = state.leaderboard || [];
+          if (panelTitle) panelTitle.textContent = `🎖️ AGENTEN LEADERBOARD (${leaderboard.length || 27})`;
 
           container.innerHTML = `
             <div class="player-leaderboard-list">
