@@ -70,7 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (playerId === "vicce") return true;
     const isLocal =
       sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
-      localStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
+      localStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
+      localStorage.getItem("jb_my_agent_id") === playerId;
     if (isLocal) return true;
     const pInfo =
       latestScoreState &&
@@ -462,6 +463,30 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
+    const myBoundId = localStorage.getItem("jb_my_agent_id");
+    if (myBoundId && !query) {
+      const mySpeler = SPEL_CONFIG.spelers.find((s) => s.id === myBoundId);
+      if (mySpeler) {
+        const boundBanner = document.createElement("div");
+        boundBanner.style.cssText =
+          "grid-column: 1 / -1; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 12px; padding: 0.85rem 1.15rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);";
+        boundBanner.innerHTML = `
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 0.72rem; color: #34d399; font-weight: 800; letter-spacing: 0.06em;">
+              📱 DIT TOESTEL IS GEKOPPELD AAN JOUW PERSOONLIJKE DOSSIER
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 900; color: #fff; margin-top: 0.15rem;">
+              Welkom, ${mySpeler.naam} <span style="font-size: 0.82rem; color: #cbd5e1; font-weight: 600;">(Dossier #${mySpeler.dossierNr})</span>
+            </div>
+          </div>
+          <a href="spelers/${mySpeler.id}.html" class="btn btn-primary" style="background: #10b981; border-color: #10b981; color: #05080d; font-weight: 900; text-decoration: none; padding: 0.55rem 1.1rem; border-radius: 8px; font-size: 0.88rem;">
+            📂 OPEN DIRECT JOUW DOSSIER &rarr;
+          </a>
+        `;
+        grid.appendChild(boundBanner);
+      }
+    }
+
     filteredActive.forEach((speler) => {
       const deviceUnlocked = isDeviceUnlocked(speler.id);
       const scoreInfo = latestScoreState.playerScoresMap.get(speler.id);
@@ -581,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedPlayer = null;
   }
 
-  codeForm.addEventListener("submit", async (e) => {
+  codeForm.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!selectedPlayer) return;
 
@@ -590,20 +615,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const master = String(SPEL_CONFIG.masterCode || "").trim().toLowerCase();
 
     if (entered && (entered === expected || (master && entered === master))) {
-      sessionStorage.setItem(`dossier_unlocked_${selectedPlayer.id}`, "true");
+      const pid = selectedPlayer.id;
+      sessionStorage.setItem(`dossier_unlocked_${pid}`, "true");
       try {
-        localStorage.setItem(`dossier_unlocked_${selectedPlayer.id}`, "true");
-        localStorage.setItem("jb_active_agent_id", selectedPlayer.id);
-        sessionStorage.setItem("jb_active_agent_id", selectedPlayer.id);
+        localStorage.setItem(`dossier_unlocked_${pid}`, "true");
+        localStorage.setItem("jb_my_agent_id", pid);
+        localStorage.setItem("jb_active_agent_id", pid);
+        sessionStorage.setItem("jb_my_agent_id", pid);
+        sessionStorage.setItem("jb_active_agent_id", pid);
       } catch (_) {}
       unlockSubmitBtn.disabled = true;
-      unlockSubmitBtn.textContent = "Bezig...";
+      unlockSubmitBtn.textContent = "Toegang Verleend...";
 
-      if (entered === expected) {
-        await ScoreService.recordUnlock(selectedPlayer.id);
+      if (entered === expected && typeof ScoreService !== "undefined") {
+        ScoreService.recordUnlock(pid).catch(() => {});
       }
 
-      window.location.href = `spelers/${selectedPlayer.id}.html`;
+      window.location.href = `spelers/${pid}.html`;
     } else {
       errorMsg.textContent = "TOEGANG GEWEIGERD: Ongeldige code.";
       codeInput.classList.remove("error");

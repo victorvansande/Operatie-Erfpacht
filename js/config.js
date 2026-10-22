@@ -77,16 +77,16 @@ const SPEL_CONFIG = {
       codewoord: "smssosnaarvicce",
       oplossingWeergave: "SMS SOS naar Vicce",
       verhaal: "Onze inlichtingendienst heeft een afgeluisterd telefoongesprek onderschept tussen Thérèse van de stad Herentals en de geheime koper over de illegale verkoop van ons KSA-lokaal. Het transcript is zwaar gecensureerd met zwarte balken, maar onze cryptograaf ontdekte een verborgen patroon in de typemachine-letters...",
-      instructie: "Bestudeer het transcript van het telefoongesprek. De verdachte, vetgedrukte letters vormen in chronologische leesvolgorde een geheime boodschap. Ontcijfer de code en stuur hem hieronder in naar Gamemaster HQ (+100 pt)!"
+      instructie: "Bestudeer het transcript van het telefoongesprek. De verdachte, vetgedrukte letters vormen in chronologische leesvolgorde een geheime boodschap. Ontcijfer de code en voer de geheime actie uit!"
     },
     {
       id: "carte_blanche",
       type: "creative_challenge",
       titel: "OPERATIE CARTE BLANCHE // HET VRIJE SPEL",
-      subtitel: "VRIJE CREATIEVE STUNT // TOT +200 PT (HOE ORIGINELER HOE BETER)",
+      subtitel: "VRIJE CREATIEVE STUNT // VERRAS HQ",
       punten: 200,
       verhaal: "In tijden van acute crisis zijn de beste geheimagenten niet diegenen die star de protocollen volgen, maar diegenen die out-of-the-box denken en het onmogelijke waarmaken. Gamemaster HQ geeft jullie team totale 'Carte Blanche'!",
-      instructie: "Doe iets buitengewoons, hilarisch, creatiefs of grensverleggends. Het kan letterlijk VANALLES zijn: een absurde sketch of stunt op video, een epische spionagefoto, een zelfgeschreven ode of gedicht, een geniaal fysiek voorwerp (of een markant persoon/voorbijganger!) meebrengen naar het Hoofdkwartier, een nep-aanwijzing planten... Geen limiet op de verbeelding. Hoe origineler en spectaculairder de inzending, hoe meer bonuspunten Victor jullie toekent bij de eindjurering (tot wel +200 PT)!",
+      instructie: "Doe iets buitengewoons, hilarisch, creatiefs of grensverleggends. Het kan letterlijk VANALLES zijn: een absurde sketch of stunt op video, een epische spionagefoto, een zelfgeschreven ode of gedicht, een geniaal fysiek voorwerp (of een markant persoon/voorbijganger!) meebrengen naar het Hoofdkwartier, een nep-aanwijzing planten... Geen limiet op de verbeelding. Hoe origineler en spectaculairder de inzending, hoe meer bonuspunten Victor jullie toekent bij de eindjurering!",
       uploadHint: "Upload hier jullie video, foto of beschrijving van jullie vrije stunt naar Gamemaster HQ (of kondig jullie fysieke verrassing voor HQ aan!)."
     },
     {
@@ -117,7 +117,7 @@ const SPEL_CONFIG = {
       punten: 150,
       verhaal: "Om de louche derde partij definitief af te schrikken en te bewijzen dat heel Herentals achter de KSA staat, hebben we een overweldigende, massale volksgetuigenis nodig. Eén getuige is niet genoeg; we moeten tonen dat de straat achter ons staat!",
       instructie: "Krijg minstens 6 volslagen vreemden (voorbijgangers in Herentals) tegelijkertijd voor jullie camera en laat ze in koor, luid en overtuigend roepen: 'Redt de KSA, de ware eigenaars van de erfpacht!'.",
-      uploadHint: "Film de 6 vreemden die de leuze in koor roepen en upload de video hier direct voor HQ (+150 pt)."
+      uploadHint: "Film de 6 vreemden die de leuze in koor roepen en upload de video hier direct voor HQ."
     },
     {
       id: "speurhond_k9",
@@ -127,7 +127,7 @@ const SPEL_CONFIG = {
       punten: 50,
       verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
       instructie: "HQ zoekt nog een speurhond. Vind een geschikte kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster HQ!",
-      uploadHint: "Upload hier de foto met de kandidaat-speurhond (+50 pt)."
+      uploadHint: "Upload hier de foto met de kandidaat-speurhond."
     }
   ],
 
@@ -143,7 +143,7 @@ const SPEL_CONFIG = {
       lng: 4.83328,
       code: "zand1",
       opdracht: "We hebben een mol in de jeugddienst van de stad zitten. Hij is op de hoogte, HQ heeft hem ingelicht. Bel hem op het nummer 0498 34 32 07, zeg het geheime codewoord, voer zijn opdracht uit en in ruil daarvoor zal hij in de volgende jeugdraad de stad aansprakelijk stellen, zodat we ze vanbinnenuit verantwoordelijk stellen en hun daden onthullen.",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Neem aan de Zandpoort een undercover spionagefoto waarop jullie groep onherkenbaar gecamoufleerd opgaat in het straatbeeld terwijl jullie bellen met de mol! (De groep met het beste materiaal, de snelste tijd én volbrachte bonusopdrachten wint!)",
+      bonusOpdracht: "Bonusopdracht: Neem aan de Zandpoort een undercover spionagefoto waarop jullie groep onherkenbaar gecamoufleerd opgaat in het straatbeeld terwijl jullie bellen met de mol! (De groep met het beste materiaal, de snelste tijd én volbrachte bonusopdrachten wint!)",
       vereistBewijs: [
         "Telefonisch contact met de mol (0498 34 32 07) met het juiste codewoord",
         "Uitvoering van de geheime opdracht die de mol jullie aan de telefoon dicteert",
@@ -178,7 +178,7 @@ const SPEL_CONFIG = {
       lng: 4.83666,
       code: "begijn2",
       opdracht: "De KSA is begonnen als een gelovige jeugdbeweging, en soms moeten we een ode brengen. Breng een zo creatief mogelijke versie van het avondlied. Hoewel HQ niet gelovig is, moeten we alle pistes bewandelen. Spreek de Heer aan in ons avondlied, upload de video hieronder en breng het mee als bewijsmateriaal naar HQ.",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Voer het avondlied meerstemmig of in processie uit op jullie knieën bij een poort/standbeeld in het Begijnhof, óf zing het in een totaal onverwacht muziekgenre (bv. rap, opera of gregoriaans koor)!",
+      bonusOpdracht: "Bonusopdracht: Voer het avondlied meerstemmig of in processie uit op jullie knieën bij een poort/standbeeld in het Begijnhof, óf zing het in een totaal onverwacht muziekgenre (bv. rap, opera of gregoriaans koor)!",
       vereistBewijs: [
         "Video-opname van jullie creatiefste versie van het avondlied (waarin de Heer wordt aangesproken)",
         "Upload de video hieronder in het mapje Begijnhof",
@@ -211,7 +211,7 @@ const SPEL_CONFIG = {
       lng: 4.83830,
       code: "boven3",
       opdracht: "Hier zoeken we een getuige die ons verhaal wil verdedigen. Neem een interview op met een voorbijganger, overtuig hen waarvoor de KSA staat en laat hen een getuigenis opnemen waarom het lokaal van ons moet zijn. Wees creatief: bij een overtuigende boodschap kunnen we deze misschien opsturen naar de onbekende 3e partij om hen te overtuigen om de verkoop toch niet te laten doorgaan en het stad te laten zitten met hun deal. Upload de video naar het HQ-portaal.",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Hoe meer zielen, hoe meer druk! Krijg minstens 2 verschillende voorbijgangers in jullie video zover om vurig 'HET LOKAAL BLIJFT VAN DE KSA!' in de camera te roepen.",
+      bonusOpdracht: "Bonusopdracht: Hoe meer zielen, hoe meer druk! Krijg minstens 2 verschillende voorbijgangers in jullie video zover om vurig 'HET LOKAAL BLIJFT VAN DE KSA!' in de camera te roepen.",
       vereistBewijs: [
         "Video-interview met een voorbijganger die getuigt waarom het lokaal van de KSA moet blijven",
         "Overtuigende boodschap gericht aan de onbekende 3e partij om van de aankoop af te zien",
@@ -249,7 +249,7 @@ const SPEL_CONFIG = {
       lng: 4.83180,
       code: "park4",
       opdracht: "Het park ligt centraal perfect gelegen om het radio- en wifisignaal van de stad te onderscheppen. Blijkt dat hun connecties ergens ondergronds toevallig pal onder het stadspark eindigen, de ideale plek om een hack uit te voeren. Hier hacken jullie de connectie van de stad om ervoor te zorgen dat de deal om 22u00 niet doorgaat.",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Vind in het Stadspark een zichtbare rioolput, elektriciteitskast of lantaarnpaal en maak een dramatische 'hacker-actiefoto' alsof jullie daar ondergronds op het stadsnetwerk inpluggen!",
+      bonusOpdracht: "Bonusopdracht: Vind in het Stadspark een zichtbare rioolput, elektriciteitskast of lantaarnpaal en maak een dramatische 'hacker-actiefoto' alsof jullie daar ondergronds op het stadsnetwerk inpluggen!",
       vereistBewijs: [
         "Voer de ondergrondse SIGINT-hack hieronder uit in de interactieve terminal terwijl jullie in het Stadspark staan",
         "Upload een groepsfoto/bewijsfoto in het Stadspark dat de connectie van de stad verbroken is"
@@ -280,7 +280,7 @@ const SPEL_CONFIG = {
       lng: 4.83467,
       code: "kerk5",
       opdracht: "Tijd om ons voor te bereiden op een blackmail. Het is mogelijk dat het stad ons ontdekt en doorheeft dat we met deze missie bezig zijn. We moeten klaar zijn om een borgsom te betalen, aangezien de stad enkel in geld communiceert. Haal per groep €10 euro af en bewaar ze om terug mee naar HQ te brengen. Film dat je het geld afhaalt, het moet live gebeuren.",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Regel het briefje van €10 zónder een klassieke bankautomaat te gebruiken (wissel bijvoorbeeld muntgeld of doe een kleine betaling bij een voorbijganger of handelszaak rond het Kerkplein in ruil voor een biljet van €10 — film de live wissel!).",
+      bonusOpdracht: "Bonusopdracht: Regel het briefje van €10 zónder een klassieke bankautomaat te gebruiken (wissel bijvoorbeeld muntgeld of doe een kleine betaling bij een voorbijganger of handelszaak rond het Kerkplein in ruil voor een biljet van €10 — film de live wissel!).",
       vereistBewijs: [
         "Haal per groep €10 cash af (of wissel live voor een briefje van €10)",
         "Film de geldafhaling / wissel LIVE en upload de video hieronder in het mapje",
@@ -315,7 +315,7 @@ const SPEL_CONFIG = {
       lng: 4.82503,
       code: "lokaal6",
       opdracht: "Hier moeten we bewijsmateriaal verzamelen. Duik in het puin van het dak dat net afgebroken is. Vind een zo goed mogelijk bewijsstuk dat het dak spijsrot was. Neem een foto, upload hem hieronder, maar neem ook het bewijsstuk terug mee naar HQ!",
-      bonusOpdracht: "Bonusopdracht (+50 pt): Neem bij het puin een 'Forensisch CSI-verslag' op video op (max. 25 sec) waarin één groepslid als bloedserieuze dak-expert het stuk spijsrot dak analyseert voor de rechtbank!",
+      bonusOpdracht: "Bonusopdracht: Neem bij het puin een 'Forensisch CSI-verslag' op video op (max. 25 sec) waarin één groepslid als bloedserieuze dak-expert het stuk spijsrot dak analyseert voor de rechtbank!",
       vereistBewijs: [
         "Zoek in het afgebroken dakpuin het meest overtuigende stuk 'spijsrot' dakmateriaal",
         "Neem ter plekke een duidelijke bewijsfoto (en/of CSI-bonusvideo) en upload die hieronder",

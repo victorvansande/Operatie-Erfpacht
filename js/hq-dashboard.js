@@ -608,9 +608,9 @@ document.addEventListener("DOMContentLoaded", () => {
         msgBtn.addEventListener("click", () => {
           if (broadcastTargetSelect) {
             broadcastTargetSelect.value = `player:${p.id}`;
+            updateBroadcastPlaceholder();
           }
           if (broadcastInput) {
-            broadcastInput.placeholder = `Typ live popup-instructie voor ${p.naam}...`;
             broadcastInput.scrollIntoView({ behavior: "smooth", block: "center" });
             broadcastInput.focus();
           }
@@ -751,9 +751,9 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
           `
           : `
-            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 6px; padding: 0.55rem 0.8rem; text-align: center; margin: 0.55rem 0 0.45rem; font-family: var(--font-mono); font-size: 0.75rem; color: #34d399; font-weight: 800;">
-              🏆 ALLE 6 LOCATIES ZIJN REEDS ONTGRENDELD VOOR ${grp.naam.toUpperCase()}
-            </div>
+            <button type="button" class="gm-btn gm-btn-recall-hq" style="background: #f59e0b; border-color: #fbbf24; color: #05080d; font-weight: 900; width: 100%; padding: 0.65rem 1rem; margin: 0.55rem 0 0.45rem; font-family: var(--font-mono); font-size: 0.78rem;" title="Keur de 6e/laatste locatie goed en stuur de dramatische finale recall alert naar dit team">
+              🏁 KEUR LAATSTE LOCATIE GOED &amp; ROEP TERUG NAAR HQ &rarr;
+            </button>
           `;
 
       card.innerHTML = `
@@ -799,6 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="gm-bonus-btns">
             <button type="button" class="gm-chip-btn" data-team-bonus="25" data-reason="Goed bewijsmateriaal">+25 Bewijs OK</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Bonusopdracht volbracht">⭐ +50 Bonus</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Snack voor Vicce meegebracht">🍔 +50 Snack Vicce</button>
             <button type="button" class="gm-chip-btn" data-team-bonus="100" data-reason="Beste materiaal / Topuitvoering">🏆 +100 Topmateriaal</button>
             <button type="button" class="gm-chip-btn chip-danger" data-team-bonus="-25" data-reason="Strafpunten HQ">-25 Straf</button>
             <div style="display:flex; gap:0.25rem; margin-left:auto;">
@@ -831,6 +832,19 @@ document.addEventListener("DOMContentLoaded", () => {
           revealBtn.textContent = "Ontgrendelen & Melden...";
           await ScoreService.revealNextLocationForGroup(grp.id);
           showToast(`✓ Volgende locatie (${nextLocName}) ontgrendeld voor ${grp.naam}! Alert pop-up verzonden.`);
+        });
+      }
+
+      // Event: Finale recall pop-up sturen naar deze groep
+      const recallBtn = card.querySelector(".gm-btn-recall-hq");
+      if (recallBtn) {
+        recallBtn.addEventListener("click", async () => {
+          recallBtn.disabled = true;
+          recallBtn.textContent = "Finale recall versturen...";
+          await ScoreService.recallGroupToHQ(grp.id);
+          showToast(`🏁 Finale recall verzonden naar ${grp.naam}! Schermvullende alert staat op hun schermen.`);
+          recallBtn.textContent = "✓ Finale Recall Verzonden (Nogmaals zenden?)";
+          recallBtn.disabled = false;
         });
       }
 
@@ -901,6 +915,104 @@ document.addEventListener("DOMContentLoaded", () => {
 
       groupsContainer.appendChild(card);
     });
+  }
+
+  // Helper: Bepaal vooraf klaargezette punten en titel op basis van moeilijkheidsgraad van de taak
+  function getTaskPresetInfo(locationId, locationName, caption) {
+    const locId = String(locationId || "").toLowerCase();
+    const text = `${locId} ${locationName || ""} ${caption || ""}`.toLowerCase();
+
+    if (locId.includes("speurhond") || text.includes("hond") || text.includes("k9") || text.includes("sollicitatie")) {
+      return {
+        points: 50,
+        shortName: "HONDENFOTO",
+        notification: "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR HONDENFOTO"
+      };
+    }
+    if (locId.includes("carte") || text.includes("carte") || text.includes("stunt")) {
+      return {
+        points: 60,
+        shortName: "CARTE BLANCHE MISSIE",
+        notification: "OPDRACHT SUCCESVOL: +60 PUNTEN VOOR CARTE BLANCHE MISSIE"
+      };
+    }
+    if (locId.includes("adfundum") || text.includes("ad fundum") || text.includes("adtje") || text.includes("café")) {
+      return {
+        points: 50,
+        shortName: "AD FUNDUM",
+        notification: "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR AD FUNDUM"
+      };
+    }
+    if (locId.includes("koor") || text.includes("volksstem") || text.includes("vreemden") || text.includes("leuze")) {
+      return {
+        points: 75,
+        shortName: "6 VREEMDEN PROTESTKOOR",
+        notification: "OPDRACHT SUCCESVOL: +75 PUNTEN VOOR 6 VREEMDEN PROTESTKOOR"
+      };
+    }
+    if (locId === "zandpoort" || text.includes("zandpoort") || text.includes("tagmark") || text.includes("mol")) {
+      return {
+        points: 40,
+        shortName: "TAGMARK ZANDPOORT",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR TAGMARK ZANDPOORT"
+      };
+    }
+    if (locId === "begijnhof" || text.includes("begijnhof") || text.includes("avondlied")) {
+      return {
+        points: 40,
+        shortName: "BEGIJNHOF AVONDLIED",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR BEGIJNHOF AVONDLIED"
+      };
+    }
+    if (locId === "bovenpoort" || text.includes("bovenpoort") || text.includes("getuige") || text.includes("interview")) {
+      return {
+        points: 40,
+        shortName: "BOVENPOORT GETUIGENIS",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR BOVENPOORT GETUIGENIS"
+      };
+    }
+    if (locId === "stadspark" || text.includes("stadspark") || text.includes("hack")) {
+      return {
+        points: 40,
+        shortName: "STADSPARK HACKERACTIE",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR STADSPARK HACKERACTIE"
+      };
+    }
+    if (locId === "kerkplein" || text.includes("kerkplein") || text.includes("10") || text.includes("cash")) {
+      return {
+        points: 40,
+        shortName: "KERKPLEIN €10 BEWIJS",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR KERKPLEIN €10 BEWIJS"
+      };
+    }
+    if (locId === "nieuw-lokaal" || text.includes("lokaal") || text.includes("dakpuin") || text.includes("csi")) {
+      return {
+        points: 40,
+        shortName: "NIEUW LOKAAL DAKPUIN",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR NIEUW LOKAAL DAKPUIN"
+      };
+    }
+    if (locId === "lakenhal" || text.includes("lakenhal")) {
+      return {
+        points: 40,
+        shortName: "LAKENHAL ONDERZOEK",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR LAKENHAL ONDERZOEK"
+      };
+    }
+    if (locId === "stadhuis" || text.includes("stadhuis")) {
+      return {
+        points: 40,
+        shortName: "STADHUIS ONDERZOEK",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR STADHUIS ONDERZOEK"
+      };
+    }
+
+    const cleanName = (locationName || "INZENDING").toUpperCase();
+    return {
+      points: 35,
+      shortName: cleanName,
+      notification: `OPDRACHT SUCCESVOL: +35 PUNTEN VOOR ${cleanName}`
+    };
   }
 
   // 7A. Render Groepsmappen (Alle uploads per team in één oogopslag)
@@ -1006,6 +1118,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `<span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-family:var(--font-mono); font-size:0.64rem; font-weight:800; padding:0.12rem 0.42rem; border-radius:4px;">${reviewedLabel}</span>`
             : `<span style="background:rgba(245,158,11,0.2); border:1px solid #f59e0b; color:#fde047; font-family:var(--font-mono); font-size:0.64rem; font-weight:800; padding:0.12rem 0.42rem; border-radius:4px;">🔔 NOG BEOORDELEN</span>`;
 
+          const preset = getTaskPresetInfo(ph.locationId, ph.locationName, ph.caption);
+          const curGrpStep = grp.revealedStepCount || 1;
+          const canUnlockNext = curGrpStep < 6;
+          const isAtStep6 = curGrpStep >= 6;
+
           card.innerHTML = `
             <div>
               ${mediaHtml}
@@ -1025,13 +1142,31 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
 
-            <div style="padding: 0.5rem 0.75rem; border-top: 1px solid #1e293b; background: rgba(15,23,42,0.6); display:flex; flex-wrap:wrap; gap:0.3rem; justify-content:space-between; align-items:center;">
-              <div style="display:flex; gap:0.25rem; flex-wrap:wrap;">
-                <button type="button" class="gm-chip-btn folder-reward-btn" data-pts="25" data-label="✓ +25 PT (OK)">+25 Team</button>
-                <button type="button" class="gm-chip-btn chip-amber folder-reward-btn" data-pts="50" data-label="✓ +50 PT (Bonus)">⭐ +50 Bonus</button>
-                <button type="button" class="gm-chip-btn folder-reward-btn" data-pts="100" data-label="✓ +100 PT (Top)">🏆 +100 Top</button>
+            <!-- Beoordeling & Melding Zendpaneel -->
+            <div style="padding: 0.65rem 0.75rem; border-top: 1px solid #1e293b; background: rgba(15,23,42,0.85); display:flex; flex-direction:column; gap:0.45rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.68rem; color:#94a3b8; font-weight:800;">
+                <span>🎁 LEVER PUNTEN IN (${preset.shortName})</span>
+                <button type="button" class="text-btn folder-delete-btn" style="font-size:0.66rem; color:var(--danger); text-decoration:underline;">Wis</button>
               </div>
-              <button type="button" class="text-btn folder-delete-btn" style="font-size:0.66rem; color:var(--danger);">Wis</button>
+              <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+                <input type="number" class="admin-input folder-pts-input" value="${preset.points}" style="width:62px; margin-bottom:0; padding:0.35rem 0.4rem; font-weight:800; text-align:center; font-size:0.85rem;" />
+                <button type="button" class="gm-btn gm-btn-primary folder-deliver-pts-btn" style="background:#10b981; border-color:#10b981; color:#05080d; font-weight:900; font-size:0.74rem; padding:0.42rem 0.7rem; flex:1; min-width:135px;">
+                  🎁 Lever de punten in (+${preset.points} PT)
+                </button>
+                ${
+                  canUnlockNext
+                    ? `<button type="button" class="gm-btn folder-deliver-unlock-btn" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#7dd3fc; font-weight:800; font-size:0.7rem; padding:0.42rem 0.6rem;" title="Ken punten toe én ontgrendel direct de volgende locatie">🔓 Lever In + Volgende Locatie</button>`
+                    : ""
+                }
+                ${
+                  isAtStep6
+                    ? `<button type="button" class="gm-btn folder-deliver-recall-btn" style="background:rgba(245,158,11,0.25); border-color:#f59e0b; color:#fde047; font-weight:800; font-size:0.7rem; padding:0.42rem 0.6rem;" title="Ken punten toe én roep team terug naar HQ">🏁 Lever In + Recall HQ</button>`
+                    : ""
+                }
+              </div>
+              <div style="font-size:0.67rem; color:#94a3b8;">
+                Melding: <span class="folder-deliver-preview" style="color:#cbd5e1; font-family:var(--font-mono); font-weight:700;">"${preset.notification}"</span>
+              </div>
             </div>
           `;
 
@@ -1046,27 +1181,87 @@ document.addEventListener("DOMContentLoaded", () => {
             });
           }
 
-          card.querySelectorAll(".folder-reward-btn").forEach((btn) => {
-            btn.addEventListener("click", async () => {
-              const pts = Number(btn.getAttribute("data-pts"));
-              const lbl = btn.getAttribute("data-label");
-              btn.disabled = true;
+          const ptsInput = card.querySelector(".folder-pts-input");
+          const deliverBtn = card.querySelector(".folder-deliver-pts-btn");
+          const previewSpan = card.querySelector(".folder-deliver-preview");
+          const unlockBtn = card.querySelector(".folder-deliver-unlock-btn");
+          const recallBtn = card.querySelector(".folder-deliver-recall-btn");
 
-              await ScoreService.addGroupBonusPoints(
-                grp.id,
-                pts,
-                `Bewijs ${ph.locationName || ""} goedgekeurd`
-              );
+          const getDeliverData = () => {
+            const pVal = Number(ptsInput ? ptsInput.value : preset.points) || preset.points;
+            const notif = `OPDRACHT SUCCESVOL: +${pVal} PUNTEN VOOR ${preset.shortName}`;
+            return { points: pVal, notif };
+          };
 
-              markUploadReviewed(ph.eventId, lbl);
+          if (ptsInput && deliverBtn && previewSpan) {
+            ptsInput.addEventListener("input", () => {
+              const d = getDeliverData();
+              deliverBtn.textContent = `🎁 Lever de punten in (+${d.points} PT)`;
+              previewSpan.textContent = `"${d.notif}"`;
+            });
+          }
+
+          if (deliverBtn) {
+            deliverBtn.addEventListener("click", async () => {
+              deliverBtn.disabled = true;
+              const d = getDeliverData();
+              await ScoreService.awardSubmissionPoints({
+                groupId: grp.id,
+                playerId: ph.playerId,
+                points: d.points,
+                taskName: preset.shortName,
+                notificationText: d.notif,
+                eventId: ph.eventId
+              });
+              markUploadReviewed(ph.eventId, `✓ +${d.points} PT (${preset.shortName})`);
               renderGroupFolders(ScoreService.getState());
               renderUploadsStream(ScoreService.getState());
               renderKPIs(ScoreService.getState());
-              showToast(
-                `+${pts} PT toegekend aan heel ${grp.naam} voor ${ph.locationName || "upload"}!`
-              );
+              showToast(`✓ +${d.points} PT toegekend aan ${grp.naam} en melding verzonden!`);
             });
-          });
+          }
+
+          if (unlockBtn) {
+            unlockBtn.addEventListener("click", async () => {
+              unlockBtn.disabled = true;
+              const d = getDeliverData();
+              await ScoreService.awardSubmissionPoints({
+                groupId: grp.id,
+                playerId: ph.playerId,
+                points: d.points,
+                taskName: preset.shortName,
+                notificationText: d.notif,
+                eventId: ph.eventId
+              });
+              await ScoreService.revealNextLocationForGroup(grp.id);
+              markUploadReviewed(ph.eventId, `✓ +${d.points} PT & Ontgrendeld`);
+              renderGroupFolders(ScoreService.getState());
+              renderUploadsStream(ScoreService.getState());
+              renderKPIs(ScoreService.getState());
+              showToast(`✓ +${d.points} PT toegekend én volgende locatie ontgrendeld voor ${grp.naam}!`);
+            });
+          }
+
+          if (recallBtn) {
+            recallBtn.addEventListener("click", async () => {
+              recallBtn.disabled = true;
+              const d = getDeliverData();
+              await ScoreService.awardSubmissionPoints({
+                groupId: grp.id,
+                playerId: ph.playerId,
+                points: d.points,
+                taskName: preset.shortName,
+                notificationText: d.notif,
+                eventId: ph.eventId
+              });
+              await ScoreService.recallGroupToHQ(grp.id);
+              markUploadReviewed(ph.eventId, `✓ +${d.points} PT & Finale Recall`);
+              renderGroupFolders(ScoreService.getState());
+              renderUploadsStream(ScoreService.getState());
+              renderKPIs(ScoreService.getState());
+              showToast(`✓ +${d.points} PT toegekend én finale recall verzonden naar ${grp.naam}!`);
+            });
+          }
 
           card.querySelector(".folder-delete-btn").addEventListener("click", async () => {
             if (window.confirm(`Dit bestand van ${ph.playerName} verwijderen?`)) {
@@ -1133,6 +1328,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `<span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-family:var(--font-mono); font-size:0.65rem; font-weight:800; padding:0.12rem 0.45rem; border-radius:4px;">${reviewedLabel}</span>`
         : `<span style="background:rgba(245,158,11,0.2); border:1px solid #f59e0b; color:#fde047; font-family:var(--font-mono); font-size:0.65rem; font-weight:800; padding:0.12rem 0.45rem; border-radius:4px;">🔔 NOG BEOORDELEN</span>`;
 
+      const preset = getTaskPresetInfo(ph.locationId, ph.locationName, ph.caption);
+      const grpObj = ph.groupId ? (state.allGroups || []).find((g) => g.id === ph.groupId) : null;
+      const curStep = grpObj ? (grpObj.revealedStepCount || 1) : 1;
+      const canUnlockNext = Boolean(ph.groupId && curStep < 6);
+      const isAtStep6 = Boolean(ph.groupId && curStep >= 6);
+
       card.innerHTML = `
         <div>
           ${mediaHtml}
@@ -1152,18 +1353,31 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
 
-        <div style="padding: 0.55rem 0.8rem; border-top: 1px solid #1e293b; background: rgba(15,23,42,0.6); display:flex; flex-wrap:wrap; gap:0.35rem; justify-content:space-between; align-items:center;">
-          <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
-            <button type="button" class="gm-chip-btn reward-upload-btn" data-pts="25" data-label="✓ +25 PT (OK)">✅ +25 Team</button>
-            <button type="button" class="gm-chip-btn chip-amber reward-upload-btn" data-pts="50" data-label="✓ +50 PT (Bonus)">⭐ +50 Bonus</button>
-            <button type="button" class="gm-chip-btn reward-upload-btn" data-pts="100" data-label="✓ +100 PT (Top)">🏆 +100 Top</button>
+        <!-- Beoordeling & Melding Zendpaneel -->
+        <div style="padding: 0.65rem 0.8rem; border-top: 1px solid #1e293b; background: rgba(15,23,42,0.85); display:flex; flex-direction:column; gap:0.45rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.68rem; color:#94a3b8; font-weight:800;">
+            <span>🎁 LEVER PUNTEN IN (${preset.shortName})</span>
+            <button type="button" class="text-btn delete-upload-btn" style="font-size:0.66rem; color:var(--danger); text-decoration:underline;">Wis</button>
+          </div>
+          <div style="display:flex; gap:0.35rem; align-items:center; flex-wrap:wrap;">
+            <input type="number" class="admin-input stream-pts-input" value="${preset.points}" style="width:62px; margin-bottom:0; padding:0.35rem 0.4rem; font-weight:800; text-align:center; font-size:0.85rem;" />
+            <button type="button" class="gm-btn gm-btn-primary stream-deliver-pts-btn" style="background:#10b981; border-color:#10b981; color:#05080d; font-weight:900; font-size:0.74rem; padding:0.42rem 0.7rem; flex:1; min-width:135px;">
+              🎁 Lever de punten in (+${preset.points} PT)
+            </button>
             ${
-              ph.groupId
-                ? `<button type="button" class="gm-chip-btn gm-upload-approve-unlock-btn" style="background: rgba(16, 185, 129, 0.22); border-color: #10b981; color: #6ee7b7; font-weight: 700;" title="Keur goed (+25 PT) én ontgrendel direct de volgende locatie voor dit team">🔓 Keur goed + Volgende Locatie</button>`
+              canUnlockNext
+                ? `<button type="button" class="gm-btn stream-deliver-unlock-btn" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#7dd3fc; font-weight:800; font-size:0.7rem; padding:0.42rem 0.6rem;" title="Ken punten toe én ontgrendel direct de volgende locatie">🔓 Lever In + Volgende Locatie</button>`
+                : ""
+            }
+            ${
+              isAtStep6
+                ? `<button type="button" class="gm-btn stream-deliver-recall-btn" style="background:rgba(245,158,11,0.25); border-color:#f59e0b; color:#fde047; font-weight:800; font-size:0.7rem; padding:0.42rem 0.6rem;" title="Ken punten toe én roep team terug naar HQ">🏁 Lever In + Recall HQ</button>`
                 : ""
             }
           </div>
-          <button type="button" class="text-btn delete-upload-btn" style="font-size:0.68rem; color:var(--danger);">Wis</button>
+          <div style="font-size:0.67rem; color:#94a3b8;">
+            Melding: <span class="stream-deliver-preview" style="color:#cbd5e1; font-family:var(--font-mono); font-weight:700;">"${preset.notification}"</span>
+          </div>
         </div>
       `;
 
@@ -1178,55 +1392,87 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
 
-      const approveUnlockBtn = card.querySelector(".gm-upload-approve-unlock-btn");
-      if (approveUnlockBtn) {
-        approveUnlockBtn.addEventListener("click", async () => {
-          approveUnlockBtn.disabled = true;
-          if (ph.groupId) {
-            await ScoreService.addGroupBonusPoints(
-              ph.groupId,
-              25,
-              `Bewijs ${ph.locationName || ""} goedgekeurd`
-            );
-            await ScoreService.revealNextLocationForGroup(ph.groupId);
-            markUploadReviewed(ph.eventId, "✓ Goedgekeurd & Locatie Ontgrendeld");
-            renderUploadsStream(ScoreService.getState());
-            renderKPIs(ScoreService.getState());
-            showToast(
-              `✓ Bewijs goedgekeurd (+25 PT) én volgende locatie ontgrendeld voor ${ph.groupName || "deze groep"}!`
-            );
-          }
+      const ptsInput = card.querySelector(".stream-pts-input");
+      const deliverBtn = card.querySelector(".stream-deliver-pts-btn");
+      const previewSpan = card.querySelector(".stream-deliver-preview");
+      const unlockBtn = card.querySelector(".stream-deliver-unlock-btn");
+      const recallBtn = card.querySelector(".stream-deliver-recall-btn");
+
+      const getDeliverData = () => {
+        const pVal = Number(ptsInput ? ptsInput.value : preset.points) || preset.points;
+        const notif = `OPDRACHT SUCCESVOL: +${pVal} PUNTEN VOOR ${preset.shortName}`;
+        return { points: pVal, notif };
+      };
+
+      if (ptsInput && deliverBtn && previewSpan) {
+        ptsInput.addEventListener("input", () => {
+          const d = getDeliverData();
+          deliverBtn.textContent = `🎁 Lever de punten in (+${d.points} PT)`;
+          previewSpan.textContent = `"${d.notif}"`;
         });
       }
 
-      card.querySelectorAll(".reward-upload-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const pts = Number(btn.getAttribute("data-pts"));
-          const lbl = btn.getAttribute("data-label");
-          btn.disabled = true;
-
-          if (ph.groupId) {
-            await ScoreService.addGroupBonusPoints(
-              ph.groupId,
-              pts,
-              `Bewijs ${ph.locationName || ""} goedgekeurd`
-            );
-          } else {
-            await ScoreService.addBonusPoints(
-              ph.playerId,
-              pts,
-              `Bewijs ${ph.locationName || ""} goedgekeurd`
-            );
-          }
-
-          markUploadReviewed(ph.eventId, lbl);
+      if (deliverBtn) {
+        deliverBtn.addEventListener("click", async () => {
+          deliverBtn.disabled = true;
+          const d = getDeliverData();
+          await ScoreService.awardSubmissionPoints({
+            groupId: ph.groupId,
+            playerId: ph.playerId,
+            points: d.points,
+            taskName: preset.shortName,
+            notificationText: d.notif,
+            eventId: ph.eventId
+          });
+          markUploadReviewed(ph.eventId, `✓ +${d.points} PT (${preset.shortName})`);
+          renderGroupFolders(ScoreService.getState());
           renderUploadsStream(ScoreService.getState());
           renderKPIs(ScoreService.getState());
-          showToast(
-            `+${pts} PT toegekend aan ${ph.groupName || ph.playerName} voor ${ph.locationName || "upload"}!`
-          );
+          showToast(`✓ +${d.points} PT toegekend aan ${ph.groupName || ph.playerName} en melding verzonden!`);
         });
-      });
+      }
+
+      if (unlockBtn) {
+        unlockBtn.addEventListener("click", async () => {
+          unlockBtn.disabled = true;
+          const d = getDeliverData();
+          await ScoreService.awardSubmissionPoints({
+            groupId: ph.groupId,
+            playerId: ph.playerId,
+            points: d.points,
+            taskName: preset.shortName,
+            notificationText: d.notif,
+            eventId: ph.eventId
+          });
+          await ScoreService.revealNextLocationForGroup(ph.groupId);
+          markUploadReviewed(ph.eventId, `✓ +${d.points} PT & Ontgrendeld`);
+          renderGroupFolders(ScoreService.getState());
+          renderUploadsStream(ScoreService.getState());
+          renderKPIs(ScoreService.getState());
+          showToast(`✓ +${d.points} PT toegekend én volgende locatie ontgrendeld voor ${ph.groupName || "deze groep"}!`);
+        });
+      }
+
+      if (recallBtn) {
+        recallBtn.addEventListener("click", async () => {
+          recallBtn.disabled = true;
+          const d = getDeliverData();
+          await ScoreService.awardSubmissionPoints({
+            groupId: ph.groupId,
+            playerId: ph.playerId,
+            points: d.points,
+            taskName: preset.shortName,
+            notificationText: d.notif,
+            eventId: ph.eventId
+          });
+          await ScoreService.recallGroupToHQ(ph.groupId);
+          markUploadReviewed(ph.eventId, `✓ +${d.points} PT & Finale Recall`);
+          renderGroupFolders(ScoreService.getState());
+          renderUploadsStream(ScoreService.getState());
+          renderKPIs(ScoreService.getState());
+          showToast(`✓ +${d.points} PT toegekend én finale recall verzonden naar ${ph.groupName || "deze groep"}!`);
+        });
+      }
 
       card.querySelector(".delete-upload-btn").addEventListener("click", async () => {
         if (window.confirm(`Dit bestand van ${ph.playerName} verwijderen?`)) {
@@ -1429,6 +1675,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function updateBroadcastPlaceholder() {
+    if (!broadcastInput || !broadcastTargetSelect) return;
+    const rawTarget = broadcastTargetSelect.value || "all";
+    if (rawTarget === "all") {
+      broadcastInput.placeholder = "Typ live popup-instructie voor ALLE veldagenten...";
+    } else if (rawTarget.startsWith("group:")) {
+      const gId = rawTarget.slice(6);
+      const grp = (latestState.allGroups || []).find((g) => g.id === gId);
+      const name = grp ? grp.naam : gId;
+      broadcastInput.placeholder = `Typ live popup-instructie voor team ${name}...`;
+    } else if (rawTarget.startsWith("player:")) {
+      const pId = rawTarget.slice(7);
+      const sp =
+        (SPEL_CONFIG.spelers || []).find((s) => s.id === pId) ||
+        (latestState.allPlayers || []).find((x) => x.id === pId);
+      const name = sp ? sp.naam : pId;
+      broadcastInput.placeholder = `Typ live popup-instructie voor ${name}...`;
+    } else {
+      broadcastInput.placeholder = "Typ bericht (verschijnt direct als popup bij ontvanger)...";
+    }
+  }
+
+  if (broadcastTargetSelect) {
+    broadcastTargetSelect.addEventListener("change", updateBroadcastPlaceholder);
+  }
+
   if (broadcastForm && broadcastInput) {
     broadcastForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -1462,6 +1734,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       broadcastInput.value = "";
+      updateBroadcastPlaceholder();
       showToast(`⚡ HQ Notificatie popup live verzonden naar ${targetLabel}!`);
     });
   }
@@ -1545,6 +1818,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Start Realtime Synchronisatie & GPS Radar Tracking
   ScoreService.startRealtimeSync();
+  updateBroadcastPlaceholder();
   ScoreService.subscribe((state) => {
     latestState = state;
     renderKPIs(state);

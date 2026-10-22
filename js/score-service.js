@@ -176,12 +176,17 @@ const ScoreService = (() => {
     const bodyId = document.body.getAttribute("data-player-id");
     if (bodyId) return bodyId;
     const st =
+      localStorage.getItem("jb_my_agent_id") ||
       localStorage.getItem("jb_active_agent_id") ||
+      sessionStorage.getItem("jb_my_agent_id") ||
       sessionStorage.getItem("jb_active_agent_id");
     if (st) return st;
     if (typeof SPEL_CONFIG !== "undefined" && SPEL_CONFIG.spelers) {
       for (const s of SPEL_CONFIG.spelers) {
-        if (sessionStorage.getItem(`dossier_unlocked_${s.id}`) === "true") {
+        if (
+          localStorage.getItem(`dossier_unlocked_${s.id}`) === "true" ||
+          sessionStorage.getItem(`dossier_unlocked_${s.id}`) === "true"
+        ) {
           return s.id;
         }
       }
@@ -212,11 +217,11 @@ const ScoreService = (() => {
     const toast = document.createElement("div");
     toast.className = `live-toast ${isNegative ? "negative" : ""}`;
     toast.innerHTML = `
-      <div class="live-toast-body">
+      <div class="live-toast-body" style="flex: 1; padding-right: 0.5rem;">
         <span class="live-toast-tag">${tagText}</span>
         <span class="live-toast-title">${titleText}</span>
       </div>
-      <button type="button" class="live-toast-close">OK</button>
+      <button type="button" class="live-toast-close" aria-label="Sluit melding" title="Sluit melding" style="width: 34px; height: 34px; min-width: 34px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; line-height: 1; border-radius: 6px; cursor: pointer; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff;">&times;</button>
     `;
 
     const closeBtn = toast.querySelector(".live-toast-close");
@@ -224,7 +229,7 @@ const ScoreService = (() => {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     };
     closeBtn.addEventListener("click", removeToast);
-    setTimeout(removeToast, 8000);
+    // GEEN setTimeout auto-dismiss: notificatie blijft persistent staan tot de gebruiker op het kruisje klikt!
 
     container.appendChild(toast);
 
@@ -307,9 +312,15 @@ const ScoreService = (() => {
     }
 
     state.allPlayers.forEach((p) => {
-      const isMyPage = currentPagePlayerId === p.id;
+      const activeAgentId = getActiveAgentId();
+      const isMyPage =
+        currentPagePlayerId === p.id ||
+        (activeAgentId && activeAgentId === p.id) ||
+        localStorage.getItem("jb_my_agent_id") === p.id;
       const isUnlockedOnThisDevice =
-        sessionStorage.getItem(`dossier_unlocked_${p.id}`) === "true";
+        sessionStorage.getItem(`dossier_unlocked_${p.id}`) === "true" ||
+        localStorage.getItem(`dossier_unlocked_${p.id}`) === "true" ||
+        isMyPage;
 
       // 1) Bonus-/strafpunten meldingen
       if (p.bonusHistory && p.bonusHistory.length > 0) {
@@ -325,15 +336,15 @@ const ScoreService = (() => {
               if (b.delta > 0) {
                 const suffix = !isMyPage ? ` (${p.naam})` : "";
                 showLiveToast(
-                  `🎉 De spelleider gaf je ${absPts} extra punten!${suffix}`,
-                  "BERICHT VAN DE SPELLEIDER",
+                  `🎉 Gamemaster HQ kende ${absPts} punten toe!${suffix}${b.reason ? ' // ' + b.reason : ''}`,
+                  "MESSAGE FROM HQ",
                   false
                 );
               } else if (b.delta < 0) {
                 const suffix = !isMyPage ? ` (${p.naam})` : "";
                 showLiveToast(
-                  `⚠️ De spelleider trok ${absPts} punten van je af!${suffix}`,
-                  "BERICHT VAN DE SPELLEIDER",
+                  `⚠️ Gamemaster HQ trok ${absPts} punten af!${suffix}${b.reason ? ' // ' + b.reason : ''}`,
+                  "MESSAGE FROM HQ",
                   true
                 );
               }
@@ -472,9 +483,9 @@ const ScoreService = (() => {
     }
 
     const category = m.category || "tip";
-    let catBadge = "💡 TACTISCHE TIP";
+    let catBadge = "📡 MESSAGE FROM HQ";
     let catClass = "tip";
-    let headerTitle = "⚡ INTEL RECEIVED FROM HQ";
+    let headerTitle = "📡 MESSAGE FROM HQ";
 
     if (category === "alert") {
       catBadge = "🚨 SPOEDINSTRUCTIE";
@@ -505,15 +516,39 @@ const ScoreService = (() => {
         : "";
 
     const isNextLocAlert = Boolean(m.text && m.text.includes("VOLGENDE LOCATIE ONTGRENDELD"));
+    const isRecallAlert = Boolean(m.text && m.text.includes("KEER ONMIDDELLIJK TERUG NAAR HQ"));
+
+    let alertHeaderTitle = headerTitle;
+    let alertBadgeTag = catBadge;
+    let alertBoxClass = catClass;
+    let alertCustomStyle = "";
+    let alertConfirmText = "⚡ BEVESTIG ONTVANGST";
+
+    if (isRecallAlert) {
+      alertHeaderTitle = "🚨 HOOFDKWARTIER SPOEDTRANSMISSIE // LAATSTE SECTOR AFGEROND";
+      alertBadgeTag = "🏁 ALLE 6 LOCATIES VOLTOOID // KEUZEMOMENT";
+      alertBoxClass = "alert";
+      alertCustomStyle = "border-color: #fbbf24; box-shadow: 0 0 50px rgba(245, 158, 11, 0.55);";
+      alertConfirmText = "⚡ BEGREPEN // WIJ MAKEN ONZE KEUZE &rarr;";
+    } else if (isNextLocAlert) {
+      alertHeaderTitle = "🔓 HOOFDKWARTIER TRANSMISSIE // VOLGENDE LOCATIE VRIJGEGEVEN";
+      alertBadgeTag = "🎯 VOLGENDE BESTEMMING VRIJGEGEVEN";
+      alertBoxClass = "alert";
+      alertCustomStyle = "border-color: #10b981; box-shadow: 0 0 45px rgba(16, 185, 129, 0.45);";
+      alertConfirmText = "⚡ GOED BEGREPEN // BEKIJK ONTGRENDELDE BESTEMMING &rarr;";
+    }
 
     backdrop.innerHTML = `
-      <div class="intel-popup-box intel-theme-${isNextLocAlert ? 'alert' : catClass}" style="${isNextLocAlert ? 'border-color: #10b981; box-shadow: 0 0 45px rgba(16, 185, 129, 0.45);' : ''}">
+      <div class="intel-popup-box intel-theme-${alertBoxClass}" style="${alertCustomStyle}">
         <div class="intel-popup-header">
           <div class="intel-popup-beacon">
-            <span class="intel-beacon-dot" style="${isNextLocAlert ? 'background:#10b981; box-shadow:0 0 10px #10b981;' : ''}"></span>
-            <span class="intel-header-title">${isNextLocAlert ? '🔓 HOOFDKWARTIER TRANSMISSIE // VOLGENDE LOCATIE VRIJGEGEVEN' : headerTitle}</span>
+            <span class="intel-beacon-dot" style="${isRecallAlert ? 'background:#f59e0b; box-shadow:0 0 12px #f59e0b;' : isNextLocAlert ? 'background:#10b981; box-shadow:0 0 10px #10b981;' : ''}"></span>
+            <span class="intel-header-title">${alertHeaderTitle}</span>
           </div>
-          ${queueIndicator}
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            ${queueIndicator}
+            <button type="button" class="intel-popup-x-close" aria-label="Sluit melding" title="Sluiten" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; width: 34px; height: 34px; border-radius: 6px; font-size: 1.4rem; font-weight: 700; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+          </div>
         </div>
         <div class="intel-popup-body">
           <div class="intel-popup-meta">
@@ -524,15 +559,24 @@ const ScoreService = (() => {
             <span class="intel-meta-item"><strong>TIJD:</strong> ${timeStr}</span>
           </div>
           <div class="intel-popup-badge-row">
-            <span class="intel-popup-tag ${isNextLocAlert ? 'alert' : catClass}" style="${isNextLocAlert ? 'background:rgba(16,185,129,0.2); color:#34d399; border-color:#10b981;' : ''}">${isNextLocAlert ? '🎯 VOLGENDE BESTEMMING VRIJGEGEVEN' : catBadge}</span>
+            <span class="intel-popup-tag ${alertBoxClass}" style="${isRecallAlert ? 'background:rgba(245,158,11,0.2); color:#fde047; border-color:#fbbf24;' : isNextLocAlert ? 'background:rgba(16,185,129,0.2); color:#34d399; border-color:#10b981;' : ''}">${alertBadgeTag}</span>
             ${
               m.locationName
-                ? `<span class="intel-popup-loc-pill" style="border-color:#10b981; color:#34d399;">📍 ${escapeHtml(m.locationName)}</span>`
+                ? `<span class="intel-popup-loc-pill" style="border-color:${isRecallAlert ? '#fbbf24; color:#fde047;' : '#10b981; color:#34d399;'}">📍 ${escapeHtml(m.locationName)}</span>`
                 : ""
             }
           </div>
           ${
-            isNextLocAlert
+            isRecallAlert
+              ? `
+                <div style="background: rgba(245, 158, 11, 0.16); border: 2.5px solid #fbbf24; border-radius: 12px; padding: 1.35rem 1.1rem; text-align: center; margin: 0.65rem 0; box-shadow: 0 0 35px rgba(245, 158, 11, 0.45);">
+                  <div style="font-size: 2.6rem; margin-bottom: 0.45rem;">🏃💨 🏁 ⭐</div>
+                  <div style="font-family: var(--font-mono); font-size: 1.02rem; font-weight: 900; color: #fde047; letter-spacing: 0.02em; line-height: 1.5; text-transform: uppercase;">
+                    ${escapeHtml(m.text)}
+                  </div>
+                </div>
+              `
+              : isNextLocAlert
               ? `
                 <div style="background: rgba(16, 185, 129, 0.16); border: 2.5px solid #10b981; border-radius: 10px; padding: 1.25rem 1rem; text-align: center; margin: 0.5rem 0; box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);">
                   <div style="font-size: 2.4rem; margin-bottom: 0.4rem;">🔓🎯</div>
@@ -545,8 +589,8 @@ const ScoreService = (() => {
           }
         </div>
         <div class="intel-popup-actions">
-          <button type="button" class="btn btn-primary intel-popup-confirm-btn" style="${isNextLocAlert ? 'background:#10b981; border-color:#10b981; color:#05080d; font-weight:800;' : ''}">
-            <span>${isNextLocAlert ? '⚡ GOED BEGREPEN // BEKIJK ONTGRENDELDE BESTEMMING &rarr;' : '⚡ BEVESTIG ONTVANGST'}</span>
+          <button type="button" class="btn btn-primary intel-popup-confirm-btn" style="${isRecallAlert ? 'background:#f59e0b; border-color:#fbbf24; color:#05080d; font-weight:900;' : isNextLocAlert ? 'background:#10b981; border-color:#10b981; color:#05080d; font-weight:800;' : ''}">
+            <span>${alertConfirmText}</span>
             <span class="intel-btn-subtext">${remainingCount > 1 ? "(VOLGENDE BERICHT &rarr;)" : "(SLUITEN)"}</span>
           </button>
         </div>
@@ -596,6 +640,8 @@ const ScoreService = (() => {
     };
 
     confirmBtn.onclick = dismissCurrent;
+    const xCloseBtn = backdrop.querySelector(".intel-popup-x-close");
+    if (xCloseBtn) xCloseBtn.onclick = dismissCurrent;
     backdrop.onclick = (e) => {
       if (e.target === backdrop) dismissCurrent();
     };
@@ -699,6 +745,7 @@ const ScoreService = (() => {
     const messagesMap = new Map(); // eventId -> message board object
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
+    const reviewedSubmissionsMap = new Map(); // targetEventId -> { eventId, label, awardedPoints, reviewedAt }
     let groupVisibilityMode = "hide"; // "hide" (standaard verborgen tot leiding onthult), "show" (leiding onthult aan iedereen)
     let debriefingModeActive = false;
     const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
@@ -712,6 +759,7 @@ const ScoreService = (() => {
         playerLocUnlocks.clear();
         groupRevealedSteps.clear();
         bonusSolves.length = 0;
+        reviewedSubmissionsMap.clear();
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
         debriefedPlayersMap.clear();
@@ -835,6 +883,13 @@ const ScoreService = (() => {
           status: ev.status,
           reward: ev.reward,
           ts: ev.ts
+        });
+      } else if (ev.type === "review_submission" && ev.targetEventId) {
+        reviewedSubmissionsMap.set(ev.targetEventId, {
+          eventId: ev.targetEventId,
+          label: ev.label || "✓ Beoordeeld",
+          awardedPoints: Number(ev.awardedPoints) || 0,
+          reviewedAt: ev.reviewedAt || ev.ts
         });
       }
     }
@@ -1167,7 +1222,8 @@ const ScoreService = (() => {
       nextPoints,
       debriefingActive: debriefingModeActive,
       debriefedCount: enabledPlayerScores.filter((p) => p.debriefed).length,
-      debriefedPlayersMap
+      debriefedPlayersMap,
+      reviewedSubmissionsMap
     };
   }
 
@@ -1609,7 +1665,6 @@ const ScoreService = (() => {
   }
 
   async function recordUnlock(playerId) {
-    await fetchCloudHistory();
     const current = computeScoreState();
     const spelerState = current.playerScoresMap.get(playerId);
     if (spelerState && (spelerState.unlocked || spelerState.disabled)) {
@@ -1820,10 +1875,37 @@ const ScoreService = (() => {
     });
   }
 
+  const FINAL_RECALL_TEXT =
+    "KEER ONMIDDELLIJK TERUG NAAR HQ, TENZIJ JULLIE NOG BONUSOPDRACHTEN WILLEN VOLTOOIEN. HOE EERDER JE AANKOMT, HOE MEER PUNTEN JE KRIJGT MAAR MISSCHIEN IS HET DAT NIET WAARD EN VERDIEN JE NET MEER PUNTEN DOOR NOG BONUSOPDRACHTEN UIT TE VOEREN... DIE AFWEGING IS AAN JULLIE. TIP: ALLE BONUSPUNTEN OPGETELD ZIJN SOWIESO MEER WAARD DAN DE PUNTEN DIE JE VERDIENT MET EERST TE ZIJN. SUCCES.";
+
+  /**
+   * Stuur de dramatische finale recall pop-up naar alle leden van een groep:
+   * "KEER ONMIDDELLIJK TERUG NAAR HQ, TENZIJ JULLIE NOG BONUSOPDRACHTEN WILLEN VOLTOOIEN..."
+   */
+  async function recallGroupToHQ(groupId, customMessage) {
+    const state = computeScoreState();
+    const grp = (state.adminGroupsList || state.groupsList || []).find(
+      (g) => normalizeGroupId(g.id) === normalizeGroupId(groupId)
+    );
+    if (!grp) return state;
+
+    await postBoardMessage({
+      targetType: "group",
+      targetId: grp.id,
+      text: customMessage || FINAL_RECALL_TEXT,
+      category: "alert",
+      locationId: "hq",
+      locationName: "Hoofdkwartier (Kapucijnenstraat 7)"
+    });
+
+    return computeScoreState();
+  }
+
   /**
    * Onthul de volgende locatie voor een specifieke groep en stuur een schermvullende alert
    * naar alle leden van die groep:
    * "GOED WERK. VOLGENDE LOCATIE ONTGRENDELD. CHECK JULLIE PERSOONLIJKE FILES OM TE KIJKEN NAAR WAAR JULLIE MOETEN."
+   * Als de groep al bij de 6e locatie is, activeert dit automatisch de finale recall.
    */
   async function revealNextLocationForGroup(groupId, customMessage) {
     const state = computeScoreState();
@@ -1833,6 +1915,10 @@ const ScoreService = (() => {
     if (!grp) return state;
 
     const curStep = grp.revealedStepCount || 1;
+    if (curStep >= 6) {
+      return recallGroupToHQ(groupId, customMessage);
+    }
+
     const nextStep = Math.min(6, curStep + 1);
     const nextLoc = (grp.orderedLocations || []).find((l) => l.stepNr === nextStep);
 
@@ -1857,6 +1943,56 @@ const ScoreService = (() => {
       locationId: nextLoc ? nextLoc.id : null,
       locationName: nextLoc ? nextLoc.naam : ""
     });
+
+    return computeScoreState();
+  }
+
+  /**
+   * Keur een ingezonden opdracht (foto/video/opdracht) goed, ken de punten toe
+   * én stuur direct de bevestigingsmelding naar de leden:
+   * bv. "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR HONDENFOTO"
+   */
+  async function awardSubmissionPoints({
+    groupId = null,
+    playerId = null,
+    points = 35,
+    taskName = "Opdracht",
+    notificationText = "",
+    eventId = null
+  }) {
+    const pts = Number(points) || 0;
+    const cleanTask = String(taskName || "Opdracht").trim();
+    const notifyMsg =
+      notificationText ||
+      `OPDRACHT SUCCESVOL: +${pts} PUNTEN VOOR ${cleanTask.toUpperCase()}`;
+
+    if (groupId) {
+      await addGroupBonusPoints(groupId, pts, `Opdracht goedgekeurd (${cleanTask})`);
+      await postBoardMessage({
+        targetType: "group",
+        targetId: groupId,
+        category: "alert",
+        text: notifyMsg
+      });
+    } else if (playerId) {
+      await addBonusPoints(playerId, pts, `Opdracht goedgekeurd (${cleanTask})`);
+      await postBoardMessage({
+        targetType: "player",
+        targetId: playerId,
+        category: "alert",
+        text: notifyMsg
+      });
+    }
+
+    if (eventId) {
+      await publishEvent({
+        type: "review_submission",
+        targetEventId: eventId,
+        awardedPoints: pts,
+        label: `✓ +${pts} PT (${cleanTask})`,
+        reviewedAt: Date.now()
+      });
+    }
 
     return computeScoreState();
   }
@@ -2062,6 +2198,9 @@ const ScoreService = (() => {
     revealNextLocationForGroup,
     setGroupRevealedStep,
     unlockAllLocationsForGroup,
+    recallGroupToHQ,
+    awardSubmissionPoints,
+    FINAL_RECALL_TEXT,
     addBonusPoints,
     addGroupBonusPoints,
     revokePlayerUnlock,

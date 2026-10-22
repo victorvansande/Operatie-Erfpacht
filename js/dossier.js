@@ -145,13 +145,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const isCloudUnlocked = Boolean(latestPlayerInfo && latestPlayerInfo.unlocked);
+    const isBoundToDevice =
+      localStorage.getItem("jb_my_agent_id") === playerId ||
+      localStorage.getItem("jb_active_agent_id") === playerId;
     const unlocked =
       isCloudUnlocked ||
+      isBoundToDevice ||
       sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
       localStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
     if (unlocked) {
       if (lockScreen) lockScreen.style.display = "none";
       if (contentEl) contentEl.classList.add("unlocked");
+      try {
+        localStorage.setItem(`dossier_unlocked_${playerId}`, "true");
+        localStorage.setItem("jb_my_agent_id", playerId);
+        localStorage.setItem("jb_active_agent_id", playerId);
+        sessionStorage.setItem(`dossier_unlocked_${playerId}`, "true");
+      } catch (_) {}
       initPlayerGpsTracking();
     } else {
       if (contentEl) contentEl.classList.remove("unlocked");
@@ -274,19 +284,20 @@ document.addEventListener("DOMContentLoaded", () => {
         sessionStorage.setItem(`dossier_unlocked_${playerId}`, "true");
         try {
           localStorage.setItem(`dossier_unlocked_${playerId}`, "true");
+          localStorage.setItem("jb_my_agent_id", playerId);
           localStorage.setItem("jb_active_agent_id", playerId);
         } catch (_) {}
         lockError.textContent = "";
 
         if (master && entered === master) {
           for (const l of SPEL_CONFIG.locaties) {
-            await unlockLocationForTeam(l.id);
+            unlockLocationForTeam(l.id).catch(() => {});
           }
           if (typeof renderLocationFolders === "function") {
             renderLocationFolders();
           }
         } else if (entered === expected && typeof ScoreService !== "undefined") {
-          await ScoreService.recordUnlock(playerId);
+          ScoreService.recordUnlock(playerId).catch(() => {});
         }
 
         checkAccess();
@@ -302,8 +313,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (lockBtn) {
     lockBtn.addEventListener("click", () => {
-      sessionStorage.removeItem(`dossier_unlocked_${playerId}`);
-      localStorage.removeItem(`dossier_unlocked_${playerId}`);
       window.location.href = "../index.html";
     });
   }
@@ -350,13 +359,16 @@ document.addEventListener("DOMContentLoaded", () => {
           })
         : "";
       let badgeColor = "var(--accent)";
-      let badgeLabel = "💡 TIP";
+      let badgeLabel = "📡 MESSAGE FROM HQ";
       if (m.category === "bonus") {
         badgeColor = "var(--amber)";
         badgeLabel = "⭐ BONUSOPDRACHT";
+      } else if (m.category === "alert") {
+        badgeColor = "#ef4444";
+        badgeLabel = "🚨 SPOEDINSTRUCTIE";
       } else if (m.category === "info") {
         badgeColor = "#38bdf8";
-        badgeLabel = "📡 BERICHT";
+        badgeLabel = "📡 MESSAGE FROM HQ";
       }
       const locTag = m.locationName ? ` • 📍 ${m.locationName}` : "";
 
@@ -606,7 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <ul style="margin: 0.35rem 0 0 1.1rem; padding: 0; font-size: 0.78rem; line-height: 1.5; color: #0f172a;">
                 <li><strong>1. Codes vinden:</strong> Op elke locatie in Herentals vinden jullie een code om het bijbehorende mapje te ontgrendelen.</li>
                 <li><strong>2. Bewijs verzamelen:</strong> Voer de opdracht uit en upload jullie foto- of videobewijs rechtstreeks in het mapje.</li>
-                <li><strong>3. Bonuspunten (+50 pt):</strong> Voer de bonusopdrachten uit voor extra voorsprong op het klassement!</li>
+                <li><strong>3. Bonuspunten:</strong> Voer de bonusopdrachten uit voor extra voorsprong op het klassement!</li>
                 <li><strong>4. 22u00 Deadline op HQ:</strong> Zorg dat jullie om 22u00 terug op het Hoofdkwartier (Kapucijnenstraat 7) zijn met de fysieke bewijsstukken (€10 cash, spijsrot dakpuin, audio)!</li>
               </ul>
             </div>
@@ -981,10 +993,10 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ DECRYPTIE (+75 PT)
+              ⭐ DECRYPTIE
             </span>
             <span class="loc-lock-badge b1-status-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
-              ${isBurnerSolved ? "✅ VOLBRACHT (+75 PT)" : "🔓 OPENSTAAND"}
+              ${isBurnerSolved ? "✅ VOLBRACHT" : "🔓 OPENSTAAND"}
             </span>
           </div>
         </button>
@@ -1027,7 +1039,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <!-- Formulier of Opgelost Scherm -->
               <div class="b1-form-area" style="${isBurnerSolved ? "display: none;" : "display: block;"}">
                 <p style="font-size: 0.82rem; color: #475569; margin-bottom: 0.5rem; font-weight: 700;">
-                  Voer het ontcijferde woord hieronder in. Zodra het klopt, wordt het direct naar Gamemaster HQ gestuurd en ontvangt je team <strong>+75 bonuspunten</strong>:
+                  Voer het ontcijferde woord hieronder in om het direct naar Gamemaster HQ te sturen ter verificatie:
                 </p>
                 <form class="b1-submit-form" autocomplete="off" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                   <input
@@ -1042,7 +1054,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     style="flex: 1; min-width: 190px; text-transform: uppercase;"
                   />
                   <button type="submit" class="btn btn-primary b1-btn" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800;">
-                    📡 VERZEND NAAR HQ (+75 PT)
+                    📡 VERZEND NAAR HQ
                   </button>
                 </form>
                 <div class="b1-feedback-msg" style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; min-height: 1.2rem;"></div>
@@ -1101,12 +1113,12 @@ document.addEventListener("DOMContentLoaded", () => {
               b1Msg.textContent = "";
               b1FormArea.style.display = "none";
               b1SolvedCard.style.display = "block";
-              b1Badge.textContent = "✅ VOLBRACHT (+75 PT)";
+              b1Badge.textContent = "✅ VOLBRACHT";
               b1Badge.style.color = "var(--accent)";
               b1Badge.style.borderColor = "var(--accent)";
               if (ScoreService.triggerIntelPopup) {
                 ScoreService.triggerIntelPopup(
-                  "🎯 BONUS VOLBRACHT! Het codewoord 'HANGJONGEREN' is geverifieerd door Gamemaster HQ (+75 PT).",
+                  "🎯 BONUS VOLBRACHT! Het codewoord 'HANGJONGEREN' is geverifieerd door Gamemaster HQ.",
                   "VELDAGENT"
                 );
               }
@@ -1114,14 +1126,14 @@ document.addEventListener("DOMContentLoaded", () => {
               b1Msg.style.color = "var(--danger)";
               b1Msg.textContent = res.message || "❌ ONJUIST WOORD: Probeer opnieuw!";
               b1Btn.disabled = false;
-              b1Btn.textContent = "📡 VERZEND NAAR HQ (+75 PT)";
+              b1Btn.textContent = "📡 VERZEND NAAR HQ";
               b1Input.select();
             }
           } catch (err) {
             b1Msg.style.color = "var(--danger)";
             b1Msg.textContent = "Verbindingsfout met HQ: " + err.message;
             b1Btn.disabled = false;
-            b1Btn.textContent = "📡 VERZEND NAAR HQ (+75 PT)";
+            b1Btn.textContent = "📡 VERZEND NAAR HQ";
           }
         });
       }
@@ -1141,10 +1153,10 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ DECRYPTIE (+100 PT)
+              ⭐ WIRE-TAP INTERCEPTIE
             </span>
             <span class="loc-lock-badge b-tap-status-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
-              ${isTapSolved ? "✅ VOLBRACHT (+100 PT)" : "🔓 OPENSTAAND"}
+              ${isTapSolved ? "✅ VOLBRACHT" : "🔓 OPENSTAAND"}
             </span>
           </div>
         </button>
@@ -1171,10 +1183,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <strong>SIGINT ONDERSCHEPPING #4208:</strong> Onze inlichtingendienst heeft een afgeluisterd telefoongesprek onderschept tussen <strong>Thérèse</strong> (Kabinet Stadsontwikkeling Herentals) en de <strong>geheime koper</strong> van het KSA-lokaal. Het document is door de censuurdienst zwaar zwartgelakt met zwarte balken, maar onze codekrakers ontdekten dat een reeks specifieke typemachineletters in chronologische leesvolgorde een geheime boodschap vormen!
               </p>
               <p>
-                Bestudeer het transcript van de tapopname. Zoek de verdachte gemarkeerde letters en ontcijfer de verborgen instructie:
+                Bestudeer het transcript van de tapopname en ontdek wat de letters samen betekenen...
               </p>
 
-              <div class="retro-burner-phone-box" style="background: #f8f6f0; border-color: #cbd5e1; color: #0f172a; font-family: var(--font-mono); line-height: 1.7; font-size: 0.85rem; padding: 1rem 1.15rem; margin-bottom: 1rem;">
+              <div class="retro-burner-phone-box" style="background: #f8f6f0; border-color: #cbd5e1; color: #0f172a; font-family: var(--font-mono); line-height: 1.7; font-size: 0.85rem; padding: 1rem 1.15rem; margin-bottom: 0.5rem;">
                 <div style="font-size: 0.72rem; color: #64748b; margin-bottom: 0.65rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.35rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
                   <span>📞 AUDIO-SIGINT // TAPE REF: #4208-THÉRÈSE</span>
                   <span>STATUS: HEAVILY REDACTED</span>
@@ -1199,39 +1211,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
 
-              <!-- Formulier of Opgelost Scherm -->
-              <div class="b-tap-form-area" style="${isTapSolved ? "display: none;" : "display: block;"}">
-                <p style="font-size: 0.82rem; color: #475569; margin-bottom: 0.5rem; font-weight: 700;">
-                  Voer de ontcijferde geheime code hieronder in en verzend direct naar Gamemaster HQ voor <strong>+100 bonuspunten</strong>:
-                </p>
-                <form class="b-tap-submit-form" autocomplete="off" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                  <input
-                    type="text"
-                    class="loc-code-input b-tap-input"
-                    placeholder="Typ de ontcijferde code..."
-                    autocapitalize="none"
-                    autocorrect="off"
-                    spellcheck="false"
-                    enterkeyhint="go"
-                    required
-                    style="flex: 1; min-width: 190px;"
-                  />
-                  <button type="submit" class="btn btn-primary b-tap-btn" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800;">
-                    📡 VERZEND CODE NAAR HQ (+100 PT)
-                  </button>
-                </form>
-                <div class="b-tap-feedback-msg" style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; min-height: 1.2rem;"></div>
-              </div>
-
-              <div class="b-tap-solved-card" style="${isTapSolved ? "display: block;" : "display: none;"} background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 6px; padding: 1rem; text-align: center; margin-top: 0.85rem;">
-                <div style="font-size: 1.4rem; margin-bottom: 0.2rem;">✅</div>
-                <div style="font-family: var(--font-mono); font-weight: 800; color: #34d399; font-size: 1.05rem;">
-                  TELEFOONTAP SUCCESVOL GECODEERD // CODE BEVESTIGD BIJ HQ
+              <!-- Bevestigingskaart als Gamemaster Victor de bonus heeft toegekend -->
+              <div class="b-tap-solved-card" style="${isTapSolved ? "display: block;" : "display: none;"} background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 6px; padding: 0.85rem 1rem; text-align: center; margin-top: 0.65rem;">
+                <div style="font-size: 1.3rem; margin-bottom: 0.2rem;">✅</div>
+                <div style="font-family: var(--font-mono); font-weight: 800; color: #34d399; font-size: 0.95rem;">
+                  TELEFOONTAP ONTRAADSELD // VERIFICATIE BEVESTIGD BIJ HQ
                 </div>
-                <div style="font-size: 0.88rem; color: #ecfdf5; margin-top: 0.35rem;">
-                  Gedecodeerde noodoproep: <strong style="letter-spacing: 0.08em; color: var(--amber);">"SMS SOS naar Vicce"</strong>
-                </div>
-                <div style="font-family: var(--font-mono); font-size: 0.78rem; color: #a7f3d0; margin-top: 0.5rem;">
+                <div style="font-family: var(--font-mono); font-size: 0.78rem; color: #a7f3d0; margin-top: 0.35rem;">
                   ⭐ +100 BONUSPUNTEN TOEGEKEND AAN JULLIE TEAM!
                 </div>
               </div>
@@ -1249,57 +1235,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const bTapHeader = bTap.querySelector(".location-folder-header");
       bTapHeader.addEventListener("click", () => bTap.classList.toggle("expanded"));
 
-      const bTapForm = bTap.querySelector(".b-tap-submit-form");
-      const bTapInput = bTap.querySelector(".b-tap-input");
-      const bTapMsg = bTap.querySelector(".b-tap-feedback-msg");
-      const bTapBtn = bTap.querySelector(".b-tap-btn");
-      const bTapFormArea = bTap.querySelector(".b-tap-form-area");
-      const bTapSolvedCard = bTap.querySelector(".b-tap-solved-card");
-      const bTapBadge = bTap.querySelector(".b-tap-status-badge");
-
-      if (bTapForm) {
-        bTapForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const val = bTapInput.value.trim();
-          if (!val) return;
-
-          bTapBtn.disabled = true;
-          bTapBtn.textContent = "Verifiëren met HQ...";
-          bTapMsg.style.color = "var(--text-muted)";
-          bTapMsg.textContent = "Verbinding maken met Gamemaster HQ...";
-
-          try {
-            const res = await ScoreService.submitBonusRiddle(playerId, "tap_therese", val);
-            if (res.success) {
-              localStorage.setItem(`jb_solved_tap_therese_${playerId}`, "true");
-              bTapMsg.textContent = "";
-              bTapFormArea.style.display = "none";
-              bTapSolvedCard.style.display = "block";
-              bTapBadge.textContent = "✅ VOLBRACHT (+100 PT)";
-              bTapBadge.style.color = "var(--accent)";
-              bTapBadge.style.borderColor = "var(--accent)";
-              if (ScoreService.triggerIntelPopup) {
-                ScoreService.triggerIntelPopup(
-                  "🎯 BONUS VOLBRACHT! De noodoproep 'SMS SOS naar Vicce' is geverifieerd (+100 PT).",
-                  "VELDAGENT"
-                );
-              }
-            } else {
-              bTapMsg.style.color = "var(--danger)";
-              bTapMsg.textContent = res.message || "❌ ONJUISTE CODE: Bestudeer de opvallende letters opnieuw!";
-              bTapBtn.disabled = false;
-              bTapBtn.textContent = "📡 VERZEND CODE NAAR HQ (+100 PT)";
-              bTapInput.select();
-            }
-          } catch (err) {
-            bTapMsg.style.color = "var(--danger)";
-            bTapMsg.textContent = "Verbindingsfout met HQ: " + err.message;
-            bTapBtn.disabled = false;
-            bTapBtn.textContent = "📡 VERZEND CODE NAAR HQ (+100 PT)";
-          }
-        });
-      }
-
       // -------------------------------------------------------------
       // BONUS 3: Operatie Carte Blanche // Het Vrije Spel
       // -------------------------------------------------------------
@@ -1315,7 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ TOT +200 PT
+              ⭐ VRIJE CREATIVITEIT
             </span>
             <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               🎬 VRIJE STUNT
@@ -1416,7 +1351,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ SNELSTE AT WINT (+100 PT)
+              ⭐ OPERATIE AD FUNDUM
             </span>
             <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               📹 VIDEO VEREIST
@@ -1510,7 +1445,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ PROVIAND HQ (+100 PT)
+              ⭐ PROVIAND VOOR VICCE
             </span>
             <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               🍟 FYSIEKE LEVERING
@@ -1603,7 +1538,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ PSY-OP (+150 PT)
+              ⭐ PSY-OP MISSIE
             </span>
             <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               📢 6 VREEMDEN IN KOOR
@@ -1624,7 +1559,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
-                TOP VALUE (+150 PT)
+                VOLKSSTEM
               </div>
             </div>
 
@@ -1642,7 +1577,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               <p>
-                <strong>HET BEWIJS:</strong> Film de 6 vreemden die dit tegelijk in koor scanderen en upload de video hier direct voor Gamemaster HQ. Succesvol volbrengen levert maar liefst <strong>+150 bonuspunten</strong> op!
+                <strong>HET BEWIJS:</strong> Film de 6 vreemden die dit tegelijk in koor scanderen en upload de video hier direct voor Gamemaster HQ. Succesvol volbrengen levert flinke bonuspunten op na beoordeling door Gamemaster HQ!
               </p>
             </div>
 
@@ -1674,7 +1609,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 required
               />
               <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
-                Upload Video naar HQ (+150 PT)
+                Upload Video naar HQ
               </button>
             </form>
             <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
@@ -1703,7 +1638,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ K9-REKRUUT (+50 PT)
+              ⭐ K9-REKRUUT
             </span>
             <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               🐕 FOTO VEREIST
@@ -1765,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 required
               />
               <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
-                Upload Sollicitatie (+50 PT)
+                Upload Sollicitatie van Speurhond
               </button>
             </form>
             <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
@@ -2780,7 +2715,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const label =
               m.category === "bonus"
                 ? "⭐ EXTRA BONUSOPDRACHT"
-                : "💡 TIP VAN DE SPELLEIDER";
+                : "📡 MESSAGE FROM HQ";
             return `
               <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid ${color}; border-radius: 6px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem;">
                 <div style="font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700; color: ${color}; margin-bottom: 0.2rem;">${label}</div>
