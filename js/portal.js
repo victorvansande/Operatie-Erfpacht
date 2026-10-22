@@ -562,6 +562,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openModal(speler) {
     selectedPlayer = speler;
+    try {
+      localStorage.setItem("jb_active_agent_id", speler.id);
+      sessionStorage.setItem("jb_active_agent_id", speler.id);
+    } catch (_) {}
     modalTag.textContent = `DOSSIER #${speler.dossierNr} // AUTORISATIE VEREIST`;
     modalTitle.textContent = speler.naam;
     codeInput.value = "";
@@ -588,6 +592,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (entered && (entered === expected || (master && entered === master))) {
       sessionStorage.setItem(`dossier_unlocked_${selectedPlayer.id}`, "true");
+      try {
+        localStorage.setItem("jb_active_agent_id", selectedPlayer.id);
+        sessionStorage.setItem("jb_active_agent_id", selectedPlayer.id);
+      } catch (_) {}
       unlockSubmitBtn.disabled = true;
       unlockSubmitBtn.textContent = "Bezig...";
 

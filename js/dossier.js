@@ -10,6 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const speler = SPEL_CONFIG.spelers.find((s) => s.id === playerId);
   let latestPlayerInfo = null;
 
+  if (playerId) {
+    try {
+      localStorage.setItem("jb_active_agent_id", playerId);
+      sessionStorage.setItem("jb_active_agent_id", playerId);
+    } catch (_) {}
+  }
+
   // Injecteer CIA / FBI Geheime Dienst Telemetrie Balk bovenaan elk spelersdossier
   function initDossierIntelTopbar() {
     if (document.querySelector(".intel-topbar")) return;

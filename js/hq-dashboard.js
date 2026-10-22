@@ -32,6 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const broadcastForm = document.getElementById("gm-broadcast-form");
   const broadcastInput = document.getElementById("gm-broadcast-input");
+  const broadcastTargetSelect = document.getElementById("gm-broadcast-target");
+  const broadcastCategorySelect = document.getElementById("gm-broadcast-category");
+  const broadcastGroupsOptGroup = document.getElementById("gm-broadcast-target-groups");
+  const broadcastPlayersOptGroup = document.getElementById("gm-broadcast-target-players");
 
   const groupsContainer = document.getElementById("gm-groups-container");
   const groupFoldersContainer = document.getElementById("gm-group-folders-container");
@@ -197,6 +201,12 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = `📍 ${loc.naam}`;
       filterLocSelect.appendChild(opt);
     });
+  }
+
+  if (broadcastPlayersOptGroup && SPEL_CONFIG.spelers) {
+    broadcastPlayersOptGroup.innerHTML = SPEL_CONFIG.spelers
+      .map((s) => `<option value="player:${s.id}">👤 #${s.dossierNr} ${s.naam}</option>`)
+      .join("");
   }
 
   // 3. Initialiseer Herentals Radar-Kaart
@@ -384,9 +394,12 @@ document.addEventListener("DOMContentLoaded", () => {
           </span>
         </div>
         <div>${statusBadge}</div>
-        <div style="display: flex; gap: 0.4rem; margin-top: 0.2rem;">
-          <button type="button" class="btn-toggle-active" style="flex: 1; padding: 0.32rem 0.5rem; font-size: 0.72rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid ${isOff ? "var(--accent)" : "rgba(239, 68, 68, 0.6)"}; background: ${isOff ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.18)"}; color: ${isOff ? "#6ee7b7" : "#fca5a5"}; transition: all 0.15s ease;">
+        <div style="display: flex; gap: 0.4rem; margin-top: 0.2rem; flex-wrap: wrap;">
+          <button type="button" class="btn-toggle-active" style="flex: 1; min-width: 95px; padding: 0.32rem 0.5rem; font-size: 0.72rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid ${isOff ? "var(--accent)" : "rgba(239, 68, 68, 0.6)"}; background: ${isOff ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.18)"}; color: ${isOff ? "#6ee7b7" : "#fca5a5"}; transition: all 0.15s ease;">
             ${isOff ? "✅ Zet Aanwezig" : "❌ Zet Inactief"}
+          </button>
+          <button type="button" class="btn-msg-p" title="Stuur directe HQ-notificatie popup naar ${p.naam}" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; transition: all 0.15s ease;">
+            💬 Bericht
           </button>
           ${
             !isOff && !isUnlocked
@@ -419,6 +432,20 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!window.confirm(`Weet je zeker dat je de persoonlijke code van ${p.naam} handmatig wilt ontgrendelen?`)) return;
           await ScoreService.recordUnlock(p.id);
           showToast(`✓ Code van ${p.naam} handmatig ontgrendeld!`);
+        });
+      }
+
+      const msgBtn = chip.querySelector(".btn-msg-p");
+      if (msgBtn) {
+        msgBtn.addEventListener("click", () => {
+          if (broadcastTargetSelect) {
+            broadcastTargetSelect.value = `player:${p.id}`;
+          }
+          if (broadcastInput) {
+            broadcastInput.placeholder = `Typ live popup-instructie voor ${p.naam}...`;
+            broadcastInput.scrollIntoView({ behavior: "smooth", block: "center" });
+            broadcastInput.focus();
+          }
         });
       }
 
@@ -1157,13 +1184,35 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const txt = broadcastInput.value.trim();
       if (!txt) return;
+
+      const rawTarget = broadcastTargetSelect ? broadcastTargetSelect.value : "all";
+      const category = broadcastCategorySelect ? broadcastCategorySelect.value : "tip";
+
+      let targetType = "all";
+      let targetId = "";
+      let targetLabel = "ALLE AGENTEN (BROADCAST)";
+
+      if (rawTarget.startsWith("group:")) {
+        targetType = "group";
+        targetId = rawTarget.slice(6);
+        const grp = (latestState.allGroups || []).find((g) => g.id === targetId);
+        targetLabel = grp ? `Groep ${grp.naam}` : targetId;
+      } else if (rawTarget.startsWith("player:")) {
+        targetType = "player";
+        targetId = rawTarget.slice(7);
+        const p = (latestState.allPlayers || []).find((x) => x.id === targetId);
+        targetLabel = p ? `Agent ${p.naam}` : targetId;
+      }
+
       await ScoreService.postBoardMessage({
-        targetType: "all",
-        category: "tip",
+        targetType,
+        targetId,
+        category,
         text: txt
       });
+
       broadcastInput.value = "";
-      showToast("📡 Bericht verzonden naar het Message Board van ALLE spelers!");
+      showToast(`⚡ HQ Notificatie popup live verzonden naar ${targetLabel}!`);
     });
   }
 
@@ -1179,6 +1228,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function updateBroadcastGroupsOptions(state) {
+    if (!broadcastGroupsOptGroup) return;
+    const currentVal = broadcastTargetSelect ? broadcastTargetSelect.value : "";
+    const groups = state.allGroups || [];
+    broadcastGroupsOptGroup.innerHTML = groups
+      .map((g) => `<option value="group:${g.id}">👥 ${g.naam}</option>`)
+      .join("");
+    if (currentVal && broadcastTargetSelect) {
+      broadcastTargetSelect.value = currentVal;
+    }
+  }
+
   // Start Realtime Synchronisatie
   ScoreService.startRealtimeSync();
   ScoreService.subscribe((state) => {
@@ -1189,5 +1250,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderGroupFolders(state);
     renderUploadsStream(state);
     renderLocationOccupancy(state);
+    updateBroadcastGroupsOptions(state);
   });
 });

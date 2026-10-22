@@ -8,10 +8,15 @@
 const ScoreService = (() => {
   const STORAGE_KEY = `jb_score_events_${SPEL_CONFIG.cloudChannel}`;
   const SEEN_BONUSES_KEY = `jb_seen_bonuses_${SPEL_CONFIG.cloudChannel}`;
+  const SEEN_INTEL_KEY = `jb_seen_intel_${SPEL_CONFIG.cloudChannel}`;
   const eventsMap = new Map(); // eventId -> event object
   const listeners = new Set();
   let sseConnection = null;
   let pollInterval = null;
+  let isSyncing = false;
+
+  let intelQueue = [];
+  let isIntelModalOpen = false;
 
   const DEFAULT_PALETTE = [
     "#3b82f6",
@@ -148,6 +153,50 @@ const ScoreService = (() => {
       s.add(eventId);
       localStorage.setItem(SEEN_BONUSES_KEY, JSON.stringify(Array.from(s)));
     } catch (_) {}
+  }
+
+  function getSeenIntelSet() {
+    try {
+      const raw = localStorage.getItem(SEEN_INTEL_KEY);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch (_) {}
+    return new Set();
+  }
+
+  function markIntelSeen(eventId) {
+    try {
+      const s = getSeenIntelSet();
+      s.add(eventId);
+      localStorage.setItem(SEEN_INTEL_KEY, JSON.stringify(Array.from(s)));
+    } catch (_) {}
+  }
+
+  function getActiveAgentId() {
+    if (typeof document === "undefined" || !document.body) return null;
+    const bodyId = document.body.getAttribute("data-player-id");
+    if (bodyId) return bodyId;
+    const st =
+      localStorage.getItem("jb_active_agent_id") ||
+      sessionStorage.getItem("jb_active_agent_id");
+    if (st) return st;
+    if (typeof SPEL_CONFIG !== "undefined" && SPEL_CONFIG.spelers) {
+      for (const s of SPEL_CONFIG.spelers) {
+        if (sessionStorage.getItem(`dossier_unlocked_${s.id}`) === "true") {
+          return s.id;
+        }
+      }
+    }
+    return null;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   function showLiveToast(titleText, tagText, isNegative = false) {
@@ -311,34 +360,238 @@ const ScoreService = (() => {
           }
         });
       }
+    });
+  }
 
-      // 2) Message Board meldingen bij een nieuwe post van de spelleider!
-      if ((isMyPage || isUnlockedOnThisDevice) && p.messages && p.messages.length > 0) {
-        p.messages.forEach((m) => {
-          if (!m.eventId) return;
-          const msgKey = `msg_${p.id}_${m.eventId}`;
-          if (!seen.has(msgKey)) {
-            markBonusSeen(msgKey);
-            let tag = "📡 NIEUW BERICHT OP JE MESSAGE BOARD";
-            let prefix = "💬";
-            if (m.category === "bonus") {
-              tag = "⭐ NIEUWE GEHEIME BONUSOPDRACHT!";
-              prefix = "⭐";
-            } else if (m.category === "tip") {
-              tag = "💡 NIEUWE TIP VAN DE SPELLEIDER";
-              prefix = "💡";
-            }
-            const locSuffix = m.locationName ? ` [${m.locationName}]` : "";
-            showLiveToast(`${prefix}${locSuffix} ${m.text}`, tag, false);
-          }
+  function playIntelChime(category) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      let tones = [784, 987.77, 1174.66];
+      if (category === "alert") {
+        tones = [880, 587.33, 880, 587.33];
+      } else if (category === "bonus") {
+        tones = [523.25, 659.25, 783.99, 1046.50];
+      }
+      tones.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+        gain.gain.setValueAtTime(0.08, now + idx * 0.11);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.11);
+        osc.stop(now + idx * 0.11 + 0.25);
+      });
+    } catch (_) {}
+
+    try {
+      if (navigator.vibrate) {
+        navigator.vibrate([160, 80, 160, 80, 300]);
+      }
+    } catch (_) {}
+  }
+
+  function showNextIntel() {
+    if (typeof document === "undefined" || !document.body) return;
+    if (intelQueue.length === 0) {
+      isIntelModalOpen = false;
+      const existing = document.getElementById("jb-intel-popup-backdrop");
+      if (existing) existing.classList.remove("active");
+      return;
+    }
+
+    isIntelModalOpen = true;
+    const item = intelQueue[0];
+    const m = item.msg;
+    const targetLabel = item.targetLabel;
+
+    let backdrop = document.getElementById("jb-intel-popup-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.id = "jb-intel-popup-backdrop";
+      backdrop.className = "intel-popup-backdrop";
+      document.body.appendChild(backdrop);
+    }
+
+    const category = m.category || "tip";
+    let catBadge = "💡 TACTISCHE TIP";
+    let catClass = "tip";
+    let headerTitle = "⚡ INTEL RECEIVED FROM HQ";
+
+    if (category === "alert") {
+      catBadge = "🚨 SPOEDINSTRUCTIE";
+      catClass = "alert";
+      headerTitle = "🚨 SPOEDINSTRUCTIE // HQ TRANSMISSIE";
+    } else if (category === "bonus") {
+      catBadge = "⭐ GEHEIME BONUSMISSIE";
+      catClass = "bonus";
+      headerTitle = "⭐ GEHEIME BONUSMISSIE // HQ INTEL";
+    }
+
+    const timeStr = m.ts
+      ? new Date(m.ts).toLocaleTimeString("nl-BE", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        })
+      : new Date().toLocaleTimeString("nl-BE", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
         });
+
+    const remainingCount = intelQueue.length;
+    const queueIndicator =
+      remainingCount > 1
+        ? `<span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber); background: rgba(245, 158, 11, 0.15); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--amber);">Bericht 1 van ${remainingCount}</span>`
+        : "";
+
+    backdrop.innerHTML = `
+      <div class="intel-popup-box intel-theme-${catClass}">
+        <div class="intel-popup-header">
+          <div class="intel-popup-beacon">
+            <span class="intel-beacon-dot"></span>
+            <span class="intel-header-title">${headerTitle}</span>
+          </div>
+          ${queueIndicator}
+        </div>
+        <div class="intel-popup-body">
+          <div class="intel-popup-meta">
+            <span class="intel-meta-item"><strong>AFZENDER:</strong> HQ GAMEMASTER</span>
+            <span class="intel-meta-sep">•</span>
+            <span class="intel-meta-item"><strong>BESTEMMING:</strong> ${escapeHtml(targetLabel)}</span>
+            <span class="intel-meta-sep">•</span>
+            <span class="intel-meta-item"><strong>TIJD:</strong> ${timeStr}</span>
+          </div>
+          <div class="intel-popup-badge-row">
+            <span class="intel-popup-tag ${catClass}">${catBadge}</span>
+            ${
+              m.locationName
+                ? `<span class="intel-popup-loc-pill">📍 ${escapeHtml(m.locationName)}</span>`
+                : ""
+            }
+          </div>
+          <div class="intel-popup-content">
+            ${escapeHtml(m.text || "")}
+          </div>
+        </div>
+        <div class="intel-popup-actions">
+          <button type="button" class="btn btn-primary intel-popup-confirm-btn">
+            <span>⚡ BEVESTIG ONTVANGST</span>
+            <span class="intel-btn-subtext">${remainingCount > 1 ? "(VOLGENDE BERICHT &rarr;)" : "(SLUITEN)"}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    backdrop.classList.add("active");
+    playIntelChime(category);
+
+    const confirmBtn = backdrop.querySelector(".intel-popup-confirm-btn");
+    const dismissCurrent = () => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.2);
+        }
+      } catch (_) {}
+
+      markIntelSeen(`intel_msg_seen_${m.eventId || m.ts}`);
+      intelQueue.shift();
+
+      if (intelQueue.length > 0) {
+        showNextIntel();
+      } else {
+        backdrop.classList.remove("active");
+        isIntelModalOpen = false;
+      }
+    };
+
+    confirmBtn.onclick = dismissCurrent;
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) dismissCurrent();
+    };
+  }
+
+  function checkIntelPopups(state) {
+    if (typeof window === "undefined" || !document.body) return;
+    if (window.location.pathname.includes("hq-dashboard")) return;
+
+    const seenIntel = getSeenIntelSet();
+    const activeAgentId = getActiveAgentId();
+    const activePlayer = activeAgentId
+      ? (state.allPlayers || []).find((p) => p.id === activeAgentId)
+      : null;
+    const now = Date.now();
+
+    const messages = state.allMessages || [];
+    let added = false;
+
+    messages.forEach((m) => {
+      if (!m || !m.text) return;
+      const seenKey = `intel_msg_seen_${m.eventId || m.ts}`;
+      if (seenIntel.has(seenKey)) return;
+
+      // Alleen berichten tonen die recent zijn verzonden (laatste 30 minuten)
+      if (m.ts && now - m.ts > 30 * 60 * 1000) return;
+
+      let isTarget = false;
+      let targetLabel = "ALLE AGENTEN (BROADCAST)";
+
+      if (m.targetType === "all") {
+        isTarget = true;
+        targetLabel = "ALLE AGENTEN (BROADCAST)";
+      } else if (m.targetType === "group") {
+        if (
+          activePlayer &&
+          (activePlayer.groupId === m.targetId || activePlayer.adminGroupId === m.targetId)
+        ) {
+          isTarget = true;
+          const grp = (state.allGroups || []).find((g) => g.id === m.targetId);
+          targetLabel = grp ? `TEAM ${grp.naam}` : `TEAM ${m.targetId}`;
+        }
+      } else if (m.targetType === "player") {
+        if (activeAgentId && m.targetId === activeAgentId) {
+          isTarget = true;
+          targetLabel = activePlayer ? `AGENT ${activePlayer.naam}` : `AGENT ${m.targetId}`;
+        }
+      }
+
+      if (isTarget) {
+        const alreadyQueued = intelQueue.some(
+          (item) => (item.msg.eventId || item.msg.ts) === (m.eventId || m.ts)
+        );
+        if (!alreadyQueued) {
+          intelQueue.push({ msg: m, targetLabel });
+          added = true;
+        }
       }
     });
+
+    if (added && !isIntelModalOpen) {
+      showNextIntel();
+    }
   }
 
   function notifyListeners() {
     const state = computeScoreState();
     checkBonusNotifications(state);
+    checkIntelPopups(state);
     listeners.forEach((cb) => {
       try {
         cb(state);
@@ -810,6 +1063,8 @@ const ScoreService = (() => {
   }
 
   function startRealtimeSync() {
+    if (isSyncing) return;
+    isSyncing = true;
     loadLocalCache();
     notifyListeners();
     fetchCloudHistory();
@@ -918,6 +1173,14 @@ const ScoreService = (() => {
   }
 
   async function resetAllScores(resetGroups = false, resetDisabled = false) {
+    try {
+      localStorage.removeItem(SEEN_INTEL_KEY);
+      intelQueue = [];
+      if (typeof document !== "undefined") {
+        const backdrop = document.getElementById("jb-intel-popup-backdrop");
+        if (backdrop) backdrop.classList.remove("active");
+      }
+    } catch (_) {}
     return publishEvent({
       type: "reset",
       resetGroups: Boolean(resetGroups),
@@ -1183,6 +1446,18 @@ const ScoreService = (() => {
     openPhotoLightbox,
     postBoardMessage,
     deleteBoardMessage,
-    refresh: fetchCloudHistory
+    refresh: fetchCloudHistory,
+    triggerIntelPopup: (msg, targetLabel) => {
+      intelQueue.push({ msg, targetLabel: targetLabel || "ALLE AGENTEN (BROADCAST)" });
+      if (!isIntelModalOpen) showNextIntel();
+    }
   };
 })();
+
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    try {
+      ScoreService.startRealtimeSync();
+    } catch (_) {}
+  }, 60);
+}

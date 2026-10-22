@@ -473,18 +473,42 @@
         </button>
       </div>
 
-      <!-- Algemeen Bericht naar Iedereen sturen -->
-      <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; min-width: 280px; justify-content: flex-end;" autocomplete="off">
+      <!-- Live Notificatie / Intel Bericht naar Spelers of Groepen sturen (verschijnt als popup) -->
+      <form id="gm-broadcast-form" style="display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; min-width: 320px; justify-content: flex-end;" autocomplete="off">
+        <select
+          id="gm-broadcast-target"
+          class="admin-input"
+          style="margin-bottom: 0; width: auto; max-width: 195px; font-size: 0.78rem; padding: 0.48rem 0.65rem; background: #0b111a; border-color: var(--accent); color: var(--accent); font-weight: 700;"
+        >
+          <option value="all">🌐 Iedereen (Broadcast)</option>
+          <optgroup label="Groepen / Teams" id="gm-broadcast-target-groups">
+            <!-- Dynamisch gevuld -->
+          </optgroup>
+          <optgroup label="Individuele Agenten" id="gm-broadcast-target-players">
+            <!-- Dynamisch gevuld -->
+          </optgroup>
+        </select>
+
+        <select
+          id="gm-broadcast-category"
+          class="admin-input"
+          style="margin-bottom: 0; width: auto; max-width: 140px; font-size: 0.78rem; padding: 0.48rem 0.65rem; background: #0b111a; border-color: #334155; color: #e2e8f0;"
+        >
+          <option value="tip">💡 Tactische Tip</option>
+          <option value="alert">🚨 Spoedinstructie</option>
+          <option value="bonus">⭐ Bonusmissie</option>
+        </select>
+
         <input
           type="text"
           id="gm-broadcast-input"
           class="admin-input"
-          placeholder="📡 Stuur live HQ-bericht of tip naar ALLE spelers tegelijk..."
-          style="margin-bottom: 0; flex: 1; min-width: 210px; font-size: 0.82rem; padding: 0.48rem 0.75rem;"
+          placeholder="Typ HQ-instructie (verschijnt direct als popup bij ontvanger)..."
+          style="margin-bottom: 0; flex: 1; min-width: 220px; font-size: 0.82rem; padding: 0.48rem 0.75rem;"
           required
         />
-        <button type="submit" class="btn btn-primary" style="padding: 0.48rem 0.9rem; font-size: 0.76rem;">
-          Zend naar Iedereen
+        <button type="submit" class="btn btn-primary" style="padding: 0.48rem 0.95rem; font-size: 0.76rem; font-weight: 700;">
+          ⚡ Zend Notificatie
         </button>
       </form>
     </section>
