@@ -1356,6 +1356,9 @@ const ScoreService = (() => {
     locationId = "",
     locationName = ""
   ) {
+    if (file && file.size > 18 * 1024 * 1024) {
+      throw new Error("Bestand is te groot (max 18 MB)");
+    }
     const isVideo = Boolean(file && file.type && file.type.startsWith("video/"));
     let blob = file;
     let finalPhotoUrl = "";
@@ -1398,6 +1401,10 @@ const ScoreService = (() => {
       } catch (e) {
         console.warn("Cloud media-upload waarschuwing, gebruikt lokale dataUrl:", e);
       }
+    }
+
+    if (isVideo && !finalPhotoUrl.startsWith("http") && finalPhotoUrl.length > 400000) {
+      throw new Error("Video upload naar de cloud mislukt. Stuur deze video door naar Gamemaster Vicce via WhatsApp!");
     }
 
     return publishEvent({

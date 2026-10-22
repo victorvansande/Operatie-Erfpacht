@@ -407,6 +407,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <button type="button" class="btn-msg-p" title="Stuur directe HQ-notificatie popup naar ${p.naam}" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid #38bdf8; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; transition: all 0.15s ease;">
             💬 Bericht
           </button>
+          <button type="button" class="btn-pts-p" title="Ken bonuspunten toe aan ${p.naam}" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--amber); background: rgba(245, 158, 11, 0.15); color: var(--amber); transition: all 0.15s ease;">
+            ⭐ +PT
+          </button>
           ${
             !isOff && !isUnlocked
               ? `<button type="button" class="force-unlock-p-btn" title="Ontgrendel speler direct handmatig" style="padding: 0.32rem 0.5rem; font-size: 0.68rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid var(--accent); background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">⚡ Login</button>`
@@ -452,6 +455,26 @@ document.addEventListener("DOMContentLoaded", () => {
             broadcastInput.scrollIntoView({ behavior: "smooth", block: "center" });
             broadcastInput.focus();
           }
+        });
+      }
+
+      const ptsBtn = chip.querySelector(".btn-pts-p");
+      if (ptsBtn) {
+        ptsBtn.addEventListener("click", async () => {
+          const val = window.prompt(
+            `Hoeveel punten wil je toekennen aan ${p.naam}? (Gebruik een minteken voor aftrek, bv. -25)`,
+            "50"
+          );
+          if (val === null) return;
+          const delta = parseInt(val, 10);
+          if (isNaN(delta) || delta === 0) return;
+          const reason =
+            window.prompt(
+              `Reden voor ${delta > 0 ? "+" : ""}${delta} PT aan ${p.naam}:`,
+              "Bonus Gamemaster HQ"
+            ) || "Handmatige aanpassing HQ";
+          await ScoreService.addBonusPoints(p.id, delta, reason);
+          showToast(`${delta > 0 ? "+" : ""}${delta} PT toegekend aan ${p.naam}!`);
         });
       }
 

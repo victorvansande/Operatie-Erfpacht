@@ -147,9 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const isCloudUnlocked = Boolean(latestPlayerInfo && latestPlayerInfo.unlocked);
     const unlocked =
       playerId === "vicce" ||
-      sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
+      isCloudUnlocked ||
+      sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
+      localStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
     if (unlocked) {
       if (lockScreen) lockScreen.style.display = "none";
       if (contentEl) contentEl.classList.add("unlocked");
@@ -176,6 +179,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (entered && (entered === expected || (master && entered === master))) {
         sessionStorage.setItem(`dossier_unlocked_${playerId}`, "true");
+        try {
+          localStorage.setItem(`dossier_unlocked_${playerId}`, "true");
+          localStorage.setItem("jb_active_agent_id", playerId);
+        } catch (_) {}
         lockError.textContent = "";
 
         if (entered === expected && typeof ScoreService !== "undefined") {
@@ -196,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (lockBtn) {
     lockBtn.addEventListener("click", () => {
       sessionStorage.removeItem(`dossier_unlocked_${playerId}`);
+      localStorage.removeItem(`dossier_unlocked_${playerId}`);
       window.location.href = "../index.html";
     });
   }
@@ -705,6 +713,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!photoInput.files || !photoInput.files[0]) return;
       const file = photoInput.files[0];
 
+      if (file.size > 18 * 1024 * 1024) {
+        photoStatus.textContent = "⚠️ Bestand is te groot (max 18 MB). Maak een kortere video (10-15s) of stuur via WhatsApp naar Gamemaster Vicce!";
+        return;
+      }
+
       photoSubmit.disabled = true;
       photoSubmit.textContent = "Uploaden...";
       photoStatus.textContent = `Bewijs wordt verstuurd naar HQ...`;
@@ -769,9 +782,13 @@ document.addEventListener("DOMContentLoaded", () => {
         ${mediaHtml}
         <div class="photo-card-body">
           <div style="color: var(--amber); font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;">
-            Door ${ph.playerName} ${ph.groupName ? `(${ph.groupName})` : ""} // ${timeStr}
+            Door ${ph.playerName} ${ph.groupName ? `(${ph.groupName})` : ""}
           </div>
-          ${ph.caption ? `<div class="photo-card-caption">${ph.caption}</div>` : ""}
+          <div style="color: #fff; font-weight: 600; font-size: 0.82rem; margin-top: 0.15rem;">${ph.caption || "Bonus bewijsmateriaal"}</div>
+          <div class="photo-card-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">${timeStr}</span>
+            <button type="button" class="text-btn delete-bonus-photo-btn" style="font-size: 0.72rem; color: var(--danger); background: none; border: none; cursor: pointer; text-decoration: underline;">Verwijder</button>
+          </div>
         </div>
       `;
 
@@ -785,6 +802,16 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
       }
+
+      const delBtn = card.querySelector(".delete-bonus-photo-btn");
+      if (delBtn) {
+        delBtn.addEventListener("click", async () => {
+          if (window.confirm("Wil je dit bewijsmateriaal verwijderen?")) {
+            await ScoreService.deletePlayerPhoto(ph.eventId);
+          }
+        });
+      }
+
       gallery.appendChild(card);
     });
   }
@@ -836,7 +863,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b1.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
-            <span class="folder-icon">📁</span>
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
             <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #01:</span>
             <span>Onderschepte SMS Burner-Phone</span>
           </div>
@@ -996,7 +1023,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b2.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
-            <span class="folder-icon">📁</span>
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
             <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #02:</span>
             <span>Operatie Ad Fundum (Café Infiltratie)</span>
           </div>
@@ -1090,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b3.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
-            <span class="folder-icon">📁</span>
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
             <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #03:</span>
             <span>Operatie Snack Attack (Red Gamemaster Vicce)</span>
           </div>
@@ -1183,7 +1210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b4.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
-            <span class="folder-icon">📁</span>
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
             <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #04:</span>
             <span>Operatie Volksstem (Overtuig de Derde Partij)</span>
           </div>
@@ -1283,7 +1310,7 @@ document.addEventListener("DOMContentLoaded", () => {
       b5.innerHTML = `
         <button type="button" class="location-folder-header">
           <div class="location-folder-title">
-            <span class="folder-icon">📁</span>
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
             <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #05:</span>
             <span>Operatie Speurhond (K9 Rekrutering)</span>
           </div>
@@ -1406,11 +1433,11 @@ document.addEventListener("DOMContentLoaded", () => {
       <!-- MAP 0: INTRO / BRIEFING (ALTIJD ONTGRENDELD, GEEN APARTE PIN) -->
       <div id="briefing-folder-container"></div>
 
-      <!-- BONUSDOSSIERS (5 GEHEIME NEVENMISSIES) -->
-      <div id="bonus-folders-container"></div>
-
       <!-- DE 6 LOCATIE-MAPPEN (UNIEKE ROUTE PER GROEP) -->
       <div id="locations-list" class="locations-list"></div>
+
+      <!-- BONUSDOSSIERS (5 GEHEIME NEVENMISSIES ONDER DE LOCATIES) -->
+      <div id="bonus-folders-container"></div>
     `;
 
     contentEl.appendChild(section);
@@ -1930,6 +1957,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         if (!photoInput.files || !photoInput.files[0]) return;
         const file = photoInput.files[0];
+
+        if (file.size > 18 * 1024 * 1024) {
+          photoStatus.textContent = "⚠️ Bestand is te groot (max 18 MB). Maak een kortere video (10-15s) of stuur via WhatsApp naar Gamemaster Vicce!";
+          return;
+        }
 
         photoSubmit.disabled = true;
         photoSubmit.textContent = "Uploaden...";

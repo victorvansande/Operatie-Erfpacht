@@ -68,7 +68,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function isDeviceUnlocked(playerId) {
     if (playerId === "vicce") return true;
-    return sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
+    const isLocal =
+      sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" ||
+      localStorage.getItem(`dossier_unlocked_${playerId}`) === "true";
+    if (isLocal) return true;
+    const pInfo =
+      latestScoreState &&
+      latestScoreState.playerScoresMap &&
+      latestScoreState.playerScoresMap.get(playerId);
+    return Boolean(pInfo && pInfo.unlocked);
   }
 
   function formatTime(ts) {
@@ -593,6 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (entered && (entered === expected || (master && entered === master))) {
       sessionStorage.setItem(`dossier_unlocked_${selectedPlayer.id}`, "true");
       try {
+        localStorage.setItem(`dossier_unlocked_${selectedPlayer.id}`, "true");
         localStorage.setItem("jb_active_agent_id", selectedPlayer.id);
         sessionStorage.setItem("jb_active_agent_id", selectedPlayer.id);
       } catch (_) {}
