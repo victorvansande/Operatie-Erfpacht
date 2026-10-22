@@ -61,8 +61,8 @@ const SPEL_CONFIG = {
       punten: 75,
       codewoord: "hangjongeren",
       toetsaanslagen: "44 - 2 - 66 - 4 - 5 - 666 - 66 - 4 - 33 - 777 - 33 - 66",
-      verhaal: "Onze SIGINT-afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige communicatie géén traceerbare smartphones gebruikt, maar een oude, ongeregistreerde burner-phone (een retro Nokia met numerieke fysieke druktoetsen). Onze antenne heeft zojuist een uitgaande SMS kunnen onderscheppen die verstuurd werd via het klassieke T9 multi-tap toetsenbord.",
-      instructie: "Ontcijfer het onderschepte woord via de T9 multi-tap toetsen en voer het hieronder in om het direct naar Gamemaster HQ te sturen voor bonuspunten!"
+      verhaal: "Onze SIGINT-afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige communicatie géén traceerbare smartphones gebruikt, maar een oude, ongeregistreerde burner-phone (een retro Nokia met numerieke fysieke druktoetsen). Onze antenne heeft zojuist een uitgaande SMS-toetsenreeks van dit toestel kunnen onderscheppen.",
+      instructie: "Ontcijfer het onderschepte woord en voer het hieronder in om het direct naar Gamemaster HQ te sturen voor bonuspunten!"
     },
     {
       id: "ad_fundum",
@@ -101,8 +101,8 @@ const SPEL_CONFIG = {
       subtitel: "K9 TACTICAL SQUAD // VIERVOETIGE INLICHTINGENDIENST",
       punten: 50,
       verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
-      instructie: "Vind in de stad een potentiële viervoetige kandidaat-speurhond (een hond die uitgelaten wordt, op een terras ligt of waakzaam achter een vensterbank zit). Neem een foto met deze kandidaat als officieel sollicitatiedossier voor Gamemaster HQ!",
-      uploadHint: "Upload hier de foto met de potentiële kandidaat-speurhond (+50 pt)."
+      instructie: "HQ zoekt nog een speurhond. Vind een geschikte kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster HQ!",
+      uploadHint: "Upload hier de foto met de kandidaat-speurhond (+50 pt)."
     }
   ],
 

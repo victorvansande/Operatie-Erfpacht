@@ -842,7 +842,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="location-folder-badges">
             <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
-              ⭐ T9 CODEWOORD (+75 PT)
+              ⭐ DECRYPTIE (+75 PT)
             </span>
             <span class="loc-lock-badge b1-status-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
               ${isBurnerSolved ? "✅ VOLBRACHT (+75 PT)" : "🔓 OPENSTAAND"}
@@ -859,7 +859,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div>
                   <div class="intel-doc-dept">SIGINT COMMUNICATIE-AFLUISTERING // ARCHIEF HERENTALS</div>
                   <div class="intel-doc-main-title">ONDERSCHEPTE BURNER-PHONE SMS</div>
-                  <div class="intel-doc-sub" style="color: var(--amber);">KLASSIEK T9 MULTI-TAP PROTOCOL // CODENAAM: RETRO-CELL</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">AFGELUISTERDE TRANSMISSIE // CODENAAM: RETRO-CELL</div>
                 </div>
               </div>
               <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
@@ -872,24 +872,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 <strong>INTERCEPTIE-VERSLAG:</strong> Onze afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige afspraken géén traceerbare smartphones of officiële e-mails gebruikt, maar een oude, anonieme <em>burner-phone</em> (een fysieke Nokia met numerieke druktoetsen).
               </p>
               <p>
-                Zojuist heeft onze antenne een uitgaande SMS kunnen onderscheppen die verstuurd werd via het klassieke <strong>T9 multi-tap toetsenbord</strong>.
+                Zojuist heeft onze antenne een uitgaande SMS-toetsenreeks van dit toestel kunnen onderscheppen:
               </p>
 
               <div class="retro-burner-phone-box">
                 <div class="burner-screen-top">
                   <span>📟 NOKIA BUFFER // INTERCEPTED SMS-STREAM</span>
-                  <span>MULTI-TAP T9 PROTOCOL</span>
+                  <span>BURST-TRANSMISSION</span>
                 </div>
                 <div class="burner-keystrokes">
                   44 &bull; 2 &bull; 66 &bull; 4 &bull; 5 &bull; 666 &bull; 66 &bull; 4 &bull; 33 &bull; 777 &bull; 33 &bull; 66
-                </div>
-                <div class="burner-hint">
-                  💡 <strong>DECODEER-HANDLEIDING (Cijfertoetsen op een klassieke GSM):</strong><br>
-                  <span style="color: #94a3b8;">
-                    <code>[2: A-B-C]</code> &bull; <code>[3: D-E-F]</code> &bull; <code>[4: G-H-I]</code> &bull; <code>[5: J-K-L]</code><br>
-                    <code>[6: M-N-O]</code> &bull; <code>[7: P-Q-R-S]</code> &bull; <code>[8: T-U-V]</code> &bull; <code>[9: W-X-Y-Z]</code>
-                  </span><br>
-                  <em>(Voorbeeld: toets 4 tweemaal = <strong>H</strong>, toets 2 eenmaal = <strong>A</strong>, toets 6 tweemaal = <strong>N</strong>, ...)</em>
                 </div>
               </div>
 
@@ -1327,10 +1319,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <strong>CAPACITEITSTEKORT OP HQ:</strong> De inlichtingendienst kampt met een acuut gebrek aan getrainde speurhonden om geursporen van het stadsbestuur te volgen en de geheime documenten op HQ te bewaken.
               </p>
               <p>
-                <strong>DE OPDRACHT:</strong> Vind tijdens jullie tocht door Herentals een potentiële <strong>kandidaat-speurhond</strong> (een hond die uitgelaten wordt, op een terras ligt of waakzaam achter een vensterbank zit).
-              </p>
-              <p>
-                <strong>HET BEWIJS:</strong> Neem een undercover foto met deze viervoetige kandidaat als officieel sollicitatiedossier voor Gamemaster Vicce!
+                <strong>DE OPDRACHT:</strong> HQ zoekt nog een speurhond. Vind een mogelijke kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster Vicce!
               </p>
             </div>
 
