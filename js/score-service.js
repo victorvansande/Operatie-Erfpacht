@@ -504,12 +504,14 @@ const ScoreService = (() => {
         ? `<span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber); background: rgba(245, 158, 11, 0.15); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--amber);">Bericht 1 van ${remainingCount}</span>`
         : "";
 
+    const isNextLocAlert = Boolean(m.text && m.text.includes("VOLGENDE LOCATIE ONTGRENDELD"));
+
     backdrop.innerHTML = `
-      <div class="intel-popup-box intel-theme-${catClass}">
+      <div class="intel-popup-box intel-theme-${isNextLocAlert ? 'alert' : catClass}" style="${isNextLocAlert ? 'border-color: #10b981; box-shadow: 0 0 45px rgba(16, 185, 129, 0.45);' : ''}">
         <div class="intel-popup-header">
           <div class="intel-popup-beacon">
-            <span class="intel-beacon-dot"></span>
-            <span class="intel-header-title">${headerTitle}</span>
+            <span class="intel-beacon-dot" style="${isNextLocAlert ? 'background:#10b981; box-shadow:0 0 10px #10b981;' : ''}"></span>
+            <span class="intel-header-title">${isNextLocAlert ? '🔓 HOOFDKWARTIER TRANSMISSIE // VOLGENDE LOCATIE VRIJGEGEVEN' : headerTitle}</span>
           </div>
           ${queueIndicator}
         </div>
@@ -522,20 +524,29 @@ const ScoreService = (() => {
             <span class="intel-meta-item"><strong>TIJD:</strong> ${timeStr}</span>
           </div>
           <div class="intel-popup-badge-row">
-            <span class="intel-popup-tag ${catClass}">${catBadge}</span>
+            <span class="intel-popup-tag ${isNextLocAlert ? 'alert' : catClass}" style="${isNextLocAlert ? 'background:rgba(16,185,129,0.2); color:#34d399; border-color:#10b981;' : ''}">${isNextLocAlert ? '🎯 VOLGENDE BESTEMMING VRIJGEGEVEN' : catBadge}</span>
             ${
               m.locationName
-                ? `<span class="intel-popup-loc-pill">📍 ${escapeHtml(m.locationName)}</span>`
+                ? `<span class="intel-popup-loc-pill" style="border-color:#10b981; color:#34d399;">📍 ${escapeHtml(m.locationName)}</span>`
                 : ""
             }
           </div>
-          <div class="intel-popup-content">
-            ${escapeHtml(m.text || "")}
-          </div>
+          ${
+            isNextLocAlert
+              ? `
+                <div style="background: rgba(16, 185, 129, 0.16); border: 2.5px solid #10b981; border-radius: 10px; padding: 1.25rem 1rem; text-align: center; margin: 0.5rem 0; box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);">
+                  <div style="font-size: 2.4rem; margin-bottom: 0.4rem;">🔓🎯</div>
+                  <div style="font-family: var(--font-mono); font-size: 1.12rem; font-weight: 900; color: #34d399; letter-spacing: 0.04em; line-height: 1.45; text-transform: uppercase;">
+                    ${escapeHtml(m.text)}
+                  </div>
+                </div>
+              `
+              : `<div class="intel-popup-content">${escapeHtml(m.text || "")}</div>`
+          }
         </div>
         <div class="intel-popup-actions">
-          <button type="button" class="btn btn-primary intel-popup-confirm-btn">
-            <span>⚡ BEVESTIG ONTVANGST</span>
+          <button type="button" class="btn btn-primary intel-popup-confirm-btn" style="${isNextLocAlert ? 'background:#10b981; border-color:#10b981; color:#05080d; font-weight:800;' : ''}">
+            <span>${isNextLocAlert ? '⚡ GOED BEGREPEN // BEKIJK ONTGRENDELDE BESTEMMING &rarr;' : '⚡ BEVESTIG ONTVANGST'}</span>
             <span class="intel-btn-subtext">${remainingCount > 1 ? "(VOLGENDE BERICHT &rarr;)" : "(SLUITEN)"}</span>
           </button>
         </div>
@@ -566,6 +577,15 @@ const ScoreService = (() => {
 
       markIntelSeen(`intel_msg_seen_${m.eventId || m.ts}`);
       intelQueue.shift();
+
+      if (isNextLocAlert) {
+        const locList = document.getElementById("locations-list");
+        if (locList) {
+          setTimeout(() => {
+            locList.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 80);
+        }
+      }
 
       if (intelQueue.length > 0) {
         showNextIntel();
@@ -673,6 +693,7 @@ const ScoreService = (() => {
     const bonuses = new Map(); // playerId -> { totalDelta, history: [] }
     const playerGroups = new Map(); // playerId -> groupId (bv. "Groep Blauw")
     const groupCustomNames = new Map(); // groupId -> customName (bv. "De Wolven")
+    const groupRevealedSteps = new Map(); // groupId -> revealedStepCount (1..6)
     const disabledPlayers = new Set(); // playerIds die niet meedoen
     const photosMap = new Map(); // eventId -> photo object
     const messagesMap = new Map(); // eventId -> message board object
@@ -689,6 +710,7 @@ const ScoreService = (() => {
         photosMap.clear();
         messagesMap.clear();
         playerLocUnlocks.clear();
+        groupRevealedSteps.clear();
         bonusSolves.length = 0;
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
@@ -750,6 +772,12 @@ const ScoreService = (() => {
           playerGroups.set(ev.playerId, norm);
         } else {
           playerGroups.delete(ev.playerId);
+        }
+      } else if (ev.type === "set_group_revealed_step" && ev.groupId) {
+        const normG = normalizeGroupId(ev.groupId);
+        if (normG) {
+          const step = Math.min(6, Math.max(1, Number(ev.stepNumber) || 1));
+          groupRevealedSteps.set(normG, step);
         }
       } else if (ev.type === "rename_group" && ev.groupId) {
         const norm = normalizeGroupId(ev.groupId);
@@ -813,7 +841,6 @@ const ScoreService = (() => {
 
     // Alleen actieve veldspelers (niet-gamemaster, niet-tester en niet-uitgeschakeld) tellen mee
     const isStaffPlayer = (id) => {
-      if (id === "vicce" || id === "lander") return true;
       const sp = SPEL_CONFIG.spelers.find((s) => s.id === id);
       return Boolean(sp && (sp.isGamemaster || sp.isExternalTester));
     };
@@ -984,6 +1011,11 @@ const ScoreService = (() => {
 
     // Verrijk elke groep in adminGroupsMap met gedeelde geopende locaties & ingezonden bewijsstukken
     adminGroupsMap.forEach((grp) => {
+      const normG = normalizeGroupId(grp.id);
+      // Elke groep start standaard op stap 1 (hun 1e locatie is direct zichtbaar & open!)
+      const revealedCount = groupRevealedSteps.get(normG) || 1;
+      grp.revealedStepCount = revealedCount;
+
       const sharedLocs = new Set();
       grp.leden.forEach((member) => {
         const mSet = playerLocUnlocks.get(member.id);
@@ -991,42 +1023,44 @@ const ScoreService = (() => {
           mSet.forEach((locId) => sharedLocs.add(locId));
         }
       });
+
+      // Zorg dat alle locaties tot en met revealedStepCount direct in sharedLocs zitten!
+      (grp.orderedLocations || []).forEach((loc) => {
+        loc.isRevealed = loc.stepNr <= revealedCount;
+        if (loc.isRevealed) {
+          sharedLocs.add(loc.id);
+        }
+      });
+
       const memberIds = new Set(grp.leden.map((m) => m.id));
       const grpPhotos = allPhotos.filter((ph) => memberIds.has(ph.playerId));
 
       grp.unlockedLocations = sharedLocs;
       grp.photos = grpPhotos;
 
-      // Bepaal waar de groep nu zit op hun route (laatst geopende map zonder upload, of eerstvolgende vergrendelde map)
-      let activeLoc = null;
-      let completedCount = 0;
-      (grp.orderedLocations || []).forEach((loc) => {
-        const isOpen = sharedLocs.has(loc.id);
-        const hasUpload = grpPhotos.some((ph) => ph.locationId === loc.id);
-        if (isOpen && hasUpload) {
-          completedCount++;
-        } else if (isOpen && !activeLoc) {
-          activeLoc = { ...loc, status: "bezig" };
-        }
-      });
-      if (!activeLoc && grp.orderedLocations && grp.orderedLocations.length > 0) {
-        const nextLocked = grp.orderedLocations.find((l) => !sharedLocs.has(l.id));
-        if (nextLocked) {
-          activeLoc = { ...nextLocked, status: "onderweg" };
-        } else {
-          activeLoc = {
-            ...grp.orderedLocations[grp.orderedLocations.length - 1],
-            status: "voltooid"
-          };
-        }
-      }
-      grp.completedLocationsCount = completedCount;
-      grp.currentLocation = activeLoc;
+      // Volgende locatie om te ontgrendelen
+      const nextLoc = (grp.orderedLocations || []).find((l) => l.stepNr === revealedCount + 1) || null;
+      grp.nextLocationToReveal = nextLoc;
+
+      // Huidige actieve locatie
+      const currentLoc = (grp.orderedLocations || []).find((l) => l.stepNr === revealedCount) || null;
+      grp.currentLocation = currentLoc ? { ...currentLoc, status: revealedCount >= 6 ? "voltooid" : "bezig" } : null;
+      grp.completedLocationsCount = (grp.orderedLocations || []).filter((l) => {
+        return sharedLocs.has(l.id) && grpPhotos.some((ph) => ph.locationId === l.id);
+      }).length;
     });
 
     // Deel map-inhoud (foto's + geopende locaties + message board) én locatie-volgorde met iedereen van hetzelfde team zodra groepen onthuld zijn!
     allPlayerScores.forEach((p) => {
-      p.orderedLocations = getOrderedLocationsForGroup(p.groupId);
+      const pGrpId = p.groupId || p.adminGroupId;
+      const normPG = pGrpId ? normalizeGroupId(pGrpId) : null;
+      const pRevealedStepCount = normPG ? (groupRevealedSteps.get(normPG) || 1) : 1;
+      p.groupRevealedStepCount = pRevealedStepCount;
+
+      p.orderedLocations = getOrderedLocationsForGroup(p.groupId || p.adminGroupId);
+      (p.orderedLocations || []).forEach((loc) => {
+        loc.isRevealed = loc.stepNr <= pRevealedStepCount;
+      });
 
       // Filter berichten die voor deze speler of zijn/haar team bestemd zijn
       p.messages = allMessages.filter((m) => {
@@ -1041,11 +1075,16 @@ const ScoreService = (() => {
         return false;
       });
 
+      const sharedLocs = new Set();
+      // Voeg alle locaties tot en met pRevealedStepCount toe
+      (p.orderedLocations || []).forEach((loc) => {
+        if (loc.isRevealed) sharedLocs.add(loc.id);
+      });
+
       if (!p.disabled && p.groupId && adminGroupsMap.has(p.groupId)) {
         const grp = adminGroupsMap.get(p.groupId);
         p.groupMembers = grp.leden.map((m) => m.naam);
 
-        const sharedLocs = new Set();
         grp.leden.forEach((member) => {
           const mSet = playerLocUnlocks.get(member.id);
           if (mSet) {
@@ -1061,7 +1100,9 @@ const ScoreService = (() => {
         );
       } else {
         p.groupMembers = [];
-        p.sharedUnlockedLocations = new Set(playerLocUnlocks.get(p.id) || []);
+        const mSet = playerLocUnlocks.get(p.id);
+        if (mSet) mSet.forEach((id) => sharedLocs.add(id));
+        p.sharedUnlockedLocations = sharedLocs;
         p.sharedPhotos = allPhotos.filter((ph) => ph.playerId === p.id);
         p.bonusSolves = bonusSolves.filter(
           (s) => s.playerId === p.id && s.status === "correct"
@@ -1762,6 +1803,67 @@ const ScoreService = (() => {
   }
 
   /**
+   * Onthul de volgende locatie voor een specifieke groep en stuur een schermvullende alert
+   * naar alle leden van die groep:
+   * "GOED WERK. VOLGENDE LOCATIE ONTGRENDELD. CHECK JULLIE PERSOONLIJKE FILES OM TE KIJKEN NAAR WAAR JULLIE MOETEN."
+   */
+  async function revealNextLocationForGroup(groupId, customMessage) {
+    const state = computeScoreState();
+    const grp = (state.adminGroupsList || state.groupsList || []).find(
+      (g) => normalizeGroupId(g.id) === normalizeGroupId(groupId)
+    );
+    if (!grp) return state;
+
+    const curStep = grp.revealedStepCount || 1;
+    const nextStep = Math.min(6, curStep + 1);
+    const nextLoc = (grp.orderedLocations || []).find((l) => l.stepNr === nextStep);
+
+    // 1. Publiceer event om de progressie in de cloud/state op te slaan
+    await publishEvent({
+      type: "set_group_revealed_step",
+      groupId: grp.id,
+      stepNumber: nextStep,
+      locationId: nextLoc ? nextLoc.id : null,
+      locationName: nextLoc ? nextLoc.naam : ""
+    });
+
+    // 2. Publiceer een duidelijke pop-up melding specifiek voor alle leden van deze groep
+    const msgText =
+      customMessage ||
+      "GOED WERK. VOLGENDE LOCATIE ONTGRENDELD. CHECK JULLIE PERSOONLIJKE FILES OM TE KIJKEN NAAR WAAR JULLIE MOETEN.";
+    await postBoardMessage({
+      targetType: "group",
+      targetId: grp.id,
+      text: msgText,
+      category: "alert",
+      locationId: nextLoc ? nextLoc.id : null,
+      locationName: nextLoc ? nextLoc.naam : ""
+    });
+
+    return computeScoreState();
+  }
+
+  /**
+   * Stel het aantal onthulde locaties in voor een groep (1..6)
+   */
+  async function setGroupRevealedStep(groupId, stepNumber) {
+    const step = Math.min(6, Math.max(1, Number(stepNumber) || 1));
+    await publishEvent({
+      type: "set_group_revealed_step",
+      groupId,
+      stepNumber: step
+    });
+    return computeScoreState();
+  }
+
+  /**
+   * Onthul direct alle 6 locaties voor een groep (bv. nood-override of leiding2026)
+   */
+  async function unlockAllLocationsForGroup(groupId) {
+    return setGroupRevealedStep(groupId, 6);
+  }
+
+  /**
    * Geef bonuspunten aan elk lid van een specifiek team tegelijk.
    */
   async function addGroupBonusPoints(groupId, delta, reason = "Team bonus") {
@@ -1939,6 +2041,9 @@ const ScoreService = (() => {
     getOrderedLocationsForGroup,
     recordUnlock,
     unlockLocation,
+    revealNextLocationForGroup,
+    setGroupRevealedStep,
+    unlockAllLocationsForGroup,
     addBonusPoints,
     addGroupBonusPoints,
     revokePlayerUnlock,

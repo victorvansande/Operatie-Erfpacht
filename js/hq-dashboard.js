@@ -423,16 +423,14 @@ document.addEventListener("DOMContentLoaded", () => {
     attendanceChips.innerHTML = "";
 
     const all = state.allPlayers || [];
-    const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && !p.isExternalTester && p.id !== "vicce" && p.id !== "lander").length;
-    const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && !p.isExternalTester && p.id !== "vicce" && p.id !== "lander").length;
+    const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && !p.isExternalTester).length;
+    const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && !p.isExternalTester).length;
 
     if (attendanceCountsBadge) {
       attendanceCountsBadge.innerHTML = `
         <span style="color: var(--accent); font-weight: 700;">🟢 ${activeCount} Veldagenten Aanwezig</span>
         &nbsp;|&nbsp;
         <span style="color: ${inactiveCount > 0 ? "var(--danger)" : "var(--text-muted)"}; font-weight: 700;">🔴 ${inactiveCount} Afwezig</span>
-        &nbsp;|&nbsp;
-        <span style="color: #f59e0b; font-weight: 700;">★ 1 Gamemaster HQ</span>
       `;
     }
 
@@ -440,8 +438,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     all.forEach((p) => {
       const chip = document.createElement("div");
-      const isTester = p.isExternalTester || p.id === "lander";
-      const isStaff = p.isGamemaster || p.id === "vicce";
+      const isTester = Boolean(p.isExternalTester);
+      const isStaff = Boolean(p.isGamemaster);
 
       if (isStaff) {
         chip.className = "gm-attend-chip is-staff";
@@ -740,6 +738,24 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .join("");
 
+      const revStep = grp.revealedStepCount || 1;
+      const nextStepNr = Math.min(6, revStep + 1);
+      const nextLoc = (grp.orderedLocations || []).find((l) => l.stepNr === nextStepNr);
+      const nextLocName = nextLoc ? nextLoc.naam : `Locatie ${nextStepNr}`;
+
+      const revealBtnHtml =
+        revStep < 6
+          ? `
+            <button type="button" class="btn btn-primary gm-btn-reveal-next-loc" data-group-id="${grp.id}" style="width: 100%; margin: 0.65rem 0 0.5rem; padding: 0.72rem 1rem; font-weight: 800; font-size: 0.85rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #34d399; box-shadow: 0 0 15px rgba(16, 185, 129, 0.35); text-align: center; justify-content: center; cursor: pointer;">
+              🔓 ONTHUL VOLGENDE LOCATIE: Stap ${nextStepNr} (${nextLocName}) &rarr;
+            </button>
+          `
+          : `
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 6px; padding: 0.55rem 0.8rem; text-align: center; margin: 0.55rem 0 0.45rem; font-family: var(--font-mono); font-size: 0.75rem; color: #34d399; font-weight: 800;">
+              🏆 ALLE 6 LOCATIES ZIJN REEDS ONTGRENDELD VOOR ${grp.naam.toUpperCase()}
+            </div>
+          `;
+
       card.innerHTML = `
         <div class="gm-group-top">
           <div>
@@ -766,6 +782,9 @@ document.addEventListener("DOMContentLoaded", () => {
             ${grp.completedLocationsCount || 0} / 6 VOLTOOID
           </span>
         </div>
+
+        <!-- Knop om direct de volgende locatie te onthullen na verificatie bewijs -->
+        ${revealBtnHtml}
 
         <!-- De 6 locaties in hun specifieke groepsvolgorde -->
         <div class="gm-route-steps">
@@ -803,6 +822,17 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
         </form>
       `;
+
+      // Event: Onthul de volgende locatie voor deze groep en stuur een directe alert pop-up
+      const revealBtn = card.querySelector(".gm-btn-reveal-next-loc");
+      if (revealBtn) {
+        revealBtn.addEventListener("click", async () => {
+          revealBtn.disabled = true;
+          revealBtn.textContent = "Ontgrendelen & Melden...";
+          await ScoreService.revealNextLocationForGroup(grp.id);
+          showToast(`✓ Volgende locatie (${nextLocName}) ontgrendeld voor ${grp.naam}! Alert pop-up verzonden.`);
+        });
+      }
 
       // Event: Open een locatie-mapje op afstand voor dit team
       card.querySelectorAll("[data-unlock-loc]").forEach((btn) => {
@@ -1127,6 +1157,11 @@ document.addEventListener("DOMContentLoaded", () => {
             <button type="button" class="gm-chip-btn reward-upload-btn" data-pts="25" data-label="✓ +25 PT (OK)">✅ +25 Team</button>
             <button type="button" class="gm-chip-btn chip-amber reward-upload-btn" data-pts="50" data-label="✓ +50 PT (Bonus)">⭐ +50 Bonus</button>
             <button type="button" class="gm-chip-btn reward-upload-btn" data-pts="100" data-label="✓ +100 PT (Top)">🏆 +100 Top</button>
+            ${
+              ph.groupId
+                ? `<button type="button" class="gm-chip-btn gm-upload-approve-unlock-btn" style="background: rgba(16, 185, 129, 0.22); border-color: #10b981; color: #6ee7b7; font-weight: 700;" title="Keur goed (+25 PT) én ontgrendel direct de volgende locatie voor dit team">🔓 Keur goed + Volgende Locatie</button>`
+                : ""
+            }
           </div>
           <button type="button" class="text-btn delete-upload-btn" style="font-size:0.68rem; color:var(--danger);">Wis</button>
         </div>
@@ -1140,6 +1175,27 @@ document.addEventListener("DOMContentLoaded", () => {
             `${ph.groupName || ph.playerName} • 📍 ${ph.locationName || ""}`,
             ph.caption || ""
           );
+        });
+      }
+
+      const approveUnlockBtn = card.querySelector(".gm-upload-approve-unlock-btn");
+      if (approveUnlockBtn) {
+        approveUnlockBtn.addEventListener("click", async () => {
+          approveUnlockBtn.disabled = true;
+          if (ph.groupId) {
+            await ScoreService.addGroupBonusPoints(
+              ph.groupId,
+              25,
+              `Bewijs ${ph.locationName || ""} goedgekeurd`
+            );
+            await ScoreService.revealNextLocationForGroup(ph.groupId);
+            markUploadReviewed(ph.eventId, "✓ Goedgekeurd & Locatie Ontgrendeld");
+            renderUploadsStream(ScoreService.getState());
+            renderKPIs(ScoreService.getState());
+            showToast(
+              `✓ Bewijs goedgekeurd (+25 PT) én volgende locatie ontgrendeld voor ${ph.groupName || "deze groep"}!`
+            );
+          }
         });
       }
 
@@ -1258,7 +1314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!ok) return;
 
       await ScoreService.setDisabledPlayers([]);
-      showToast("✓ Alle 26 spelers staan weer op AANWEZIG (actief)!");
+      showToast(`✓ Alle ${SPEL_CONFIG.spelers.length} spelers staan weer op AANWEZIG (actief)!`);
     });
   }
 
@@ -1266,7 +1322,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnRandomGroups) {
     btnRandomGroups.addEventListener("click", async () => {
       const presentPlayers = SPEL_CONFIG.spelers.filter((s) => {
-        if (s.id === "vicce" || s.isGamemaster) return false;
+        if (s.isGamemaster || s.isExternalTester) return false;
         const sInfo = latestState.playerScoresMap.get(s.id);
         return !(sInfo && sInfo.disabled);
       });

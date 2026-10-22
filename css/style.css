@@ -2440,7 +2440,38 @@ a,
   .dossier-nav {
     margin-bottom: 1.15rem;
     gap: 0.5rem;
+    display: flex;
     flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .dossier-nav .back-link {
+    flex: 1 1 calc(50% - 0.35rem);
+    justify-content: center;
+    font-size: 0.76rem;
+    padding: 0.55rem 0.35rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .b1-submit-form,
+  .b-tap-submit-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .b1-submit-form input,
+  .b1-submit-form button,
+  .b-tap-submit-form input,
+  .b-tap-submit-form button {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .location-folder-header {
@@ -2711,6 +2742,18 @@ a,
   color: #0f172a;
   padding: 0.08rem 0.35rem;
   font-weight: 800;
+}
+
+.doc-tap-char {
+  font-weight: 900;
+  color: #0f172a;
+  background: rgba(245, 158, 11, 0.28);
+  border-bottom: 2.5px solid #b45309;
+  padding: 0 1.5px;
+  border-radius: 2px;
+  display: inline-block;
+  font-family: inherit;
+  letter-spacing: normal;
 }
 
 .intel-checklist-box {

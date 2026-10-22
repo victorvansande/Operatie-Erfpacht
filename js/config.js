@@ -69,6 +69,27 @@ const SPEL_CONFIG = {
       instructie: "Ontcijfer het onderschepte woord en voer het hieronder in om het direct naar Gamemaster HQ te sturen voor bonuspunten!"
     },
     {
+      id: "tap_therese",
+      type: "riddle",
+      titel: "GELEKT AUDIO-TRANSCRIPT // TAP GESPREK THÉRÈSE",
+      subtitel: "SIGINT TAP #4208 // KABINET STAD HERENTALS",
+      punten: 100,
+      codewoord: "smssosnaarvicce",
+      oplossingWeergave: "SMS SOS naar Vicce",
+      verhaal: "Onze inlichtingendienst heeft een afgeluisterd telefoongesprek onderschept tussen Thérèse van de stad Herentals en de geheime koper over de illegale verkoop van ons KSA-lokaal. Het transcript is zwaar gecensureerd met zwarte balken, maar onze cryptograaf ontdekte een verborgen patroon in de typemachine-letters...",
+      instructie: "Bestudeer het transcript van het telefoongesprek. De verdachte, vetgedrukte letters vormen in chronologische leesvolgorde een geheime boodschap. Ontcijfer de code en stuur hem hieronder in naar Gamemaster HQ (+100 pt)!"
+    },
+    {
+      id: "carte_blanche",
+      type: "creative_challenge",
+      titel: "OPERATIE CARTE BLANCHE // HET VRIJE SPEL",
+      subtitel: "VRIJE CREATIEVE STUNT // TOT +200 PT (HOE ORIGINELER HOE BETER)",
+      punten: 200,
+      verhaal: "In tijden van acute crisis zijn de beste geheimagenten niet diegenen die star de protocollen volgen, maar diegenen die out-of-the-box denken en het onmogelijke waarmaken. Gamemaster HQ geeft jullie team totale 'Carte Blanche'!",
+      instructie: "Doe iets buitengewoons, hilarisch, creatiefs of grensverleggends. Het kan letterlijk VANALLES zijn: een absurde sketch of stunt op video, een epische spionagefoto, een zelfgeschreven ode of gedicht, een geniaal fysiek voorwerp (of een markant persoon/voorbijganger!) meebrengen naar het Hoofdkwartier, een nep-aanwijzing planten... Geen limiet op de verbeelding. Hoe origineler en spectaculairder de inzending, hoe meer bonuspunten Victor jullie toekent bij de eindjurering (tot wel +200 PT)!",
+      uploadHint: "Upload hier jullie video, foto of beschrijving van jullie vrije stunt naar Gamemaster HQ (of kondig jullie fysieke verrassing voor HQ aan!)."
+    },
+    {
       id: "ad_fundum",
       type: "video_challenge",
       titel: "OPERATIE AD FUNDUM // CAFÉ INFILTRATIE",
@@ -348,7 +369,7 @@ const SPEL_CONFIG = {
     { id: "rosan",     naam: "Rosan",     dossierNr: "23", code: "5836" },
     { id: "siebe",     naam: "Siebe",     dossierNr: "24", code: "6947" },
     { id: "tobias",    naam: "Tobias",    dossierNr: "25", code: "7158" },
-    { id: "vicce",     naam: "Vicce",     dossierNr: "26", code: "8269", isGamemaster: true, role: "Gamemaster HQ" },
-    { id: "lander",    naam: "Lander",    dossierNr: "99", code: "9999", isExternalTester: true, isGamemaster: false, role: "Externe Tester (Volledig Unlocked)" }
+    { id: "vicce",     naam: "Vicce",     dossierNr: "26", code: "8269" },
+    { id: "lander",    naam: "Lander",    dossierNr: "27", code: "1234" }
   ]
 };
