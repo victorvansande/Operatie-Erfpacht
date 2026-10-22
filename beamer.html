@@ -250,7 +250,7 @@
     .war-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: 330px 1fr 380px;
+      grid-template-columns: 360px 1fr 380px;
       gap: 0.85rem;
       padding: 0.85rem 1rem 0.5rem;
       height: calc(100vh - 88px - 38px);
@@ -369,45 +369,49 @@
 
     /* AANWEZIGHEIDS COUNTER CARD */
     .agent-status-card {
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 6px;
-      padding: 0.65rem 0.75rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      border-radius: 8px;
+      padding: 0.95rem 1rem;
       transition: all 0.3s ease;
       flex-shrink: 0;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
     }
 
     .agent-status-card.all-unlocked {
       border-color: var(--hud-amber);
-      background: rgba(245, 158, 11, 0.1);
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+      background: rgba(245, 158, 11, 0.14);
+      box-shadow: 0 0 22px rgba(245, 158, 11, 0.35);
     }
 
     .agent-status-kpi {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.45rem;
     }
 
     .agent-kpi-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.45rem;
+      font-size: 1.85rem;
       font-weight: 900;
       color: var(--hud-cyan);
+      text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
     }
 
     .agent-kpi-sub {
-      font-size: 0.72rem;
-      color: var(--hud-muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.02em;
     }
 
     .agent-progress-bar {
-      height: 5px;
+      height: 8px;
       background: #1e293b;
-      border-radius: 3px;
+      border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.5rem;
     }
 
     .agent-progress-fill {
@@ -415,31 +419,40 @@
       background: linear-gradient(90deg, var(--hud-cyan), var(--hud-green));
       width: 0%;
       transition: width 0.4s ease;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.65);
     }
 
     .agent-chips-mini {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.2rem;
-      max-height: 65px;
-      overflow-y: auto;
+      gap: 0.35rem;
+      max-height: none;
+      overflow: visible;
+      margin-top: 0.45rem;
     }
 
     .chip-mini {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
-      padding: 0.1rem 0.3rem;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #94a3b8;
-    }
-    .chip-mini.unlocked {
-      background: rgba(16, 185, 129, 0.2);
-      border-color: rgba(16, 185, 129, 0.5);
-      color: #6ee7b7;
+      font-size: 0.72rem;
       font-weight: 700;
+      padding: 0.25rem 0.52rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .chip-mini.unlocked {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.7);
+      color: #6ee7b7;
+      font-weight: 800;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
     }
 
     /* CYBER TERMINAL WIDGET */
@@ -1286,7 +1299,7 @@
           <div class="agent-progress-bar">
             <div class="agent-progress-fill" id="war-agents-progress"></div>
           </div>
-          <div style="font-size: 0.65rem; color: var(--hud-muted); margin-bottom: 0.35rem; font-family: 'JetBrains Mono', monospace;">
+          <div style="font-size: 0.72rem; color: #cbd5e1; margin-bottom: 0.45rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;">
             STATUS: <span id="war-login-summary" style="color: var(--hud-amber);">Wachten op logins via gsm...</span>
           </div>
 

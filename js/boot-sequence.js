@@ -46,16 +46,49 @@
           <div class="boot-pad-wrap" id="boot-pad-wrap">
             <div class="boot-pad-center">
               <div class="boot-laser"></div>
-              <svg class="boot-fp-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 15 C30 15 15 30 15 50 C15 75 25 95 35 110" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 25 C36 25 25 36 25 50 C25 72 32 88 42 105" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 35 C42 35 35 42 35 50 C35 65 40 82 48 95" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 45 C47 45 44 47 44 50 C44 60 48 72 52 82" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 15 C70 15 85 30 85 50 C85 75 75 95 65 110" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 25 C64 25 75 36 75 50 C75 72 68 88 58 105" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 35 C58 35 65 42 65 50 C65 65 60 82 52 95" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 45 C53 45 56 47 56 50 C56 60 52 72 48 82" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M50 55 C49 55 48 57 48 60 C48 70 51 78 50 85" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <svg class="boot-fp-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <!-- 1. Buitenste contour boog -->
+                <path d="M 50 8 C 25 8 13 26 13 49 C 13 74 21 95 31 110" />
+                <path d="M 50 8 C 75 8 87 26 87 49 C 87 74 79 95 69 110" />
+                
+                <!-- 2. Buitenste secundaire kam -->
+                <path d="M 50 15 C 29 15 19 31 19 51 C 19 71 26 89 35 104" />
+                <path d="M 50 15 C 71 15 81 31 81 51 C 81 71 74 89 65 104" />
+
+                <!-- 3. Middelkam met natuurlijke flow -->
+                <path d="M 50 22 C 33 22 25 36 25 53 C 25 68 31 84 39 97" />
+                <path d="M 50 22 C 67 22 75 36 75 53 C 75 68 69 84 61 97" />
+
+                <!-- 4. Karakteristieke lus met minutia onderbreking -->
+                <path d="M 50 29 C 37 29 31 41 31 55 C 31 67 36 78 43 89" />
+                <path d="M 50 29 C 63 29 69 41 69 55 C 69 67 64 78 57 89" />
+
+                <!-- 5. Binnenste dermale lus -->
+                <path d="M 50 36 C 41 36 37 46 37 57 C 37 66 41 74 47 82" />
+                <path d="M 50 36 C 59 36 63 46 63 57 C 63 66 59 74 53 82" />
+
+                <!-- 6. Whorl centrum / loop -->
+                <path d="M 50 43 C 45 43 43 51 43 59 C 43 65 46 70 49 74" />
+                <path d="M 50 43 C 55 43 57 51 57 59 C 57 64 55 68 52 71" />
+
+                <!-- 7. Forensische kern stip / whorl centrum -->
+                <path d="M 50 50 C 48 50 47 53 47 58 C 47 61 48 63 50 64 C 51 63 53 61 53 58 C 53 53 52 50 50 50 Z" />
+
+                <!-- 8. Dermal Ridge Minutiae (Vertakkingen & Eilandjes) -->
+                <path d="M 16 38 C 16 29 20 22 26 16" />
+                <path d="M 84 38 C 84 29 80 22 74 16" />
+
+                <path d="M 22 75 C 24 83 28 90 33 97" />
+                <path d="M 78 75 C 76 83 72 90 67 97" />
+
+                <path d="M 28 61 C 28 67 30 73 34 79" />
+                <path d="M 72 61 C 72 67 70 73 66 79" />
+
+                <!-- 9. Basis triradius / delta patronen -->
+                <path d="M 45 107 C 47 103 48 99 49 95" />
+                <path d="M 55 107 C 53 103 52 99 51 95" />
+                <path d="M 40 115 C 43 111 45 107 47 103" />
+                <path d="M 60 115 C 57 111 55 107 53 103" />
               </svg>
             </div>
             <svg class="boot-progress-svg" viewBox="0 0 140 140">
