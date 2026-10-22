@@ -503,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span>DOSSIER #${speler.dossierNr}</span>
             ${statusHtml}
           </div>
-          <div class="player-name">${speler.naam}</div>
+          <div class="player-name"><span class="folder-icon" aria-hidden="true">📁</span> ${speler.naam}</div>
           ${groupBadgeHtml}
         </div>
         <div class="player-action" style="justify-content: space-between; width: 100%;">
@@ -541,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span>DOSSIER #${speler.dossierNr}</span>
                 <span class="inactive-stamp">✕ NON-ACTIEF</span>
               </div>
-              <div class="player-name inactive-name">${speler.naam}</div>
+              <div class="player-name inactive-name"><span class="folder-icon" aria-hidden="true">📁</span> ${speler.naam}</div>
             </div>
             <div class="inactive-reason">${funnyReason}</div>
           `;
@@ -567,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("jb_active_agent_id", speler.id);
     } catch (_) {}
     modalTag.textContent = `DOSSIER #${speler.dossierNr} // AUTORISATIE VEREIST`;
-    modalTitle.textContent = speler.naam;
+    modalTitle.innerHTML = `<span class="folder-icon" aria-hidden="true">📁</span> ${speler.naam}`;
     codeInput.value = "";
     errorMsg.textContent = "";
     codeInput.classList.remove("error");
@@ -1195,82 +1195,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Start Herentals Radar Map + Realtime Sync
   // =========================================================================
-  // LIVE CCTV WEBCAM FEED VANUIT HEADQUARTERS (KAPUCIJNENSTRAAT 7)
+  // T-MINUS AFTELKLOK NAAR DEADLINE (ZATERDAG 24 OKTOBER 22u00)
   // =========================================================================
-  function initHqLiveWebcam() {
-    const box = document.getElementById("hq-webcam-box");
-    const canvas = document.getElementById("hq-webcam-canvas");
-    const timecodeEl = document.getElementById("hq-webcam-timecode");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-    let frame = 0;
+  function initTMinusCountdown() {
+    const daysEl = document.getElementById("tminus-days");
+    const hoursEl = document.getElementById("tminus-hours");
+    const minsEl = document.getElementById("tminus-mins");
+    const secsEl = document.getElementById("tminus-secs");
+    const statusEl = document.getElementById("tminus-status");
+    if (!daysEl) return;
 
-    setInterval(() => {
-      frame = (frame + 1) % 15;
+    function getTargetDeadline() {
+      // Zaterdag 24 oktober 2026 om 22u00
+      const fixedTarget = new Date("2026-10-24T22:00:00");
+      const now = new Date();
+      if (now <= fixedTarget) return fixedTarget;
 
-      // Update live timecode met frames (HH:MM:SS:FF)
-      if (timecodeEl) {
-        const now = new Date();
-        const t = now.toLocaleTimeString("nl-BE", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit"
-        });
-        const ff = String(frame).padStart(2, "0");
-        timecodeEl.textContent = `${t}:${ff}`;
+      // Fallback voor testen op andere data: eerstvolgende zaterdag 22u00
+      const d = new Date();
+      const day = d.getDay();
+      const diff = (6 - day + 7) % 7;
+      d.setDate(d.getDate() + diff);
+      d.setHours(22, 0, 0, 0);
+      if (d <= now) {
+        d.setDate(d.getDate() + 7);
       }
-
-      ctx.clearRect(0, 0, w, h);
-
-      // 1) Flikkerend scherm-tegenlicht van de PC-monitoren op het silhouet met kap
-      const glowAlpha = 0.05 + Math.random() * 0.08;
-      const grad = ctx.createRadialGradient(w * 0.42, h * 0.45, 4, w * 0.45, h * 0.48, w * 0.48);
-      grad.addColorStop(0, `rgba(16, 185, 129, ${glowAlpha})`);
-      grad.addColorStop(0.6, `rgba(6, 182, 212, ${glowAlpha * 0.45})`);
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-
-      // 2) Bewegende terminal-coderegels op het scherm links van het silhouet
-      ctx.fillStyle = `rgba(16, 185, 129, ${0.14 + Math.random() * 0.12})`;
-      for (let i = 0; i < 5; i++) {
-        const lineY = ((frame * 3 + i * 9) % 42) + 28;
-        const lineW = 10 + ((i * 7 + frame) % 18);
-        ctx.fillRect(58, lineY, lineW, 1.5);
-      }
-
-      // 3) Subtiele CCTV ruis-spikkels
-      ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
-      for (let i = 0; i < 28; i++) {
-        const rx = Math.random() * w;
-        const ry = Math.random() * h;
-        ctx.fillRect(rx, ry, 1.2, 1.2);
-      }
-
-      // 4) Af en toe een subtiele horizontale CCTV-trackinglijn
-      if (Math.random() < 0.22) {
-        const glitchY = Math.random() * h;
-        ctx.fillStyle = "rgba(16, 185, 129, 0.12)";
-        ctx.fillRect(0, glitchY, w, 2);
-      }
-    }, 66); // ~15 FPS authentieke beveiligingscamera framerate
-
-    if (box) {
-      box.addEventListener("click", () => {
-        if (typeof ScoreService !== "undefined" && ScoreService.openPhotoLightbox) {
-          ScoreService.openPhotoLightbox(
-            "img/hq-webcam.jpg",
-            "● REC // CAM-01 — HEADQUARTERS KAPUCIJNENSTRAAT 7",
-            "Live beveiligingsfeed: Gamemaster Vicce monitort de veldoperatie in Sector 2200 Herentals."
-          );
-        }
-      });
+      return d;
     }
+
+    const deadline = getTargetDeadline();
+
+    function update() {
+      const now = new Date();
+      const diff = deadline - now;
+
+      if (diff <= 0) {
+        daysEl.textContent = "00";
+        hoursEl.textContent = "00";
+        minsEl.textContent = "00";
+        secsEl.textContent = "00";
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color: #ef4444; font-weight: 800; animation: tminusSepBlink 1s infinite alternate;">🚨 DEADLINE BEREIKT // ERFPACHT DEFINITIEF VERKOCHT AAN HET STAD</span>`;
+        }
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+
+      daysEl.textContent = String(days).padStart(2, "0");
+      hoursEl.textContent = String(hours).padStart(2, "0");
+      minsEl.textContent = String(mins).padStart(2, "0");
+      secsEl.textContent = String(secs).padStart(2, "0");
+    }
+
+    update();
+    setInterval(update, 1000);
   }
 
-  initHqLiveWebcam();
+  initTMinusCountdown();
   initHerentalsRadarMap();
 
   ScoreService.subscribe((state) => {

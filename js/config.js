@@ -117,8 +117,8 @@ const SPEL_CONFIG = {
       veldTool: {
         type: "avondlied_tekst",
         titel: "📜 SPIEKBRIEFJE // ORIGINELE TEKST KSA-AVONDLIED",
-        tekst: "O Heer, d'avond is neergekomen,\nde zonne zinkt in 't westen neer.\nDe wind suist zachtjes door de bomen,\nen alles rust in vrede weer.\n\nWij danken U voor deze dag,\nvoor al de vreugde die hij gaf.\nVergeef ons wat misdreven lag,\nen wend van ons het onheil af.\n\nBewaar ons lokaal en onze wacht,\nin deze donk're avondnacht!",
-        instructie: "Gebruik deze tekst als basis, spreek de Heer expliciet aan om ons lokaal te redden en maak er de meest creatieve uitvoering ooit van!"
+        tekst: "O Heer, de avond is neergekomen,\nde zonne zonk, het duister klom.\nDe winden doorruisen de bomen,\nen verre sterren staan alom...\n\nWij knielen neer om u te zingen\nin 't slapend woud ons avondlied.\nWij danken u voor wat we ontvingen,\nen vragen, heer, verlaat ons niet!\n\nKnielen, knielen, knielen wij neder,\ndoor de stilte weerklinkt onze bee.\nLuist'rend fluist'ren kruinen mee\nen sterren staren teder.\nGeef ons Heer, zegen en rust en vree.",
+        instructie: "Gebruik deze authentieke tekst als basis, spreek de Heer expliciet aan om ons lokaal te redden en maak er de meest creatieve uitvoering ooit van!"
       }
     },
     {

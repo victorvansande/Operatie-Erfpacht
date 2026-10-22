@@ -160,23 +160,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4200);
   }
 
-  // 1. Live Countdown naar 22u00
+  // 1. Live Countdown naar Zaterdag 22u00 (Deadline Verkoop Lokaal)
   function updateCountdown() {
     const el = document.getElementById("gm-countdown-timer");
     if (!el) return;
     const now = new Date();
-    const target = new Date();
-    target.setHours(22, 0, 0, 0);
+    const fixedTarget = new Date("2026-10-24T22:00:00");
+    let target = fixedTarget;
+    if (now > fixedTarget) {
+      target = new Date();
+      target.setHours(22, 0, 0, 0);
+    }
     const diff = target - now;
 
     if (diff <= 0) {
       el.textContent = "22u00 BEREIKT (DEADLINE)";
       return;
     }
-    const hrs = String(Math.floor(diff / 3600000)).padStart(2, "0");
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hrs = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, "0");
     const mins = String(Math.floor((diff % 3600000) / 60000)).padStart(2, "0");
     const secs = String(Math.floor((diff % 60000) / 1000)).padStart(2, "0");
-    el.textContent = `${hrs}:${mins}:${secs} resterend`;
+    const dayStr = days > 0 ? `${days}d ` : "";
+    el.textContent = `${dayStr}${hrs}:${mins}:${secs} resterend`;
   }
   updateCountdown();
   setInterval(updateCountdown, 1000);
@@ -205,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (broadcastPlayersOptGroup && SPEL_CONFIG.spelers) {
     broadcastPlayersOptGroup.innerHTML = SPEL_CONFIG.spelers
-      .map((s) => `<option value="player:${s.id}">👤 #${s.dossierNr} ${s.naam}</option>`)
+      .map((s) => `<option value="player:${s.id}">📁 #${s.dossierNr} ${s.naam}</option>`)
       .join("");
   }
 
@@ -387,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chip.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 0.35rem;">
           <strong style="font-size: 0.95rem; color: ${isOff ? "#94a3b8" : "#ffffff"}; text-decoration: ${isOff ? "line-through" : "none"};">
-            ${p.naam}
+            📁 ${p.naam}
           </strong>
           <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">
             #${p.dossierNr}

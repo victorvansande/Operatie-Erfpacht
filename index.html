@@ -38,33 +38,41 @@
         <span>BEVEILIGD NETWERK // LIVE VERBONDEN</span>
       </div>
       <h1 class="portal-title">Operatie Erfpacht</h1>
-      <p class="portal-subtitle">
-        Kraak jouw persoonlijke code zo snel mogelijk! Wie zijn dossier als eerste ontgrendelt, pakt de meeste punten op het live scorebord.
-      </p>
       <div class="rules-btn-wrap">
         <button type="button" id="open-rules-btn" class="btn-rules">
           📜 Bekijk de Officiële Spelregels
         </button>
       </div>
 
-      <!-- Kleine "Live Webcam" feed vanuit Headquarters (sfeer / bijzaak) -->
-      <div class="hq-webcam-wrap">
-        <div id="hq-webcam-box" class="hq-webcam-box" title="Live CCTV-feed vanuit Headquarters (Kapucijnenstraat 7)">
-          <img
-            src="img/hq-webcam.jpg"
-            alt="Live CCTV Headquarters"
-            class="hq-webcam-img"
-          />
-          <canvas id="hq-webcam-canvas" class="hq-webcam-canvas" width="240" height="135"></canvas>
-          <div class="hq-webcam-vignette"></div>
-          <div class="hq-webcam-hud-top">
-            <span class="hq-webcam-rec"><span class="intel-blink-red"></span> REC // CAM-01</span>
-            <span class="hq-webcam-fps">15 FPS</span>
+      <!-- T-MINUS Aftelklok naar Zaterdag 22u00 (Deadline Verkoop Lokaal) -->
+      <div class="tminus-card">
+        <div class="tminus-header">
+          <span class="tminus-beacon"><span class="intel-blink-red"></span> T-MINUS DEADLINE</span>
+          <span class="tminus-target-date">ZATERDAG 24 OKTOBER // 22u00</span>
+        </div>
+        <div class="tminus-digits" id="tminus-clock">
+          <div class="tminus-unit">
+            <span class="tminus-val" id="tminus-days">00</span>
+            <span class="tminus-lbl">DAGEN</span>
           </div>
-          <div class="hq-webcam-hud-bottom">
-            <span>HQ // KAPUCIJNENSTRAAT 7</span>
-            <span id="hq-webcam-timecode">--:--:--:00</span>
+          <span class="tminus-sep">:</span>
+          <div class="tminus-unit">
+            <span class="tminus-val" id="tminus-hours">00</span>
+            <span class="tminus-lbl">UREN</span>
           </div>
+          <span class="tminus-sep">:</span>
+          <div class="tminus-unit">
+            <span class="tminus-val" id="tminus-mins">00</span>
+            <span class="tminus-lbl">MIN</span>
+          </div>
+          <span class="tminus-sep">:</span>
+          <div class="tminus-unit">
+            <span class="tminus-val" id="tminus-secs">00</span>
+            <span class="tminus-lbl">SEC</span>
+          </div>
+        </div>
+        <div class="tminus-status" id="tminus-status">
+          DEFCON-1 WAARSCHUWING // HET STAD VERKOOPT ONS LOKAAL OM 22u00 — KRAAK DE CODES!
         </div>
       </div>
 

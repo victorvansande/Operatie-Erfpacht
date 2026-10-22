@@ -67,6 +67,15 @@ document.addEventListener("DOMContentLoaded", () => {
       lockInput.setAttribute("enterkeyhint", "go");
     }
 
+    const dossierTitleEl = document.querySelector(".dossier-header h1.portal-title");
+    if (dossierTitleEl && !dossierTitleEl.innerHTML.includes("📁") && !dossierTitleEl.innerHTML.includes("📂")) {
+      dossierTitleEl.innerHTML = `<span class="folder-icon" aria-hidden="true">📁</span> ${dossierTitleEl.innerHTML}`;
+    }
+    const lockTitleEl = document.querySelector("#dossier-lock-screen .modal-title");
+    if (lockTitleEl && !lockTitleEl.innerHTML.includes("📁") && !lockTitleEl.innerHTML.includes("📂")) {
+      lockTitleEl.innerHTML = `<span class="folder-icon" aria-hidden="true">📁</span> ${lockTitleEl.innerHTML}`;
+    }
+
     // Ruim overbodige standaard-tekstblokken ("Welkom...", "Nog geen specifieke opdracht...", "Extra Hint: ---")
     // op zodat het dossier veel rustiger en overzichtelijker oogt:
     if (contentEl) {
