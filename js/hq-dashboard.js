@@ -989,9 +989,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. De 7 Bonusmissies
     if (locId.includes("speurhond") || text.includes("hond") || text.includes("k9") || text.includes("sollicitatie")) {
       return {
-        points: 38,
+        points: 50,
         shortName: "HONDENFOTO K9",
-        notification: "OPDRACHT SUCCESVOL: +38 PUNTEN VOOR HONDENFOTO K9"
+        notification: "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR HONDENFOTO K9"
       };
     }
     if (locId.includes("carte") || text.includes("carte") || text.includes("stunt")) {

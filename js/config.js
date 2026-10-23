@@ -124,7 +124,7 @@ const SPEL_CONFIG = {
       type: "photo_challenge",
       titel: "OPERATIE SPEURHOND // K9 REKRUTERINGSBUREAU",
       subtitel: "K9 TACTICAL SQUAD // VIERVOETIGE INLICHTINGENDIENST",
-      punten: 38,
+      punten: 50,
       verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
       instructie: "HQ zoekt nog een speurhond. Vind een geschikte kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster HQ!",
       uploadHint: "Upload hier de foto met de kandidaat-speurhond."
