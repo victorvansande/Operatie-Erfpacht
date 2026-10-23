@@ -32,15 +32,15 @@
 
     @page {
       size: A4 portrait;
-      margin: 8mm 8mm;
+      margin: 6mm 7mm;
     }
 
     body {
       background: #0b0f17;
       color: var(--ink);
       font-family: 'JetBrains Mono', 'Courier New', monospace;
-      font-size: 8.5pt;
-      line-height: 1.3;
+      font-size: 8pt;
+      line-height: 1.25;
     }
 
     .screen-toolbar {
@@ -103,21 +103,45 @@
     }
 
     @media print {
-      body {
-        background: #ffffff;
+      html, body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       .screen-toolbar {
         display: none !important;
       }
       .page-sheet {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        height: 284mm !important;
+        max-height: 284mm !important;
         margin: 0 !important;
+        padding: 0 !important;
         box-shadow: none !important;
         border: none !important;
-        page-break-after: always;
-        height: auto;
+        page-break-before: auto !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
       }
-      .page-sheet:last-child {
-        page-break-after: avoid;
+      .page-sheet:last-of-type {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      .sec-box, .cheat-header, .footer-note {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
     }
 
@@ -126,27 +150,30 @@
       min-height: 297mm;
       background: #ffffff;
       margin: 1.5rem auto;
-      padding: 8mm 10mm;
+      padding: 7mm 8mm;
       position: relative;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
       border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     /* HEADER BLOCK */
     .cheat-header {
       border: 2px solid var(--border-dark);
       background: #f8fafc;
-      padding: 6px 10px;
+      padding: 4px 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
 
     .cheat-header-left {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
 
     .doc-classification {
@@ -154,8 +181,8 @@
       background: var(--red);
       color: #ffffff;
       font-weight: 800;
-      font-size: 7pt;
-      padding: 1px 5px;
+      font-size: 6.8pt;
+      padding: 1px 4px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       align-self: flex-start;
@@ -164,7 +191,7 @@
 
     .sheet-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 13pt;
+      font-size: 11.5pt;
       font-weight: 800;
       color: #0f172a;
       letter-spacing: -0.02em;
@@ -172,7 +199,7 @@
     }
 
     .sheet-subtitle {
-      font-size: 7.5pt;
+      font-size: 7pt;
       color: var(--ink-muted);
       font-weight: 600;
     }
@@ -181,14 +208,14 @@
       background: #0f172a;
       color: #fbbf24;
       border: 1px solid #f59e0b;
-      padding: 5px 8px;
+      padding: 3px 6px;
       text-align: right;
-      font-size: 7.5pt;
-      border-radius: 4px;
+      font-size: 7pt;
+      border-radius: 3px;
     }
 
     .master-code-val {
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-weight: 800;
       color: #38bdf8;
       letter-spacing: 0.05em;
@@ -197,16 +224,16 @@
     /* SECTION BOX */
     .sec-box {
       border: 1.5px solid var(--border-dark);
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       background: #ffffff;
     }
 
     .sec-head {
       background: #0f172a;
       color: #ffffff;
-      padding: 3px 8px;
+      padding: 2.5px 6px;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 8.5pt;
+      font-size: 8pt;
       font-weight: 800;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -231,38 +258,38 @@
     }
 
     .sec-body {
-      padding: 6px 8px;
+      padding: 4px 6px;
     }
 
     /* TIMELINE FLOW */
     .timeline-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
+      gap: 5px;
     }
 
     .flow-step {
       border: 1px solid #cbd5e1;
       background: #f8fafc;
-      padding: 5px 6px;
+      padding: 3px 5px;
       border-radius: 3px;
     }
 
     .flow-step-time {
       font-weight: 800;
-      font-size: 7.5pt;
+      font-size: 7.2pt;
       color: var(--blue);
       display: flex;
       align-items: center;
       gap: 4px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 2px;
+      padding-bottom: 1px;
     }
 
     .flow-step-title {
       font-weight: 800;
-      font-size: 8pt;
+      font-size: 7.6pt;
       margin-bottom: 2px;
       color: #0f172a;
     }
@@ -270,13 +297,13 @@
     .flow-step ul {
       list-style: none;
       padding-left: 0;
-      font-size: 7pt;
+      font-size: 6.8pt;
       color: var(--ink-muted);
     }
 
     .flow-step li {
-      margin-bottom: 2px;
-      padding-left: 8px;
+      margin-bottom: 1.5px;
+      padding-left: 7px;
       position: relative;
     }
 
@@ -291,7 +318,7 @@
     .table-sectors {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7.2pt;
+      font-size: 6.8pt;
     }
 
     .table-sectors th {
@@ -299,14 +326,14 @@
       color: #0f172a;
       font-weight: 800;
       text-align: left;
-      padding: 3px 5px;
+      padding: 2.5px 4px;
       border: 1px solid #94a3b8;
       text-transform: uppercase;
-      font-size: 6.8pt;
+      font-size: 6.6pt;
     }
 
     .table-sectors td {
-      padding: 4px 5px;
+      padding: 2.5px 4px;
       border: 1px solid #cbd5e1;
       vertical-align: top;
     }
@@ -530,7 +557,7 @@
               <li>Zet beamer aan op <code>beamer.html</code> (War Room radar + leaderboard). Druk op <code>F</code> voor fullscreen, <code>R</code> voor spelregels.</li>
               <li>Open HQ Control Panel op je laptop/gsm (<code>hq-dashboard.html</code>, PIN: <code>leiding2026</code>).</li>
               <li>Zet geluid laptop op 70% (militaire radar-chime klinkt bij nieuwe inzendingen).</li>
-              <li>27 agenten ingedeeld in 5 teams (of klik 🎲 Verdeel).</li>
+              <li>27 agenten ingedeeld in 6 teams (of klik 🎲 Verdeel).</li>
             </ul>
           </div>
 
@@ -724,45 +751,45 @@
       </div>
     </div>
 
-    <!-- 3. DE MOL CONTACT-KAART -->
+    <!-- 3. TACTISCHE HQ CONTROLS (DE MOL, FINALE RECALL & BEAMER) -->
     <div class="sec-box">
       <div class="sec-head red">
-        <span>🕵️ DE MOL // DIRECTE INTERCEPTIE &amp; CONTACTGEGEVENS</span>
-        <span style="font-size: 7pt; font-weight: 600;">SECTOR ZANDPOORT</span>
+        <span>⚡ TACTISCHE HQ CONTROLS // DE MOL, FINALE RECALL &amp; BEAMER HOTKEYS</span>
+        <span style="font-size: 7pt; font-weight: 600;">HERENTALS COMMANDOPOST</span>
       </div>
-      <div class="sec-body">
-        <div class="mol-grid">
-          <div>
-            <div style="font-size: 7pt; color: #64748b; font-weight: 700;">HOTLINE TELEFOONNUMMER:</div>
-            <div class="mol-hotline">📞 0498 34 32 07</div>
-            <div style="font-size: 7pt; color: #64748b; font-weight: 700; margin-top: 4px;">GEHEIM CODEWOORD:</div>
-            <div class="mol-codeword">"DE DAKPANNEN LIGGEN LOS"</div>
+      <div class="sec-body" style="padding: 3.5px 5px;">
+        <div style="display: grid; grid-template-columns: 1.1fr 1.35fr 0.85fr; gap: 5px; align-items: stretch;">
+          
+          <!-- Col 1: De Mol -->
+          <div style="background: #fffbeb; border: 1px dashed #d97706; padding: 3px 5px; border-radius: 3px; font-size: 6.6pt; line-height: 1.25;">
+            <div style="font-weight: 800; color: #b45309; margin-bottom: 1px;">🕵️ DE MOL (SECTOR ZANDPOORT)</div>
+            <div>Hotline: <strong style="color: #b91c1c; font-size: 7.6pt;">📞 0498 34 32 07</strong></div>
+            <div style="margin-top: 1px;">Codewoord: <span class="badge-code" style="background:#0f172a; color:#fbbf24; font-size:6.6pt; padding:0.5px 3px;">DE DAKPANNEN LIGGEN LOS</span></div>
+            <div style="color: #78350f; font-size: 6.2pt; margin-top: 2px;">
+              Wacht op codewoord (anders ophangen). Bevestig lid jeugdraad &amp; geef opdracht tagmark te plaatsen.
+            </div>
           </div>
-          <div style="font-size: 7.2pt; color: #0f172a;">
-            <strong>WAT DE MOL MOET DOEN BIJ OPROEP:</strong>
-            <p>1. Wacht tot de beller het codewoord <em>"DE DAKPANNEN LIGGEN LOS"</em> zegt. Zo niet: ophangen ("Verkeerd verbonden!").</p>
-            <p>2. Zodra het codewoord correct is: bevestig dat je in de jeugdraad zit en geef ze de opdracht om hun tagmark achter te laten en HQ in te lichten.</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 4. FINALE RECALL & BEAMER SNELTOETSEN -->
-    <div style="display: grid; grid-template-columns: 1.65fr 1fr; gap: 6px; margin-bottom: 6px;">
-      <div style="background: #fffbeb; border: 1.5px solid #d97706; padding: 5px 7px; border-radius: 4px; font-size: 6.8pt; line-height: 1.35;">
-        <strong style="color: #b45309;">🏁 LAATSTE LOCATIE FINALE RECALL TEKST (SECTOR 6 AFGEROND):</strong>
-        <p style="color: #78350f; font-style: italic; margin-top: 2px;">
-          "KEER ONMIDDELLIJK TERUG NAAR HQ, TENZIJ JULLIE NOG BONUSOPDRACHTEN WILLEN VOLTOOIEN. HOE EERDER JE AANKOMT, HOE MEER PUNTEN JE KRIJGT MAAR MISSCHIEN IS HET DAT NIET WAARD EN VERDIEN JE NET MEER PUNTEN DOOR NOG BONUSOPDRACHTEN UIT TE VOEREN... DIE AFWEGING IS AAN JULLIE. TIP: ALLE BONUSPUNTEN OPGETELD ZIJN SOWIESO MEER WAARD DAN DE PUNTEN DIE JE VERDIENT MET EERST TE ZIJN. SUCCES."
-        </p>
-      </div>
-      <div style="background: #f0fdf4; border: 1.5px solid #16a34a; padding: 5px 7px; border-radius: 4px; font-size: 6.8pt; line-height: 1.35;">
-        <strong style="color: #15803d;">🖥️ BEAMER SNELTOETSEN &amp; CONTROLS:</strong>
-        <ul style="margin: 2px 0 0 12px; color: #166534;">
-          <li><code>F</code> = Fullscreen Beamer (aan/uit)</li>
-          <li><code>R</code> of <code>F2</code> = Spelregels tonen / sluiten</li>
-          <li><code>C</code> = Grote Digitale Aftelklok</li>
-          <li><code>Esc</code> = Alle popups direct sluiten</li>
-        </ul>
+          <!-- Col 2: Finale Recall -->
+          <div style="background: #fefce8; border: 1px solid #eab308; padding: 3px 5px; border-radius: 3px; font-size: 6.3pt; line-height: 1.25;">
+            <strong style="color: #a16207;">🏁 FINALE RECALL OPROEP (BIJ SECTOR 6):</strong>
+            <p style="color: #854d0e; font-style: italic; margin-top: 1.5px;">
+              "KEER ONMIDDELLIJK TERUG NAAR HQ, TENZIJ JULLIE NOG BONUSOPDRACHTEN WILLEN VOLTOOIEN. HOE EERDER JE AANKOMT, HOE MEER PUNTEN JE KRIJGT MAAR MISSCHIEN IS HET DAT NIET WAARD EN VERDIEN JE NET MEER PUNTEN DOOR NOG BONUSOPDRACHTEN UIT TE VOEREN... DIE AFWEGING IS AAN JULLIE. TIP: ALLE BONUSPUNTEN OPGETELD ZIJN SOWIESO MEER WAARD DAN DE PUNTEN DIE JE VERDIENT MET EERST TE ZIJN. SUCCES."
+            </p>
+          </div>
+
+          <!-- Col 3: Beamer Controls -->
+          <div style="background: #f0fdf4; border: 1px solid #16a34a; padding: 3px 5px; border-radius: 3px; font-size: 6.5pt; line-height: 1.3;">
+            <strong style="color: #15803d;">🖥️ BEAMER HOTKEYS:</strong>
+            <ul style="margin: 1.5px 0 0 4px; color: #166534; padding-left: 0; list-style: none;">
+              <li><code>F</code> : Fullscreen Beamer</li>
+              <li><code>R</code> / <code>F2</code> : Spelregels tonen</li>
+              <li><code>C</code> : Grote Countdown Klok</li>
+              <li><code>Esc</code> : Popups direct sluiten</li>
+            </ul>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -1031,7 +1058,7 @@
 
           <div class="emergency-card">
             <div class="emergency-card-title">🏁 Podium Ranking</div>
-            <p><strong>1e: +100 | 2e: +75 | 3e: +50 | 4e: +30 | 5e: +15 pt.</strong> 1-klik knop in HQ Dashboard boven Debriefing!</p>
+            <p><strong>1e: +100 | 2e: +75 | 3e: +50 | 4e: +30 | 5e: +15 | 6e: +10 pt.</strong> 1-klik knop in HQ Dashboard boven Debriefing!</p>
           </div>
 
           <div class="emergency-card">
@@ -1048,10 +1075,6 @@
             <div class="emergency-card-title">🛑 Debriefing Einde</div>
             <p>Pas actief als Victor op <strong>Fase 3: Einde Spel</strong> klikt. Spelers sluiten dan af met pincode.</p>
           </div>
-
-        </div>
-      </div>
-    </div>
 
         </div>
       </div>
