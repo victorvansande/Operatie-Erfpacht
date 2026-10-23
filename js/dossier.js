@@ -828,9 +828,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const isVid = Boolean(file && file.type && file.type.startsWith("video/"));
       photoSubmit.disabled = true;
       photoSubmit.textContent = isVid ? "Video uploaden..." : "Uploaden...";
-      photoStatus.textContent = isVid
-        ? "Video wordt verstuurd naar HQ (even geduld)..."
-        : "Bewijs wordt verstuurd naar HQ...";
+      photoStatus.innerHTML = `
+        <div style="background: rgba(245, 158, 11, 0.16); border: 1.5px solid #f59e0b; color: #fde047; padding: 0.65rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; margin-top: 0.45rem; text-align: center; line-height: 1.45;">
+          <div style="font-size: 1.15rem; margin-bottom: 0.2rem;">⏳ ${isVid ? "Video" : "Bewijs"} wordt verstuurd naar HQ...</div>
+          <div style="color: #fbbf24; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.02em;">⚠️ SLUIT DIT SCHERM NIET AF EN BLIJF OP DEZE PAGINA TOT DE UPLOAD VOLTOOID IS!</div>
+        </div>
+      `;
+
+      const preventLeave = (evt) => {
+        evt.preventDefault();
+        evt.returnValue = "De upload is nog bezig naar HQ. Sluit deze pagina niet!";
+      };
+      window.addEventListener("beforeunload", preventLeave);
 
       try {
         await ScoreService.uploadPlayerPhoto(
@@ -843,15 +852,25 @@ document.addEventListener("DOMContentLoaded", () => {
         photoInput.value = "";
         if (photoCaption) photoCaption.value = "";
         photoFilename.textContent = "Geen bestand gekozen";
-        photoStatus.textContent = "✓ Bewijsmateriaal succesvol verzonden naar HQ!";
-        setTimeout(() => {
-          if (photoStatus.textContent.startsWith("✓")) {
-            photoStatus.textContent = "";
-          }
-        }, 4500);
+        photoStatus.innerHTML = `
+          <div style="background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; color: #34d399; padding: 0.75rem 0.95rem; border-radius: 8px; font-weight: 800; font-size: 0.88rem; margin-top: 0.5rem; text-align: center; box-shadow: 0 0 25px rgba(16, 185, 129, 0.35); line-height: 1.45;">
+            <div style="font-size: 1.6rem; margin-bottom: 0.25rem;">✅ UPLOAD GESLAAGD!</div>
+            <div style="color: #ffffff; font-size: 0.82rem; font-weight: 700;">
+              Jullie ${isVid ? "video" : "foto"} is veilig aangekomen bij Gamemaster Victor op HQ.
+            </div>
+            <div style="color: #a7f3d0; font-size: 0.72rem; margin-top: 0.3rem; font-family: var(--font-mono);">
+              STATUS: IN WACHTRIJ VOOR BEOORDELING DOOR HQ
+            </div>
+          </div>
+        `;
       } catch (err) {
-        photoStatus.textContent = "Fout bij uploaden. Probeer opnieuw.";
+        photoStatus.innerHTML = `
+          <div style="background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; color: #fca5a5; padding: 0.65rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; margin-top: 0.45rem; text-align: center;">
+            ❌ Fout bij uploaden naar HQ. Controleer jullie 4G en probeer opnieuw.
+          </div>
+        `;
       } finally {
+        window.removeEventListener("beforeunload", preventLeave);
         photoSubmit.disabled = false;
         photoSubmit.textContent = "Upload naar HQ";
       }
@@ -2309,9 +2328,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const isVid = Boolean(file && file.type && file.type.startsWith("video/"));
         photoSubmit.disabled = true;
         photoSubmit.textContent = isVid ? "Video uploaden..." : "Uploaden...";
-        photoStatus.textContent = isVid
-          ? `Video wordt verstuurd naar mapje ${loc.naam} (even geduld)...`
-          : `Foto wordt in mapje ${loc.naam} geplaatst...`;
+        photoStatus.innerHTML = `
+          <div style="background: rgba(245, 158, 11, 0.16); border: 1.5px solid #f59e0b; color: #fde047; padding: 0.65rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; margin-top: 0.45rem; text-align: center; line-height: 1.45;">
+            <div style="font-size: 1.15rem; margin-bottom: 0.2rem;">⏳ ${isVid ? "Video" : "Foto"} wordt verstuurd naar mapje ${loc.naam}...</div>
+            <div style="color: #fbbf24; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.02em;">⚠️ SLUIT DIT SCHERM NIET AF EN BLIJF OP DEZE PAGINA TOT DE UPLOAD VOLTOOID IS!</div>
+          </div>
+        `;
+
+        const preventLeave = (evt) => {
+          evt.preventDefault();
+          evt.returnValue = "De upload is nog bezig naar HQ. Sluit deze pagina niet!";
+        };
+        window.addEventListener("beforeunload", preventLeave);
 
         try {
           await ScoreService.uploadPlayerPhoto(
@@ -2324,15 +2352,25 @@ document.addEventListener("DOMContentLoaded", () => {
           photoInput.value = "";
           photoCaption.value = "";
           photoFilename.textContent = "Geen foto gekozen";
-          photoStatus.textContent = `✓ Foto toegevoegd aan ${loc.naam}!`;
-          setTimeout(() => {
-            if (photoStatus.textContent.startsWith("✓")) {
-              photoStatus.textContent = "";
-            }
-          }, 4500);
+          photoStatus.innerHTML = `
+            <div style="background: rgba(16, 185, 129, 0.2); border: 2px solid #10b981; color: #34d399; padding: 0.75rem 0.95rem; border-radius: 8px; font-weight: 800; font-size: 0.88rem; margin-top: 0.5rem; text-align: center; box-shadow: 0 0 25px rgba(16, 185, 129, 0.35); line-height: 1.45;">
+              <div style="font-size: 1.6rem; margin-bottom: 0.25rem;">✅ UPLOAD GESLAAGD!</div>
+              <div style="color: #ffffff; font-size: 0.82rem; font-weight: 700;">
+                Jullie ${isVid ? "video" : "foto"} is succesvol toegevoegd aan mapje ${loc.naam} en verzonden naar HQ.
+              </div>
+              <div style="color: #a7f3d0; font-size: 0.72rem; margin-top: 0.3rem; font-family: var(--font-mono);">
+                STATUS: IN WACHTRIJ VOOR BEOORDELING DOOR HQ
+              </div>
+            </div>
+          `;
         } catch (err) {
-          photoStatus.textContent = "Fout bij uploaden. Probeer opnieuw.";
+          photoStatus.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; color: #fca5a5; padding: 0.65rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.82rem; margin-top: 0.45rem; text-align: center;">
+              ❌ Fout bij uploaden naar HQ. Controleer jullie 4G en probeer opnieuw.
+            </div>
+          `;
         } finally {
+          window.removeEventListener("beforeunload", preventLeave);
           photoSubmit.disabled = false;
           photoSubmit.textContent = loc.uploadKnopTekst || `Upload Bewijs in ${loc.naam}`;
         }
