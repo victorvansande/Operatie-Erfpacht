@@ -825,9 +825,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!photoInput.files || !photoInput.files[0]) return;
       const file = photoInput.files[0];
 
+      const isVid = Boolean(file && file.type && file.type.startsWith("video/"));
       photoSubmit.disabled = true;
-      photoSubmit.textContent = "Uploaden...";
-      photoStatus.textContent = `Bewijs wordt verstuurd naar HQ...`;
+      photoSubmit.textContent = isVid ? "Video uploaden..." : "Uploaden...";
+      photoStatus.textContent = isVid
+        ? "Video wordt verstuurd naar HQ (even geduld)..."
+        : "Bewijs wordt verstuurd naar HQ...";
 
       try {
         await ScoreService.uploadPlayerPhoto(
@@ -2303,9 +2306,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!photoInput.files || !photoInput.files[0]) return;
         const file = photoInput.files[0];
 
+        const isVid = Boolean(file && file.type && file.type.startsWith("video/"));
         photoSubmit.disabled = true;
-        photoSubmit.textContent = "Uploaden...";
-        photoStatus.textContent = `Foto wordt in mapje ${loc.naam} geplaatst...`;
+        photoSubmit.textContent = isVid ? "Video uploaden..." : "Uploaden...";
+        photoStatus.textContent = isVid
+          ? `Video wordt verstuurd naar mapje ${loc.naam} (even geduld)...`
+          : `Foto wordt in mapje ${loc.naam} geplaatst...`;
 
         try {
           await ScoreService.uploadPlayerPhoto(

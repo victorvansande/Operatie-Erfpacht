@@ -271,6 +271,15 @@ const ScoreService = (() => {
       document.body.appendChild(lb);
     }
 
+    const isVideoUrl = Boolean(
+      photoUrl &&
+        (photoUrl.startsWith("data:video/") ||
+          /\.(mp4|mov|webm|m4v)(\?|$)/i.test(photoUrl))
+    );
+    const mediaTag = isVideoUrl
+      ? `<video src="${photoUrl}" controls autoplay playsinline style="max-width: 100%; max-height: 74dvh; border-radius: 8px; border: 1px solid var(--border-color); background: #000;"></video>`
+      : `<img src="${photoUrl}" alt="${title}" style="max-width: 100%; max-height: 74dvh; border-radius: 8px; object-fit: contain; border: 1px solid var(--border-color); background: #000;" />`;
+
     lb.innerHTML = `
       <div class="modal-box" style="max-width: 680px; padding: 1rem; text-align: center; background: #070a0e; border-color: var(--accent);">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem; text-align: left;">
@@ -280,7 +289,7 @@ const ScoreService = (() => {
           </div>
           <button type="button" class="btn btn-secondary lb-close-btn" style="flex: 0 0 auto; padding: 0.4rem 0.75rem; font-size: 0.75rem;">✕ Sluiten</button>
         </div>
-        <img src="${photoUrl}" alt="${title}" style="max-width: 100%; max-height: 74dvh; border-radius: 8px; object-fit: contain; border: 1px solid var(--border-color); background: #000;" />
+        ${mediaTag}
       </div>
     `;
 
@@ -1820,24 +1829,57 @@ const ScoreService = (() => {
     let blob = file;
     let finalPhotoUrl = "";
 
-    if (isVideo) {
-      finalPhotoUrl = await new Promise((resolve) => {
-        const r = new FileReader();
-        r.onload = (e) => resolve(e.target.result || "");
-        r.onerror = () => resolve("");
-        r.readAsDataURL(file);
-      });
-    } else {
-      const compressed = await compressImageFile(file, 900, 0.78);
-      blob = compressed.blob;
-      finalPhotoUrl = compressed.dataUrl;
+    // 1. Lokale voorbewerking:
+    // Foto's worden op het toestel snel verkleind naar ~150KB JPEG voor razendsnelle mobiele verzending
+    if (!isVideo) {
+      try {
+        const compressed = await compressImageFile(file, 900, 0.78);
+        blob = compressed.blob;
+        finalPhotoUrl = compressed.dataUrl;
+      } catch (_) {
+        blob = file;
+      }
     }
 
-    const fbUrl = getFirebaseUrl();
-    if (!fbUrl && blob) {
-      // Upload het mediabestand naar een apart media-kanaal op ntfy.sh
+    // 2. Primaire Media Cloud: Litterbox API (Ondersteunt tot 1 GB per bestand, anoniem, 24u retentie)
+    if (blob) {
       try {
-        const ext = isVideo ? (file.name.split(".").pop() || "mp4") : "jpg";
+        const ext = isVideo
+          ? ((file.name && file.name.split(".").pop()) || "mp4")
+          : "jpg";
+        const filename = `bewijs_${playerId}_${locationId || "algemeen"}_${Date.now()}.${ext}`;
+
+        const fd = new FormData();
+        fd.append("reqtype", "fileupload");
+        fd.append("time", "24h");
+        fd.append("fileToUpload", blob, filename);
+
+        const litterRes = await fetch(
+          "https://litterbox.catbox.moe/resources/internals/api.php",
+          {
+            method: "POST",
+            body: fd
+          }
+        );
+
+        if (litterRes.ok) {
+          const respText = (await litterRes.text()).trim();
+          if (respText.startsWith("http")) {
+            finalPhotoUrl = respText;
+          }
+        }
+      } catch (errLitter) {
+        console.warn("Litterbox upload niet gelukt, probeert secundaire fallback:", errLitter);
+      }
+    }
+
+    // 3. Secundaire Media Fallback: ntfy media kanaal (voor bestanden < 15MB)
+    const fbUrl = getFirebaseUrl();
+    if (!fbUrl && blob && (!finalPhotoUrl || finalPhotoUrl.startsWith("data:"))) {
+      try {
+        const ext = isVideo
+          ? ((file.name && file.name.split(".").pop()) || "mp4")
+          : "jpg";
         const mediaChannel = `${SPEL_CONFIG.cloudChannel}_media`;
         const uploadRes = await fetch(
           `https://ntfy.sh/${encodeURIComponent(mediaChannel)}`,
@@ -1856,12 +1898,13 @@ const ScoreService = (() => {
           }
         }
       } catch (e) {
-        console.warn("Cloud media-upload waarschuwing:", e);
+        console.warn("Ntfy media fallback waarschuwing:", e);
       }
     }
 
-    // Veiligheidscontrole: als video niet als externe URL kon worden geüpload (bv. bestand te groot voor ntfy / mobiele data),
-    // stop dan GEEN gigantische base64 data-URL in het JSON event, want ntfy wijst events > 64KB af!
+    // 4. Veilige doorgifte naar HQ:
+    // Als video niet extern kon worden geüpload (bv. 4G weggevallen), stuur de melding veilig door
+    // zónder gigantische dataUrl in het JSON-event, zodat HQ de inzending altijd ontvangt!
     let finalCaption = (caption || "").trim();
     if (isVideo && (!finalPhotoUrl || finalPhotoUrl.startsWith("data:"))) {
       finalPhotoUrl = "";
