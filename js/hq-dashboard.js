@@ -1713,6 +1713,7 @@ document.addEventListener("DOMContentLoaded", () => {
           localStorage.removeItem(`jb_loc_unlocked_${SPEL_CONFIG.cloudChannel}_${s.id}_${l.id}`);
         });
       });
+      localStorage.removeItem(REVIEWED_KEY);
       localStorage.removeItem(`jb_reviewed_uploads_${SPEL_CONFIG.cloudChannel}`);
 
       showToast(
