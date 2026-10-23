@@ -114,7 +114,7 @@ const SPEL_CONFIG = {
       type: "video_challenge",
       titel: "OPERATIE VOLKSSTEM // OVERTUIG DE DERDE PARTIJ",
       subtitel: "PSY-OPS STRATEGIE // MINIMAAL 6 VREEMDEN TEGELIJK",
-      punten: 150,
+      punten: 100,
       verhaal: "Om de louche derde partij definitief af te schrikken en te bewijzen dat heel Herentals achter de KSA staat, hebben we een overweldigende, massale volksgetuigenis nodig. Eén getuige is niet genoeg; we moeten tonen dat de straat achter ons staat!",
       instructie: "Krijg minstens 6 volslagen vreemden (voorbijgangers in Herentals) tegelijkertijd voor jullie camera en laat ze in koor, luid en overtuigend roepen: 'Redt de KSA, de ware eigenaars van de erfpacht!'.",
       uploadHint: "Film de 6 vreemden die de leuze in koor roepen en upload de video hier direct voor HQ."

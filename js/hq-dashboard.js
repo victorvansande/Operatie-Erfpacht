@@ -986,16 +986,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (locId.includes("adfundum") || text.includes("ad fundum") || text.includes("adtje") || text.includes("café")) {
       return {
-        points: 50,
+        points: 100,
         shortName: "AD FUNDUM",
-        notification: "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR AD FUNDUM"
+        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR AD FUNDUM"
       };
     }
     if (locId.includes("koor") || text.includes("volksstem") || text.includes("vreemden") || text.includes("leuze")) {
       return {
-        points: 75,
+        points: 100,
         shortName: "6 VREEMDEN PROTESTKOOR",
-        notification: "OPDRACHT SUCCESVOL: +75 PUNTEN VOOR 6 VREEMDEN PROTESTKOOR"
+        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR 6 VREEMDEN PROTESTKOOR"
       };
     }
     if (locId === "zandpoort" || text.includes("zandpoort") || text.includes("tagmark") || text.includes("mol")) {
