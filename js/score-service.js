@@ -735,8 +735,8 @@ const ScoreService = (() => {
    */
   function computeScoreState() {
     const inst = SPEL_CONFIG.scoreInstellingen || {
-      eerstePlekPunten: 260,
-      stapPerPlek: 10,
+      eerstePlekPunten: 100,
+      stapPerPlek: 5,
       minimumPunten: 10
     };
 

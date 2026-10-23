@@ -846,8 +846,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="gm-bonus-btns">
             <button type="button" class="gm-chip-btn" data-team-bonus="25" data-reason="Goed bewijsmateriaal">+25 Bewijs OK</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Bonusopdracht volbracht">⭐ +50 Bonus</button>
-            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Snack voor Vicce meegebracht">🍔 +50 Snack Vicce</button>
-            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="100" data-reason="SMS SOS naar Vicce ontvangen">📱 +100 SOS SMS</button>
+            <button type="button" class="gm-chip-btn chip-amber gm-custom-prompt-btn" data-reason="Snack voor Vicce">🍟 Snack Vicce (Vrij)</button>
+            <button type="button" class="gm-chip-btn chip-amber gm-custom-prompt-btn" data-reason="Carte Blanche Stunt">🎭 Carte Blanche (Vrij)</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="60" data-reason="SMS SOS naar Vicce ontvangen">📱 +60 SOS SMS</button>
             <button type="button" class="gm-chip-btn" data-team-bonus="100" data-reason="Beste materiaal / Topuitvoering">🏆 +100 Topmateriaal</button>
             <button type="button" class="gm-chip-btn chip-danger" data-team-bonus="-25" data-reason="Strafpunten HQ">-25 Straf</button>
             <div style="display:flex; gap:0.25rem; margin-left:auto;">
@@ -923,6 +924,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
+      // Event: Prompt bonus (Snack Vicce & Carte Blanche met zelfgekozen punten)
+      card.querySelectorAll(".gm-custom-prompt-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const reason = btn.getAttribute("data-reason") || "Bonus";
+          const input = window.prompt(`Hoeveel punten toekennen aan ${grp.naam} voor "${reason}"?`, "50");
+          if (input === null) return;
+          const delta = parseInt(input, 10);
+          if (isNaN(delta) || delta === 0) return;
+          btn.disabled = true;
+          await ScoreService.addGroupBonusPoints(grp.id, delta, `${reason}: ${delta > 0 ? "+" : ""}${delta} PT`);
+          btn.disabled = false;
+          showToast(`✓ ${delta > 0 ? "+" : ""}${delta} PT toegekend aan ${grp.naam} (${reason})!`);
+        });
+      });
+
       // Event: Vrije punten geven aan heel het team
       const customInput = card.querySelector(".gm-custom-pts-input");
       const customBtn = card.querySelector(".gm-custom-pts-btn");
@@ -965,79 +981,103 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Helper: Bepaal vooraf klaargezette punten en titel op basis van moeilijkheidsgraad van de taak
+  // Helper: Bepaal vooraf klaargezette punten en titel op basis van de taak / sector
   function getTaskPresetInfo(locationId, locationName, caption) {
     const locId = String(locationId || "").toLowerCase();
     const text = `${locId} ${locationName || ""} ${caption || ""}`.toLowerCase();
 
+    // 1. De 7 Bonusmissies
     if (locId.includes("speurhond") || text.includes("hond") || text.includes("k9") || text.includes("sollicitatie")) {
       return {
-        points: 50,
-        shortName: "HONDENFOTO",
-        notification: "OPDRACHT SUCCESVOL: +50 PUNTEN VOOR HONDENFOTO"
+        points: 38,
+        shortName: "HONDENFOTO K9",
+        notification: "OPDRACHT SUCCESVOL: +38 PUNTEN VOOR HONDENFOTO K9"
       };
     }
     if (locId.includes("carte") || text.includes("carte") || text.includes("stunt")) {
       return {
-        points: 60,
+        points: 0,
         shortName: "CARTE BLANCHE MISSIE",
-        notification: "OPDRACHT SUCCESVOL: +60 PUNTEN VOOR CARTE BLANCHE MISSIE"
+        notification: "OPDRACHT SUCCESVOL: CARTE BLANCHE BEOORDEELD"
       };
     }
-    if (locId.includes("adfundum") || text.includes("ad fundum") || text.includes("adtje") || text.includes("café")) {
+    if (locId.includes("snack") || text.includes("snack") || text.includes("proviand")) {
       return {
-        points: 100,
+        points: 0,
+        shortName: "SNACK VOOR VICCE",
+        notification: "OPDRACHT SUCCESVOL: SNACK VOOR VICCE BEOORDEELD"
+      };
+    }
+    if (locId.includes("adfundum") || text.includes("ad_fundum") || text.includes("ad fundum") || text.includes("adtje") || text.includes("café")) {
+      return {
+        points: 140,
         shortName: "AD FUNDUM",
-        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR AD FUNDUM"
+        notification: "OPDRACHT SUCCESVOL: +140 PUNTEN VOOR AD FUNDUM"
       };
     }
     if (locId.includes("koor") || text.includes("volksstem") || text.includes("vreemden") || text.includes("leuze")) {
       return {
-        points: 100,
+        points: 160,
         shortName: "6 VREEMDEN PROTESTKOOR",
-        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR 6 VREEMDEN PROTESTKOOR"
+        notification: "OPDRACHT SUCCESVOL: +160 PUNTEN VOOR 6 VREEMDEN PROTESTKOOR"
       };
     }
-    if (locId === "zandpoort" || text.includes("zandpoort") || text.includes("tagmark") || text.includes("mol")) {
+    if (locId.includes("burner") || text.includes("burner") || text.includes("nokia")) {
       return {
         points: 40,
+        shortName: "NOKIA BURNER SMS",
+        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR NOKIA BURNER SMS"
+      };
+    }
+    if (locId.includes("therese") || text.includes("therese") || text.includes("tap") || text.includes("sos")) {
+      return {
+        points: 60,
+        shortName: "TAP THÉRÈSE SOS",
+        notification: "OPDRACHT SUCCESVOL: +60 PUNTEN VOOR TAP THÉRÈSE SOS"
+      };
+    }
+
+    // 2. De 6 Vaste Veldsectoren
+    if (locId === "zandpoort" || text.includes("zandpoort") || text.includes("tagmark") || text.includes("mol")) {
+      return {
+        points: 150,
         shortName: "TAGMARK ZANDPOORT",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR TAGMARK ZANDPOORT"
+        notification: "OPDRACHT SUCCESVOL: +150 PUNTEN VOOR TAGMARK ZANDPOORT"
       };
     }
     if (locId === "begijnhof" || text.includes("begijnhof") || text.includes("avondlied")) {
       return {
-        points: 40,
+        points: 70,
         shortName: "BEGIJNHOF AVONDLIED",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR BEGIJNHOF AVONDLIED"
+        notification: "OPDRACHT SUCCESVOL: +70 PUNTEN VOOR BEGIJNHOF AVONDLIED"
       };
     }
     if (locId === "bovenpoort" || text.includes("bovenpoort") || text.includes("getuige") || text.includes("interview")) {
       return {
-        points: 40,
+        points: 130,
         shortName: "BOVENPOORT GETUIGENIS",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR BOVENPOORT GETUIGENIS"
+        notification: "OPDRACHT SUCCESVOL: +130 PUNTEN VOOR BOVENPOORT GETUIGENIS"
       };
     }
     if (locId === "stadspark" || text.includes("stadspark") || text.includes("hack")) {
       return {
-        points: 40,
+        points: 80,
         shortName: "STADSPARK HACKERACTIE",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR STADSPARK HACKERACTIE"
+        notification: "OPDRACHT SUCCESVOL: +80 PUNTEN VOOR STADSPARK HACKERACTIE"
       };
     }
     if (locId === "kerkplein" || text.includes("kerkplein") || text.includes("10") || text.includes("cash")) {
       return {
-        points: 40,
+        points: 100,
         shortName: "KERKPLEIN €10 BEWIJS",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR KERKPLEIN €10 BEWIJS"
+        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR KERKPLEIN €10 BEWIJS"
       };
     }
     if (locId === "nieuw-lokaal" || text.includes("lokaal") || text.includes("dakpuin") || text.includes("csi")) {
       return {
-        points: 40,
+        points: 100,
         shortName: "NIEUW LOKAAL DAKPUIN",
-        notification: "OPDRACHT SUCCESVOL: +40 PUNTEN VOOR NIEUW LOKAAL DAKPUIN"
+        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR NIEUW LOKAAL DAKPUIN"
       };
     }
     if (locId === "lakenhal" || text.includes("lakenhal")) {
@@ -1057,9 +1097,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const cleanName = (locationName || "INZENDING").toUpperCase();
     return {
-      points: 35,
+      points: 50,
       shortName: cleanName,
-      notification: `OPDRACHT SUCCESVOL: +35 PUNTEN VOOR ${cleanName}`
+      notification: `OPDRACHT SUCCESVOL: +50 PUNTEN VOOR ${cleanName}`
     };
   }
 
@@ -1868,8 +1908,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // 9. Finale HQ Podium & Aankomst Registratie
   const hqArrivalContainer = document.getElementById("gm-hq-arrival-list");
   const hqArrivalCounter = document.getElementById("gm-hq-arrival-counter");
-  const ARRIVAL_POINTS_TABLE = [100, 75, 50, 30, 15];
-  const PODIUM_MEDALS = ["🥇 1e PLEK", "🥈 2e PLEK", "🥉 3e PLEK", "4e PLEK", "5e PLEK"];
+  const ARRIVAL_POINTS_TABLE = [100, 75, 50, 30, 15, 10];
+  const PODIUM_MEDALS = ["🥇 1e PLEK", "🥈 2e PLEK", "🥉 3e PLEK", "4e PLEK", "5e PLEK", "6e PLEK"];
 
   function renderHqArrivals(state) {
     if (!hqArrivalContainer) return;
@@ -1878,7 +1918,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const arrivalsList = state.hqArrivals || [];
 
     if (hqArrivalCounter) {
-      hqArrivalCounter.textContent = `${arrivalsList.length} / ${groups.length || 5} Teams Binnen`;
+      hqArrivalCounter.textContent = `${arrivalsList.length} / ${groups.length || 6} Teams Binnen`;
     }
 
     if (groups.length === 0) {

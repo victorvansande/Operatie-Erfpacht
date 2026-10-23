@@ -22,10 +22,10 @@ const SPEL_CONFIG = {
   firebaseDatabaseUrl: "",
 
   // PUNTENTELLING INSTELLINGEN (Aflopend per plek):
-  // 1e plek krijgt 260 pt, 2e plek 250 pt, 3e plek 240 pt ... t/m 26e plek (10 pt)
+  // 1e plek krijgt 100 pt, 2e plek 95 pt, 3e plek 90 pt ... minimum 10 pt
   scoreInstellingen: {
-    eerstePlekPunten: 260,
-    stapPerPlek: 10,
+    eerstePlekPunten: 100,
+    stapPerPlek: 5,
     minimumPunten: 10
   },
 
@@ -62,7 +62,7 @@ const SPEL_CONFIG = {
       type: "riddle",
       titel: "ONDERSCHEPTE SMS BURNER-PHONE",
       subtitel: "SIGINT INTERCEPTIE // STADSARCHIEF HERENTALS",
-      punten: 75,
+      punten: 40,
       codewoord: "hangjongeren",
       toetsaanslagen: "44 - 2 - 66 - 4 - 5 - 666 - 66 - 4 - 33 - 777 - 33 - 66",
       verhaal: "Onze SIGINT-afluisterdienst heeft ontdekt dat het stadsbestuur voor gevoelige communicatie géén traceerbare smartphones gebruikt, maar een oude, ongeregistreerde burner-phone (een retro Nokia met numerieke fysieke druktoetsen). Onze antenne heeft zojuist een uitgaande SMS-toetsenreeks van dit toestel kunnen onderscheppen.",
@@ -73,7 +73,7 @@ const SPEL_CONFIG = {
       type: "riddle",
       titel: "GELEKT AUDIO-TRANSCRIPT // TAP GESPREK THÉRÈSE",
       subtitel: "SIGINT TAP #4208 // KABINET STAD HERENTALS",
-      punten: 100,
+      punten: 60,
       codewoord: "smssosnaarvicce",
       oplossingWeergave: "SMS SOS naar Vicce",
       verhaal: "Onze inlichtingendienst heeft een afgeluisterd telefoongesprek onderschept tussen Thérèse van de stad Herentals en de geheime koper over de illegale verkoop van ons KSA-lokaal. Het transcript is zwaar gecensureerd met zwarte balken, maar onze cryptograaf ontdekte een verborgen patroon in de typemachine-letters...",
@@ -84,7 +84,7 @@ const SPEL_CONFIG = {
       type: "creative_challenge",
       titel: "OPERATIE CARTE BLANCHE // HET VRIJE SPEL",
       subtitel: "VRIJE CREATIEVE STUNT // VERRAS HQ",
-      punten: 200,
+      punten: 0, // Vrij in te stellen door Gamemaster HQ
       verhaal: "In tijden van acute crisis zijn de beste geheimagenten niet diegenen die star de protocollen volgen, maar diegenen die out-of-the-box denken en het onmogelijke waarmaken. Gamemaster HQ geeft jullie team totale 'Carte Blanche'!",
       instructie: "Doe iets buitengewoons, hilarisch, creatiefs of grensverleggends. Het kan letterlijk VANALLES zijn: een absurde sketch of stunt op video, een epische spionagefoto, een zelfgeschreven ode of gedicht, een geniaal fysiek voorwerp (of een markant persoon/voorbijganger!) meebrengen naar het Hoofdkwartier, een nep-aanwijzing planten... Geen limiet op de verbeelding. Hoe origineler en spectaculairder de inzending, hoe meer bonuspunten Victor jullie toekent bij de eindjurering!",
       uploadHint: "Upload hier jullie video, foto of beschrijving van jullie vrije stunt naar Gamemaster HQ (of kondig jullie fysieke verrassing voor HQ aan!)."
@@ -94,7 +94,7 @@ const SPEL_CONFIG = {
       type: "video_challenge",
       titel: "OPERATIE AD FUNDUM // CAFÉ INFILTRATIE",
       subtitel: "HUMINT VELDTEST // SNELSTE 'AT' WINT",
-      punten: 100,
+      punten: 140,
       verhaal: "Een echte veldagent moet te allen tijde alert en paraat zijn, maar moet ook bliksemsnel zijn glas kunnen leegdrinken wanneer de plicht roept en HQ plots het evacuatie-signaal geeft!",
       instructie: "Infiltreer undercover een café in Herentals en bestel aan de toog een pint (of een frisdrank voor wie geen alcohol drinkt). Trek een adje ('at')! Film het adje van start tot finish op video met een lopende stopwatch (bv. op een tweede gsm) duidelijk zichtbaar in beeld. De snelste tijd pakt de maximale bonus!",
       uploadHint: "Film het adje met stopwatch en upload de video hier direct naar Gamemaster HQ."
@@ -104,7 +104,7 @@ const SPEL_CONFIG = {
       type: "physical_delivery",
       titel: "OPERATIE SNACK ATTACK // RED GAMEMASTER VICCE",
       subtitel: "LOGISTIEKE NOODMISSIE // PROVIAND VOOR HQ",
-      punten: 100,
+      punten: 0, // Vrij in te stellen door Gamemaster HQ
       verhaal: "Gamemaster Vicce is al dagen- en nachtenlang onafgebroken bezig met het uitpluizen van deze duistere samenzwering, het bouwen van het commandoportaal en het bewaken van de satellietverbindingen. Zijn energiepeil staat op 1% en zijn maag knort luid over de frequenties. Hij heeft acute honger!",
       instructie: "Zorg dat Gamemaster Vicce niet bezwijkt: breng hem op het einde van de tocht een snack mee terug naar het Hoofdkwartier (Kapucijnenstraat 7) die hij écht lust (bv. frituur, bakkerij, nachtwinkel of café). De beste snack levert koninklijke bonuspunten op!",
       uploadHint: "Optioneel: maak alvast een teaser-foto van de snack bij aankoop en upload die hieronder."
@@ -114,7 +114,7 @@ const SPEL_CONFIG = {
       type: "video_challenge",
       titel: "OPERATIE VOLKSSTEM // OVERTUIG DE DERDE PARTIJ",
       subtitel: "PSY-OPS STRATEGIE // MINIMAAL 6 VREEMDEN TEGELIJK",
-      punten: 100,
+      punten: 160,
       verhaal: "Om de louche derde partij definitief af te schrikken en te bewijzen dat heel Herentals achter de KSA staat, hebben we een overweldigende, massale volksgetuigenis nodig. Eén getuige is niet genoeg; we moeten tonen dat de straat achter ons staat!",
       instructie: "Krijg minstens 6 volslagen vreemden (voorbijgangers in Herentals) tegelijkertijd voor jullie camera en laat ze in koor, luid en overtuigend roepen: 'Redt de KSA, de ware eigenaars van de erfpacht!'.",
       uploadHint: "Film de 6 vreemden die de leuze in koor roepen en upload de video hier direct voor HQ."
@@ -124,7 +124,7 @@ const SPEL_CONFIG = {
       type: "photo_challenge",
       titel: "OPERATIE SPEURHOND // K9 REKRUTERINGSBUREAU",
       subtitel: "K9 TACTICAL SQUAD // VIERVOETIGE INLICHTINGENDIENST",
-      punten: 50,
+      punten: 38,
       verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
       instructie: "HQ zoekt nog een speurhond. Vind een geschikte kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster HQ!",
       uploadHint: "Upload hier de foto met de kandidaat-speurhond."
@@ -137,6 +137,7 @@ const SPEL_CONFIG = {
     {
       id: "zandpoort",
       naam: "Zandpoort",
+      punten: 150,
       adres: "Zandstraat 41–43, 2200 Herentals",
       beschrijving: "De historische stadspoortdoorgang tussen de Zandstraat en de Nonnenstraat",
       lat: 51.17674,
@@ -172,6 +173,7 @@ const SPEL_CONFIG = {
     {
       id: "begijnhof",
       naam: "Begijnhof",
+      punten: 70,
       adres: "Begijnhof 1–30, 2200 Herentals",
       beschrijving: "Toegangspoort via de Begijnenstraat / Nonnenstraat",
       lat: 51.18035,
@@ -205,6 +207,7 @@ const SPEL_CONFIG = {
     {
       id: "bovenpoort",
       naam: "Bovenpoort",
+      punten: 130,
       adres: "Bovenrij 19–21, 2200 Herentals",
       beschrijving: "De overgebleven stadspoort aan het einde van de Bovenrij richting Molseweg",
       lat: 51.17408,
@@ -243,6 +246,7 @@ const SPEL_CONFIG = {
     {
       id: "stadspark",
       naam: "Stadspark",
+      punten: 80,
       adres: "Belgiëlaan, 2200 Herentals",
       beschrijving: "Begrensd door de Belgiëlaan, Olympiadelaan en Augustijnenlaan",
       lat: 51.18059,
@@ -274,6 +278,7 @@ const SPEL_CONFIG = {
     {
       id: "kerkplein",
       naam: "Kerkplein (Sint-Waldetrudis)",
+      punten: 100,
       adres: "Kerkplein, 2200 Herentals",
       beschrijving: "Het plein rondom de Sint-Waldetrudiskerk",
       lat: 51.17470,
@@ -309,6 +314,7 @@ const SPEL_CONFIG = {
     {
       id: "nieuw-lokaal",
       naam: "Nieuw Lokaal",
+      punten: 100,
       adres: "Markgravenstraat 77, 2200 Herentals",
       beschrijving: "Renovatie / voormalige tekenacademie",
       lat: 51.17800,
