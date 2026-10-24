@@ -838,6 +838,7 @@ const ScoreService = (() => {
     const photosMap = new Map(); // eventId -> photo object
     const messagesMap = new Map(); // eventId -> message board object
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
+    const manualCompletedLocations = new Map(); // normGroupId -> Set<locationId>
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
     const reviewedSubmissionsMap = new Map(); // targetEventId -> { eventId, label, awardedPoints, reviewedAt }
     const hqArrivals = new Map(); // groupId -> { groupId, place, points, ts }
@@ -856,6 +857,7 @@ const ScoreService = (() => {
         groupRevealedSteps.clear();
         bonusSolves.length = 0;
         reviewedSubmissionsMap.clear();
+        manualCompletedLocations.clear();
         hqArrivals.clear();
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
@@ -934,6 +936,18 @@ const ScoreService = (() => {
         if (normG) {
           const step = Math.min(6, Math.max(1, Number(ev.stepNumber) || 1));
           groupRevealedSteps.set(normG, step);
+        }
+      } else if (ev.type === "set_location_done" && ev.groupId && ev.locationId) {
+        const normG = normalizeGroupId(ev.groupId);
+        if (normG) {
+          if (!manualCompletedLocations.has(normG)) {
+            manualCompletedLocations.set(normG, new Set());
+          }
+          if (ev.done !== false) {
+            manualCompletedLocations.get(normG).add(ev.locationId);
+          } else {
+            manualCompletedLocations.get(normG).delete(ev.locationId);
+          }
         }
       } else if (ev.type === "rename_group" && ev.groupId) {
         const norm = normalizeGroupId(ev.groupId);
@@ -1216,12 +1230,19 @@ const ScoreService = (() => {
       const nextLoc = (grp.orderedLocations || []).find((l) => l.stepNr === revealedCount + 1) || null;
       grp.nextLocationToReveal = nextLoc;
 
-      // Huidige actieve locatie
+      // Huidige actieve locatie & voltooide sectoren (zowel via foto/bewijs als handmatig gemarkeerd door HQ)
+      const manualDone = manualCompletedLocations.get(normG) || new Set();
+      grp.manualDoneLocations = manualDone;
+
+      const isLocDone = (locId) => manualDone.has(locId) || grpPhotos.some((ph) => ph.locationId === locId);
+      const activeLoc = (grp.orderedLocations || []).find((l) => !isLocDone(l.id)) || null;
+      const allDone = (grp.orderedLocations || []).length > 0 && !activeLoc;
+
       const currentLoc = (grp.orderedLocations || []).find((l) => l.stepNr === revealedCount) || null;
-      grp.currentLocation = currentLoc ? { ...currentLoc, status: revealedCount >= 6 ? "voltooid" : "bezig" } : null;
-      grp.completedLocationsCount = (grp.orderedLocations || []).filter((l) => {
-        return sharedLocs.has(l.id) && grpPhotos.some((ph) => ph.locationId === l.id);
-      }).length;
+      grp.currentLocation = allDone
+        ? { status: "voltooid", naam: "Alle 6 locaties voltooid" }
+        : activeLoc ? { ...activeLoc, status: "bezig" } : currentLoc;
+      grp.completedLocationsCount = (grp.orderedLocations || []).filter((l) => isLocDone(l.id)).length;
     });
 
     // Deel map-inhoud (foto's + geopende locaties + message board) én locatie-volgorde met iedereen van hetzelfde team zodra groepen onthuld zijn!
@@ -1833,6 +1854,15 @@ const ScoreService = (() => {
     });
   }
 
+  async function setGroupLocationDone(groupId, locationId, isDone = true) {
+    return publishEvent({
+      type: "set_location_done",
+      groupId,
+      locationId,
+      done: isDone
+    });
+  }
+
   /**
    * Laat een speler (of de leiding) de naam van zijn/haar eigen groep aanpassen.
    */
@@ -2405,6 +2435,7 @@ const ScoreService = (() => {
     recordPlayerDebrief,
     setAllGroups,
     assignPlayerGroup,
+    setGroupLocationDone,
     renameGroup,
     setGroupsVisibilityMode,
     setPlayerDisabled,

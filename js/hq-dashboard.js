@@ -1028,7 +1028,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const locUploads = (grp.photos || []).filter(
             (ph) => ph.locationId === loc.id
           );
-          const isDone = isOpen && locUploads.length > 0;
+          const isManualDone = Boolean(grp.manualDoneLocations && grp.manualDoneLocations.has(loc.id));
+          const isDone = isManualDone || (isOpen && locUploads.length > 0);
           const preset = getTaskPresetInfo(loc.id, loc.naam, "");
           const locPts = preset.points || 100;
 
@@ -1036,7 +1037,7 @@ document.addEventListener("DOMContentLoaded", () => {
           let statusLabel = `🔒 ${loc.code}`;
           if (isDone) {
             pillClass = "step-done";
-            statusLabel = `🟢 KLAAR (📷${locUploads.length})`;
+            statusLabel = isManualDone ? `🟢 KLAAR (HQ)` : `🟢 KLAAR (📷${locUploads.length})`;
           } else if (isOpen) {
             pillClass = "step-open";
             statusLabel = `🟡 BEZIG`;
@@ -1048,13 +1049,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <strong style="color: var(--text-muted); font-size:0.75rem;">${loc.stepNr}.</strong>
                 <strong style="color:#ffffff; font-size:0.8rem;">${loc.naam}</strong>
               </div>
-              <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
                 <span style="font-size:0.7rem; font-family:var(--font-mono);">${statusLabel}</span>
-                ${
-                  !isOpen
-                    ? `<button type="button" class="gm-step-unlock-btn" data-unlock-loc="${loc.id}" title="Open dit mapje op afstand voor ${grp.naam}">🔓 Open</button>`
-                    : ""
-                }
+                <button type="button" class="gm-step-toggle-done-btn" data-group-id="${grp.id}" data-loc-id="${loc.id}" data-done="${isDone ? 'true' : 'false'}" style="background: ${isDone ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.08)'}; border: 1px solid ${isDone ? '#10b981' : 'rgba(255,255,255,0.2)'}; color: ${isDone ? '#6ee7b7' : '#cbd5e1'}; font-size: 0.68rem; font-weight: 800; border-radius: 4px; padding: 0.2rem 0.45rem; cursor: pointer;" title="${isDone ? 'Klik om heropenen (status klaar opheffen)' : 'Zet deze locatie op KLAAR voor dit team (zonder punten toe te kennen)'}">
+                  ${isDone ? "✓ Klaar" : "Zet op Klaar"}
+                </button>
                 <button type="button" class="gm-step-award-btn" data-group-id="${grp.id}" data-loc-id="${loc.id}" data-loc-name="${loc.naam}" data-pts="${locPts}" title="Ken direct de vaste +${locPts} PT van sector ${loc.naam} toe aan ${grp.naam}">
                   +${locPts} PT
                 </button>
@@ -1206,6 +1205,20 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.textContent = "...";
           await ScoreService.unlockLocation(firstMember.id, locId);
           showToast(`Mapje '${locId}' op afstand geopend voor ${grp.naam}!`);
+        });
+      });
+
+      // Event: Locatie handmatig op KLAAR zetten (zonder punten toe te kennen)
+      card.querySelectorAll(".gm-step-toggle-done-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const gId = btn.getAttribute("data-group-id");
+          const lId = btn.getAttribute("data-loc-id");
+          const isDone = btn.getAttribute("data-done") === "true";
+          const nextState = !isDone;
+          btn.disabled = true;
+          await ScoreService.setGroupLocationDone(gId, lId, nextState);
+          showToast(`${nextState ? "✓ Locatie gemarkeerd als KLAAR" : "Locatie heropend"} voor ${grp.naam} (0 PT).`);
         });
       });
 
