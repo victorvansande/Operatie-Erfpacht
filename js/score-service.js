@@ -327,11 +327,15 @@ const ScoreService = (() => {
     const isVideoUrl = Boolean(
       photoUrl &&
         (photoUrl.startsWith("data:video/") ||
-          /\.(mp4|mov|webm|m4v)(\?|$)/i.test(photoUrl))
+          /\.(mp4|mov|webm|m4v|3gp|avi|mkv|quicktime)(\?|$)/i.test(photoUrl))
     );
     const mediaTag = isVideoUrl
-      ? `<video src="${photoUrl}" controls autoplay playsinline style="max-width: 100%; max-height: 74dvh; border-radius: 8px; border: 1px solid var(--border-color); background: #000;"></video>`
-      : `<img src="${photoUrl}" alt="${title}" style="max-width: 100%; max-height: 74dvh; border-radius: 8px; object-fit: contain; border: 1px solid var(--border-color); background: #000;" />`;
+      ? `<video src="${photoUrl}" controls autoplay playsinline style="max-width: 100%; max-height: 68dvh; border-radius: 8px; border: 1px solid var(--border-color); background: #000;">
+           <source src="${photoUrl}" type="video/mp4">
+           <source src="${photoUrl}" type="video/quicktime">
+           <source src="${photoUrl}" type="video/webm">
+         </video>`
+      : `<img src="${photoUrl}" alt="${title}" style="max-width: 100%; max-height: 68dvh; border-radius: 8px; object-fit: contain; border: 1px solid var(--border-color); background: #000;" />`;
 
     lb.innerHTML = `
       <div class="modal-box" style="max-width: 680px; padding: 1rem; text-align: center; background: #070a0e; border-color: var(--accent);">
@@ -343,6 +347,14 @@ const ScoreService = (() => {
           <button type="button" class="btn btn-secondary lb-close-btn" style="flex: 0 0 auto; padding: 0.4rem 0.75rem; font-size: 0.75rem;">✕ Sluiten</button>
         </div>
         ${mediaTag}
+        <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+          <a href="${photoUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 0.76rem; padding: 0.45rem 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; background: #10b981; border-color: #10b981; color: #020617; font-weight: 800;">
+            ▶ Speel Af / Bekijk in Nieuw Tabblad ↗
+          </a>
+          <a href="${photoUrl}" download class="btn btn-secondary" style="font-size: 0.76rem; padding: 0.45rem 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+            ⬇ Download Bestand
+          </a>
+        </div>
       </div>
     `;
 

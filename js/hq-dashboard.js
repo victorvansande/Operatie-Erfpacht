@@ -1584,13 +1584,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const isVid =
             ph.mediaType === "video" ||
-            (ph.photoUrl &&
-              (ph.photoUrl.startsWith("data:video/") ||
-                /\.(mp4|mov|webm)(\?|$)/i.test(ph.photoUrl)));
+            Boolean(
+              ph.photoUrl &&
+                (ph.photoUrl.startsWith("data:video/") ||
+                  /\.(mp4|mov|webm|m4v|3gp|avi|mkv|quicktime)(\?|$)/i.test(ph.photoUrl) ||
+                  (ph.caption && (ph.caption.toLowerCase().includes("video") || ph.caption.toLowerCase().includes("film") || ph.caption.toLowerCase().includes("opname"))))
+            );
 
-          const mediaHtml = isVid
-            ? `<video src="${ph.photoUrl}" class="gm-upload-media" controls playsinline preload="metadata"></video>`
-            : `<img src="${ph.photoUrl}" class="gm-upload-media" alt="Bewijs van ${ph.playerName}" title="Klik om op volledig scherm te bekijken" />`;
+          let mediaHtml = "";
+          if (ph.photoUrl) {
+            if (isVid) {
+              mediaHtml = `
+                <div style="position:relative; background:#000;">
+                  <video class="gm-upload-media" controls playsinline preload="metadata" style="display:block; width:100%; max-height:220px; object-fit:contain; background:#000;">
+                    <source src="${ph.photoUrl}" type="video/mp4">
+                    <source src="${ph.photoUrl}" type="video/quicktime">
+                    <source src="${ph.photoUrl}" type="video/webm">
+                    Je browser kan deze video niet direct afspelen.
+                  </video>
+                </div>
+              `;
+            } else {
+              mediaHtml = `<img src="${ph.photoUrl}" class="gm-upload-media" alt="Bewijs van ${ph.playerName}" title="Klik om op volledig scherm te bekijken" style="display:block; width:100%; max-height:220px; object-fit:cover; cursor:pointer;" />`;
+            }
+          } else {
+            mediaHtml = `
+              <div style="padding:1.25rem 0.75rem; text-align:center; background:rgba(245,158,11,0.08); border-bottom:1px solid rgba(245,158,11,0.25); color:#fde047; font-family:var(--font-mono); font-size:0.75rem;">
+                <div style="font-size:1.6rem; margin-bottom:0.25rem;">📹</div>
+                <strong>Opname bewaard op toestel van ${ph.playerName}</strong>
+              </div>
+            `;
+          }
+
+          const playActionsHtml = ph.photoUrl
+            ? `
+              <div style="display:flex; gap:0.35rem; padding:0.35rem 0.75rem; background:rgba(0,0,0,0.35); flex-wrap:wrap; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <a href="${ph.photoUrl}" target="_blank" rel="noopener noreferrer" style="font-family:var(--font-mono); font-size:0.68rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.18); border:1px solid rgba(56,189,248,0.4); border-radius:4px; padding:0.22rem 0.55rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+                  ▶ Speel Af / Open in Nieuw Tabblad ↗
+                </a>
+                <a href="${ph.photoUrl}" download style="font-family:var(--font-mono); font-size:0.68rem; font-weight:700; color:#cbd5e1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:0.22rem 0.5rem; text-decoration:none;">
+                  ⬇ Download
+                </a>
+              </div>
+            `
+            : "";
 
           const statusPill = reviewedLabel
             ? `<span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-family:var(--font-mono); font-size:0.64rem; font-weight:800; padding:0.12rem 0.42rem; border-radius:4px;">${reviewedLabel}</span>`
@@ -1604,6 +1641,7 @@ document.addEventListener("DOMContentLoaded", () => {
           card.innerHTML = `
             <div>
               ${mediaHtml}
+              ${playActionsHtml}
               <div style="padding: 0.65rem 0.75rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:0.35rem; margin-bottom:0.25rem;">
                   <span style="font-family:var(--font-mono); font-size:0.72rem; color:var(--amber); font-weight:700;">
@@ -1794,13 +1832,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const isVid =
         ph.mediaType === "video" ||
-        (ph.photoUrl &&
-          (ph.photoUrl.startsWith("data:video/") ||
-            /\.(mp4|mov|webm)(\?|$)/i.test(ph.photoUrl)));
+        Boolean(
+          ph.photoUrl &&
+            (ph.photoUrl.startsWith("data:video/") ||
+              /\.(mp4|mov|webm|m4v|3gp|avi|mkv|quicktime)(\?|$)/i.test(ph.photoUrl) ||
+              (ph.caption && (ph.caption.toLowerCase().includes("video") || ph.caption.toLowerCase().includes("film") || ph.caption.toLowerCase().includes("opname"))))
+        );
 
-      const mediaHtml = isVid
-        ? `<video src="${ph.photoUrl}" class="gm-upload-media" controls playsinline preload="metadata"></video>`
-        : `<img src="${ph.photoUrl}" class="gm-upload-media" alt="Bewijs van ${ph.playerName}" title="Klik om op volledig scherm te bekijken" />`;
+      let mediaHtml = "";
+      if (ph.photoUrl) {
+        if (isVid) {
+          mediaHtml = `
+            <div style="position:relative; background:#000;">
+              <video class="gm-upload-media" controls playsinline preload="metadata" style="display:block; width:100%; max-height:220px; object-fit:contain; background:#000;">
+                <source src="${ph.photoUrl}" type="video/mp4">
+                <source src="${ph.photoUrl}" type="video/quicktime">
+                <source src="${ph.photoUrl}" type="video/webm">
+                Je browser kan deze video niet direct afspelen.
+              </video>
+            </div>
+          `;
+        } else {
+          mediaHtml = `<img src="${ph.photoUrl}" class="gm-upload-media" alt="Bewijs van ${ph.playerName}" title="Klik om op volledig scherm te bekijken" style="display:block; width:100%; max-height:220px; object-fit:cover; cursor:pointer;" />`;
+        }
+      } else {
+        mediaHtml = `
+          <div style="padding:1.25rem 0.75rem; text-align:center; background:rgba(245,158,11,0.08); border-bottom:1px solid rgba(245,158,11,0.25); color:#fde047; font-family:var(--font-mono); font-size:0.75rem;">
+            <div style="font-size:1.6rem; margin-bottom:0.25rem;">📹</div>
+            <strong>Opname bewaard op toestel van ${ph.playerName}</strong>
+          </div>
+        `;
+      }
+
+      const playActionsHtml = ph.photoUrl
+        ? `
+          <div style="display:flex; gap:0.35rem; padding:0.35rem 0.8rem; background:rgba(0,0,0,0.35); flex-wrap:wrap; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <a href="${ph.photoUrl}" target="_blank" rel="noopener noreferrer" style="font-family:var(--font-mono); font-size:0.68rem; font-weight:800; color:#38bdf8; background:rgba(56,189,248,0.18); border:1px solid rgba(56,189,248,0.4); border-radius:4px; padding:0.22rem 0.55rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">
+              ▶ Speel Af / Open in Nieuw Tabblad ↗
+            </a>
+            <a href="${ph.photoUrl}" download style="font-family:var(--font-mono); font-size:0.68rem; font-weight:700; color:#cbd5e1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:0.22rem 0.5rem; text-decoration:none;">
+              ⬇ Download
+            </a>
+          </div>
+        `
+        : "";
 
       const statusPill = reviewedLabel
         ? `<span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-family:var(--font-mono); font-size:0.65rem; font-weight:800; padding:0.12rem 0.45rem; border-radius:4px;">${reviewedLabel}</span>`
@@ -1815,6 +1890,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <div>
           ${mediaHtml}
+          ${playActionsHtml}
           <div style="padding: 0.7rem 0.8rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:0.4rem; margin-bottom:0.3rem;">
               <span style="font-family:var(--font-mono); font-size:0.74rem; font-weight:800; color:${ph.groupColor || "var(--accent)"};">
