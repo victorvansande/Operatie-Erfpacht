@@ -128,6 +128,16 @@ const SPEL_CONFIG = {
       verhaal: "De inlichtingendienst van HQ kampt met een acuut capaciteitstekort in de K9-afdeling. We zoeken dringend een talentvolle speurhond in Herentals om sporen van het stadsbestuur te volgen en de kluis te bewaken.",
       instructie: "HQ zoekt nog een speurhond. Vind een geschikte kandidaat, neem een foto met de hond en upload hem als officieel sollicitatiedossier voor Gamemaster HQ!",
       uploadHint: "Upload hier de foto met de kandidaat-speurhond."
+    },
+    {
+      id: "flyer_bierfeesten",
+      type: "photo_challenge",
+      titel: "OPERATIE BIERFEESTEN // CAFÉ INFILTRATIE & PROPAGANDA",
+      subtitel: "INFILTRATIE & PROMOTIE // +100 PT",
+      punten: 100,
+      verhaal: "Nu ons lokaal op het spel staat en de stad met erfpachtcontracten sjoemelt, mogen we absoluut geen enkel risico nemen met onze inkomsten. De Bierfeesten zijn onze levenslijn: dit evenement móét een gigantisch succes worden! We moeten zien dat dit evenement van ons zeker niet faalt nu ons lokaal op het spel staat.",
+      instructie: "Infiltreer undercover een café in Herentals en flyer het hele café vol met flyers van de Bierfeesten (leg flyers op de toog, op alle tafels, aan het prikbord, etc.). Maak een duidelijke foto/video als onomstotelijk bewijs en upload het naar HQ!",
+      uploadHint: "Upload hier de foto of video van het geflyerde café als bewijs voor HQ."
     }
   ],
 

@@ -1043,15 +1043,16 @@ document.addEventListener("DOMContentLoaded", () => {
           ${stepsHtml}
         </div>
 
-        <!-- 1-Klik Team Bonuspunten & Strafpunten (De 7 Bonusmissies) -->
+        <!-- 1-Klik Team Bonuspunten & Strafpunten (De 8 Bonusmissies) -->
         <div class="gm-bonus-bar">
           <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-bottom:0.25rem;">
-            <span>⭐ DE 7 BONUSMISSIES TOEKENNEN AAN ${grp.naam.toUpperCase()}:</span>
+            <span>⭐ DE 8 BONUSMISSIES TOEKENNEN AAN ${grp.naam.toUpperCase()}:</span>
           </div>
           <div class="gm-bonus-btns" style="display:flex; flex-wrap:wrap; gap:0.35rem;">
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="40" data-reason="Nokia Burner SMS gekraakt">📱 +40 Nokia SMS</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="60" data-reason="SMS SOS naar Vicce ontvangen">📞 +60 SOS SMS</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Speurhond K9 foto goedgekeurd">🐕 +50 Speurhond K9</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="100" data-reason="Café geflyerd met Bierfeesten">🍻 +100 Flyer Bierfeesten</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="140" data-reason="Ad Fundum Café Infiltratie">🍺 +140 Ad Fundum</button>
             <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="160" data-reason="Volksstem 6 Vreemden Koor">📢 +160 Volksstem</button>
             <button type="button" class="gm-chip-btn chip-amber gm-custom-prompt-btn" data-reason="Snack voor Vicce">🍟 Snack Vicce (Vrij)</button>
@@ -1262,7 +1263,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const locId = String(locationId || "").toLowerCase();
     const text = `${locId} ${locationName || ""} ${caption || ""}`.toLowerCase();
 
-    // 1. De 7 Bonusmissies
+    // 1. De 8 Bonusmissies
+    if (locId.includes("bierfeesten") || text.includes("bierfeest") || text.includes("flyer")) {
+      return {
+        points: 100,
+        shortName: "FLYEREN BIERFEESTEN CAFÉ",
+        notification: "OPDRACHT SUCCESVOL: +100 PUNTEN VOOR FLYEREN BIERFEESTEN CAFÉ"
+      };
+    }
     if (locId.includes("speurhond") || text.includes("hond") || text.includes("k9") || text.includes("sollicitatie")) {
       return {
         points: 50,

@@ -1739,6 +1739,100 @@ document.addEventListener("DOMContentLoaded", () => {
       const b5Header = b5.querySelector(".location-folder-header");
       b5Header.addEventListener("click", () => b5.classList.toggle("expanded"));
       setupBonusUploadForm(b5, "bonus_speurhond", "Bonus #07: Operatie Speurhond");
+
+      // -------------------------------------------------------------
+      // BONUS 8: Operatie Bierfeesten (Flyer een Café)
+      // -------------------------------------------------------------
+      const b6 = document.createElement("div");
+      b6.className = "location-folder bonus-folder";
+      b6.id = "loc-folder-bonus-bierfeesten";
+      b6.innerHTML = `
+        <button type="button" class="location-folder-header">
+          <div class="location-folder-title">
+            <span class="folder-icon" style="color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);">⭐</span>
+            <span class="loc-step-label" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); font-weight: 800;">BONUS #08:</span>
+            <span>Operatie Bierfeesten (Flyer een Café)</span>
+          </div>
+          <div class="location-folder-badges">
+            <span class="briefing-audio-pill" style="border-color: rgba(245, 158, 11, 0.4); color: var(--amber); background: rgba(245, 158, 11, 0.1);">
+              ⭐ PROMOTIE
+            </span>
+            <span class="loc-lock-badge" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.45);">
+              🍻 +100 PT
+            </span>
+          </div>
+        </button>
+
+        <div class="location-folder-body">
+          <article class="intel-doc-sheet doc-variant-tool" style="border-left-color: var(--amber); margin-bottom: 0.85rem;">
+            <div class="intel-doc-top-tab" style="background: var(--amber); color: #000;">COMMERCIËLE INFILTRATIE // FINANCIEEL OVERLEVINGSPROTOCOL</div>
+            <div class="intel-doc-header">
+              <div class="intel-doc-brand">
+                ${AGENCY_SEAL_SMALL_SVG}
+                <div>
+                  <div class="intel-doc-dept">FINANCIËLE VEILIGHEIDSDIENST HQ // RED HET LOKAAL</div>
+                  <div class="intel-doc-main-title">OPERATIE BIERFEESTEN // CAFÉ INFILTRATIE &amp; PROPAGANDA</div>
+                  <div class="intel-doc-sub" style="color: var(--amber);">DOEL: FLYER EEN HEEL CAFÉ // +100 PUNTEN</div>
+                </div>
+              </div>
+              <div class="intel-doc-stamp" style="border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.08);">
+                BIERFEESTEN
+              </div>
+            </div>
+
+            <div class="intel-doc-body">
+              <p>
+                <strong>TACTISCHE NOODZAAK:</strong> We moeten zien dat de <strong>Bierfeesten</strong> zeker niet falen nu ons lokaal op het spel staat! De inkomsten van dit evenement zijn van vitaal belang om onze erfpacht te kunnen verdedigen.
+              </p>
+              <p>
+                <strong>DE OPDRACHT:</strong> Infiltreer undercover een café in Herentals en <strong>flyer het hele café vol met flyers van de Bierfeesten</strong> (leg flyers op de toog, op alle tafeltjes, aan het prikbord, etc.).
+              </p>
+              <p>
+                <strong>HET BEWIJS:</strong> Maak een duidelijke foto of video van het café waar de flyers goed zichtbaar liggen en upload die hier direct naar Gamemaster HQ voor <strong>+100 bonuspunten</strong>!
+              </p>
+            </div>
+
+            <div class="intel-doc-footer">
+              <span>AUTH: FINANCIËLE TASKFORCE // SECTOR HERENTALS</span>
+              <div class="intel-barcode-bars"></div>
+            </div>
+          </article>
+
+          <!-- Foto / Video Uploadzone voor Bierfeesten -->
+          <div style="background: rgba(14, 20, 28, 0.92); border: 2px solid var(--amber); border-radius: 8px; padding: 1.05rem;">
+            <div class="clue-label" style="color: var(--amber); margin-bottom: 0.35rem; font-size: 0.82rem;">
+              📷 BEWIJSMATERIAAL UPLOAD // FOTO/VIDEO GEFLYERD CAFÉ (+100 PT)
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.55rem;">
+              Upload hier jullie bewijsmateriaal van het café en vermeld de naam van het café!
+            </p>
+            <form class="photo-upload-form loc-photo-form" autocomplete="off" style="margin-top: 0.5rem;">
+              <label class="file-input-label">
+                <span>📷 Kies of maak foto/video van het café</span>
+                <input type="file" class="loc-photo-input" accept="image/*,video/*" style="display: none;" required />
+              </label>
+              <span class="loc-photo-filename" style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-main);">Geen bestand gekozen</span>
+              <input
+                type="text"
+                class="admin-input loc-photo-caption"
+                placeholder="bv. Café 't Schipke volgeflyerd - Groep Blauw"
+                style="margin-bottom: 0; flex: 1; min-width: 170px;"
+                required
+              />
+              <button type="submit" class="btn btn-primary loc-photo-submit" style="flex: 0 0 auto; background: var(--amber); border-color: var(--amber); color: #000; font-weight: 800; padding: 0.6rem 1rem;">
+                Upload Bewijs naar HQ (+100 PT)
+              </button>
+            </form>
+            <div class="loc-photo-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--amber); margin-top: 0.45rem; min-height: 1.1rem;"></div>
+            <div class="photos-grid loc-photos-gallery"></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(b6);
+
+      const b6Header = b6.querySelector(".location-folder-header");
+      b6Header.addEventListener("click", () => b6.classList.toggle("expanded"));
+      setupBonusUploadForm(b6, "bonus_bierfeesten", "Bonus #08: Operatie Bierfeesten");
     }
 
     // Refresh galleries for bonus uploads if info has updated photos
@@ -1756,6 +1850,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const b5 = document.getElementById("loc-folder-bonus-speurhond");
     if (b5) renderBonusGallery(b5, "bonus_speurhond", info);
+
+    const b6 = document.getElementById("loc-folder-bonus-bierfeesten");
+    if (b6) renderBonusGallery(b6, "bonus_bierfeesten", info);
   }
 
   // =========================================================================
