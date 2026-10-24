@@ -1250,10 +1250,10 @@
     <div class="war-clock-center" id="war-clock-btn" title="Klik om de doeltijd aan te passen">
       <div class="war-clock-label">
         <span class="red-beacon-dot"></span>
-        <span id="clock-mode-label">T-MINUS // MISSIESTART</span>
+        <span id="clock-mode-label">⏳ T-MINUS // DEADLINE 22u00</span>
       </div>
-      <div class="war-countdown-display" id="war-countdown-digits">00:00:00</div>
-      <div class="war-countdown-sub" id="war-target-sub">Doeltijd: Zaterdag 19:00 (Klik om te wijzigen)</div>
+      <div class="war-countdown-display" id="war-countdown-digits">--:--:--</div>
+      <div class="war-countdown-sub" id="war-target-sub">Doeltijd: Za 24 okt 22:00 (Klik om te wijzigen)</div>
     </div>
 
     <!-- RECHTS: STATUS & BEDIENING -->
@@ -1481,12 +1481,12 @@
 
       <div style="display:flex; flex-direction:column; gap:0.75rem;">
         <div>
-          <label style="font-size:0.75rem; color:var(--hud-muted); display:block; margin-bottom:0.3rem;">Kies snel een doeltijd voor zaterdag:</label>
+          <label style="font-size:0.75rem; color:var(--hud-muted); display:block; margin-bottom:0.3rem;">Kies de deadline voor de erfpacht (vanavond):</label>
           <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-            <button type="button" class="war-btn" onclick="setTargetHour(19, 0)">Zaterdag 19:00</button>
-            <button type="button" class="war-btn" onclick="setTargetHour(19, 30)">19:30</button>
-            <button type="button" class="war-btn" onclick="setTargetHour(20, 0)">20:00</button>
-            <button type="button" class="war-btn" onclick="setTargetHour(20, 30)">20:30</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(22, 0)" style="border-color:#38bdf8; color:#38bdf8; font-weight:800;">Vanavond 22:00 (Standaard)</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(22, 15)">22:15</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(22, 30)">22:30</button>
+            <button type="button" class="war-btn" onclick="setTargetHour(23, 0)">23:00</button>
           </div>
         </div>
 
@@ -1695,21 +1695,26 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
 
-        // Serie 24 countdown piep: 880Hz (A5), subtiele dubbele/hogere pitch op de minuut (1760Hz)
+        // Heldere, futuristische digitale countdown piep (geen doffe luidsprekerklik)
+        // Reguliere seconde: 1320 Hz (heldere E6 beep)
+        // Minuutmarkering: 1760 Hz (hoge A6 accent-beep)
         osc.type = "sine";
-        const freq = isMinute ? 1760 : 880;
+        const freq = isMinute ? 1760 : 1320;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
         const now = audioCtx.currentTime;
-        // Subtiel, niet te oorverdovend (volume ~0.15)
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+        const duration = isMinute ? 0.12 : 0.085;
+
+        // Vloeiende attack van 12ms vermijdt mechanische pop/klik van DC-offset
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         osc.start(now);
-        osc.stop(now + 0.05);
+        osc.stop(now + duration + 0.02);
       } catch (_) {}
     }
 
@@ -1719,16 +1724,16 @@
 
     function initTargetTime() {
       const saved = localStorage.getItem(STORAGE_TARGET_KEY);
-      if (saved) {
-        targetTime = new Date(parseInt(saved, 10));
+      let parsed = saved ? new Date(parseInt(saved, 10)) : null;
+      const defaultTonight = new Date();
+      defaultTonight.setHours(22, 0, 0, 0);
+
+      // Automatisch corrigeren als oude 19:00 opgeslagen stond of doel in het verleden ligt
+      if (!parsed || isNaN(parsed.getTime()) || parsed.getHours() < 21 || parsed.getTime() < Date.now() - 60000) {
+        targetTime = defaultTonight;
+        localStorage.setItem(STORAGE_TARGET_KEY, targetTime.getTime());
       } else {
-        // Standaard doel: Zaterdag om 19:00
-        const d = new Date();
-        const day = d.getDay();
-        const diff = (6 - day + 7) % 7; // dagen tot zaterdag
-        d.setDate(d.getDate() + diff);
-        d.setHours(19, 0, 0, 0);
-        targetTime = d;
+        targetTime = parsed;
       }
     }
 
@@ -1744,7 +1749,7 @@
       let isMinuteMark = false;
 
       if (diffMs > 0) {
-        label.textContent = "T-MINUS // MISSIESTART";
+        label.textContent = "⏳ T-MINUS // DEADLINE 22u00";
         const totalSec = Math.floor(diffMs / 1000);
         isMinuteMark = (totalSec % 60) === 0;
         const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
@@ -1752,7 +1757,7 @@
         const secs = String(totalSec % 60).padStart(2, "0");
         display.textContent = `${hrs}:${mins}:${secs}`;
       } else {
-        label.textContent = "MISSIE BEZIG // VERSTREKEN TIJD";
+        label.textContent = "🚨 DEADLINE VERSTREKEN // OVERTIJD";
         const elapsedSec = Math.floor(Math.abs(diffMs) / 1000);
         isMinuteMark = (elapsedSec % 60) === 0;
         const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, "0");
@@ -1761,7 +1766,7 @@
         display.textContent = `+${hrs}:${mins}:${secs}`;
       }
 
-      // Speel de subtiele 24 countdown piep per seconde
+      // Speel de subtiele digitale countdown piep per seconde
       play24Beep(isMinuteMark);
 
       if (sub && targetTime) {
@@ -1783,9 +1788,6 @@
 
     function setTargetHour(hr, min) {
       const d = new Date();
-      const day = d.getDay();
-      const diff = (6 - day + 7) % 7;
-      d.setDate(d.getDate() + diff);
       d.setHours(hr, min, 0, 0);
       targetTime = d;
       localStorage.setItem(STORAGE_TARGET_KEY, targetTime.getTime());
