@@ -1184,17 +1184,14 @@ const ScoreService = (() => {
     // Verrijk elke groep in adminGroupsMap met gedeelde geopende locaties & ingezonden bewijsstukken
     adminGroupsMap.forEach((grp) => {
       const normG = normalizeGroupId(grp.id);
-      // Elke groep start standaard op stap 1 (hun 1e locatie is direct zichtbaar & open!)
-      const revealedCount = groupRevealedSteps.get(normG) || 1;
+      // Alle 6 locaties zijn nu direct zichtbaar & open voor iedereen
+      const revealedCount = groupRevealedSteps.get(normG) || 6;
       grp.revealedStepCount = revealedCount;
 
       const sharedLocs = new Set();
-      // STRIKTE CONTROLE: Enkel locaties tot en met revealedStepCount (standaard stap 1) zitten in sharedLocs!
       (grp.orderedLocations || []).forEach((loc) => {
-        loc.isRevealed = loc.stepNr <= revealedCount;
-        if (loc.isRevealed) {
-          sharedLocs.add(loc.id);
-        }
+        loc.isRevealed = true;
+        sharedLocs.add(loc.id);
       });
 
       const memberIds = new Set(grp.leden.map((m) => m.id));
@@ -1219,12 +1216,12 @@ const ScoreService = (() => {
     allPlayerScores.forEach((p) => {
       const pGrpId = p.groupId || p.adminGroupId;
       const normPG = pGrpId ? normalizeGroupId(pGrpId) : null;
-      const pRevealedStepCount = normPG ? (groupRevealedSteps.get(normPG) || 1) : 1;
+      const pRevealedStepCount = normPG ? (groupRevealedSteps.get(normPG) || 6) : 6;
       p.groupRevealedStepCount = pRevealedStepCount;
 
       p.orderedLocations = getOrderedLocationsForGroup(p.groupId || p.adminGroupId);
       (p.orderedLocations || []).forEach((loc) => {
-        loc.isRevealed = loc.stepNr <= pRevealedStepCount;
+        loc.isRevealed = true;
       });
 
       // Filter berichten die voor deze speler of zijn/haar team bestemd zijn

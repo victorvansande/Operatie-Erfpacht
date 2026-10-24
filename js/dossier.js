@@ -2796,9 +2796,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateLocationFolderState(folder, loc, stepNr) {
-    const revStep = (latestPlayerInfo && latestPlayerInfo.groupRevealedStepCount) || 1;
-    // STRIKTE CONTROLE: Enkel stap 1 is standaard open! Latere stappen zijn pas zichtbaar als HQ ze onthult!
-    const isRevealed = (stepNr === 1) || (stepNr <= revStep);
+    const revStep = (latestPlayerInfo && latestPlayerInfo.groupRevealedStepCount) || 6;
+    // Alle 6 locaties staan nu volledig open voor alle spelers
+    const isRevealed = true;
 
     const lockedView = folder.querySelector(".loc-locked-view");
     const unlockedView = folder.querySelector(".loc-unlocked-view");
