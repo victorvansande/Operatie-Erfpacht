@@ -799,7 +799,27 @@ const ScoreService = (() => {
 
     const unlocks = new Map(); // playerId -> { playerId, ts }
     const bonuses = new Map(); // playerId -> { totalDelta, history: [] }
+    const OFFICIAL_GAME_GROUPS = {
+      "daan": "Groep Rood",
+      "leon": "Groep Rood",
+      "merlijn": "Groep Rood",
+      "emile": "Groep Paars",
+      "julie": "Groep Paars",
+      "lex": "Groep Paars",
+      "luna": "Groep Paars",
+      "lotte": "Groep Groen",
+      "rik": "Groep Groen",
+      "rosan": "Groep Groen",
+      "jassin": "Groep Blauw",
+      "matthijs": "Groep Blauw",
+      "riet": "Groep Blauw",
+      "dominique": "Groep Geel",
+      "floris": "Groep Geel",
+      "jules": "Groep Geel"
+    };
+
     const playerGroups = new Map(); // playerId -> groupId (bv. "Groep Blauw")
+    Object.entries(OFFICIAL_GAME_GROUPS).forEach(([pid, gid]) => playerGroups.set(pid, gid));
     const groupCustomNames = new Map(); // groupId -> customName (bv. "De Wolven")
     const groupRevealedSteps = new Map(); // groupId -> revealedStepCount (1..6)
     const disabledPlayers = new Set(); // playerIds die niet meedoen
@@ -831,6 +851,7 @@ const ScoreService = (() => {
         groupDebriefExemptions.clear();
         if (ev.resetGroups) {
           playerGroups.clear();
+          Object.entries(OFFICIAL_GAME_GROUPS).forEach(([pid, gid]) => playerGroups.set(pid, gid));
           groupCustomNames.clear();
         }
         if (ev.resetDisabled) {
@@ -1046,15 +1067,8 @@ const ScoreService = (() => {
       const totalPoints = basePoints + bonusPoints;
 
       let configuredGroupId = !isDisabled
-        ? playerGroups.get(speler.id) || null
+        ? playerGroups.get(speler.id) || speler.groepId || null
         : null;
-      // Auto-fallback groepen ALLEEN genereren als het spel onthuld is én de admin nooit groepen heeft ingesteld
-      if (!isDisabled && !configuredGroupId && groupsRevealed && playerGroups.size === 0) {
-        const autoGrp =
-          defaultGroupList[enabledIdx % numAutoGroups] ||
-          `Groep ${(enabledIdx % numAutoGroups) + 1}`;
-        configuredGroupId = autoGrp;
-      }
       if (!isDisabled && configuredGroupId) enabledIdx++;
 
       const configuredGroupName = configuredGroupId
