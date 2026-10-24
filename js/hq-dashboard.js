@@ -1609,9 +1609,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           } else {
             mediaHtml = `
-              <div style="padding:1.25rem 0.75rem; text-align:center; background:rgba(245,158,11,0.08); border-bottom:1px solid rgba(245,158,11,0.25); color:#fde047; font-family:var(--font-mono); font-size:0.75rem;">
-                <div style="font-size:1.6rem; margin-bottom:0.25rem;">📹</div>
-                <strong>Opname bewaard op toestel van ${ph.playerName}</strong>
+              <div style="padding:1.4rem 1rem; text-align:center; background:rgba(245,158,11,0.12); border-bottom:1.5px solid rgba(245,158,11,0.3); color:#fde047;">
+                <div style="font-size:2.2rem; margin-bottom:0.35rem;">📱🎬</div>
+                <div style="font-family:var(--font-mono); font-size:0.82rem; font-weight:800; color:#fbbf24; letter-spacing:0.04em;">
+                  VIDEO OPGENOMEN OP SMARTPHONE AGENT
+                </div>
+                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:0.35rem; line-height:1.4;">
+                  Het videobestand staat veilig lokaal op het toestel van <strong>${ph.playerName}</strong>.<br/>
+                  (Laat bij aankomst op HQ kort tonen)
+                </div>
               </div>
             `;
           }
@@ -1857,9 +1863,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else {
         mediaHtml = `
-          <div style="padding:1.25rem 0.75rem; text-align:center; background:rgba(245,158,11,0.08); border-bottom:1px solid rgba(245,158,11,0.25); color:#fde047; font-family:var(--font-mono); font-size:0.75rem;">
-            <div style="font-size:1.6rem; margin-bottom:0.25rem;">📹</div>
-            <strong>Opname bewaard op toestel van ${ph.playerName}</strong>
+          <div style="padding:1.4rem 1rem; text-align:center; background:rgba(245,158,11,0.12); border-bottom:1.5px solid rgba(245,158,11,0.3); color:#fde047;">
+            <div style="font-size:2.2rem; margin-bottom:0.35rem;">📱🎬</div>
+            <div style="font-family:var(--font-mono); font-size:0.82rem; font-weight:800; color:#fbbf24; letter-spacing:0.04em;">
+              VIDEO OPGENOMEN OP SMARTPHONE AGENT
+            </div>
+            <div style="font-size:0.75rem; color:#cbd5e1; margin-top:0.35rem; line-height:1.4;">
+              Het videobestand staat veilig lokaal op het toestel van <strong>${ph.playerName}</strong>.<br/>
+              (Laat bij aankomst op HQ kort tonen)
+            </div>
           </div>
         `;
       }
