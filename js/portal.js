@@ -631,7 +631,9 @@ document.addEventListener("DOMContentLoaded", () => {
         ScoreService.recordUnlock(pid).catch(() => {});
       }
 
-      window.location.href = `spelers/${pid}.html`;
+      setTimeout(() => {
+        window.location.href = `spelers/${pid}.html`;
+      }, 200);
     } else {
       errorMsg.textContent = "TOEGANG GEWEIGERD: Ongeldige code.";
       codeInput.classList.remove("error");

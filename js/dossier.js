@@ -162,6 +162,12 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("jb_active_agent_id", playerId);
         sessionStorage.setItem(`dossier_unlocked_${playerId}`, "true");
       } catch (_) {}
+
+      // Garandeer dat HQ & Beamer direct zien dat deze speler aangemeld / online is
+      if (typeof ScoreService !== "undefined") {
+        ScoreService.recordUnlock(playerId).catch(() => {});
+      }
+
       initPlayerGpsTracking();
     } else {
       if (contentEl) contentEl.classList.remove("unlocked");
@@ -2989,6 +2995,11 @@ document.addEventListener("DOMContentLoaded", () => {
       checkAccess();
       const info = state.playerScoresMap.get(playerId);
       latestPlayerInfo = info || null;
+
+      // Als de speler op dit toestel ontgrendeld is, maar de cloud het nog niet wist, direct syncen!
+      if (info && !info.unlocked && !info.disabled && (sessionStorage.getItem(`dossier_unlocked_${playerId}`) === "true" || localStorage.getItem(`dossier_unlocked_${playerId}`) === "true")) {
+        ScoreService.recordUnlock(playerId).catch(() => {});
+      }
 
       const statusBox = document.getElementById("player-live-score-status");
       const teamBox = document.getElementById("player-live-team-status");

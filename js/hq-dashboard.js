@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnAwardAllOnTime = document.getElementById("gm-award-all-ontime-btn");
   const btnAwardAllOutfit = document.getElementById("gm-award-all-outfit-btn");
   const enableAllPlayersBtn = document.getElementById("gm-enable-all-players-btn");
+  const btnUnlockAll = document.getElementById("gm-unlock-all-btn");
   const collapseAttendanceBtn = document.getElementById("gm-collapse-attendance-btn");
   const kpiCardAttendance = document.getElementById("gm-kpi-card-attendance");
 
@@ -2035,6 +2036,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await ScoreService.setDisabledPlayers([]);
       showToast(`✓ Alle ${SPEL_CONFIG.spelers.length} spelers staan weer op AANWEZIG (actief)!`);
+    });
+  }
+
+  // Meld alle aanwezigen direct aan / zet online op beamer en HQ
+  if (btnUnlockAll) {
+    btnUnlockAll.addEventListener("click", async () => {
+      const state = latestState || ScoreService.getState();
+      const present = (state.allPlayers || []).filter(
+        (p) => !p.disabled && !p.isGamemaster && !p.isExternalTester
+      );
+      const ok = window.confirm(
+        `⚡ BEVESTIGING: MELD ALLE ${present.length} AANWEZIGE AGENTEN AAN\n\n` +
+        `Wil je alle aanwezige spelers die nu al hun code ingegeven hebben direct forceren als AANGEMELD / ONLINE op de beamer en het dashboard?`
+      );
+      if (!ok) return;
+
+      btnUnlockAll.disabled = true;
+      btnUnlockAll.textContent = "Aanmelden...";
+      for (const p of present) {
+        await ScoreService.recordUnlock(p.id);
+      }
+      btnUnlockAll.disabled = false;
+      btnUnlockAll.textContent = "⚡ Meld Alle Aanwezigen Aan";
+      showToast(`✓ Alle ${present.length} aanwezige agenten zijn aangemeld en direct online op beamer & dashboard!`);
     });
   }
 

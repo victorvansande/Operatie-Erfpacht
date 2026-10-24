@@ -2272,9 +2272,11 @@
       if (chipsEl) {
         chipsEl.innerHTML = all.map(p => {
           if (p.disabled || p.isGamemaster || p.isExternalTester) return "";
-          const cls = p.debriefed ? "debriefed" : p.unlocked ? "unlocked" : "";
-          const prefix = p.debriefed ? "🔒 " : p.unlocked ? "✓ " : "";
-          return `<span class="chip-mini ${cls}">${prefix}${p.naam}</span>`;
+          const isDone = Boolean(p.unlocked);
+          const cls = p.debriefed ? "debriefed" : isDone ? "unlocked" : "waiting";
+          const icon = p.debriefed ? "🔒 " : isDone ? "🟢 " : "⏳ ";
+          const tag = isDone ? " <span style='font-size:0.62rem; color:#6ee7b7; font-weight:800;'>[ONLINE]</span>" : " <span style='font-size:0.62rem; color:#94a3b8;'>[WACHT]</span>";
+          return `<span class="chip-mini ${cls}">${icon}${p.naam}${tag}</span>`;
         }).join("");
       }
     }
@@ -2353,7 +2355,12 @@
 
                 const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
                 const rankIcon = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
-                const membersStr = grp.leden.map(m => m.naam).join(", ");
+                const membersHtml = grp.leden.map(m => {
+                  const isOnline = Boolean(m.unlocked);
+                  const color = isOnline ? "#6ee7b7" : "#94a3b8";
+                  const icon = isOnline ? "🟢" : "⏳";
+                  return `<span style="display:inline-flex; align-items:center; gap:0.2rem; color:${color}; margin-right:0.4rem; background:rgba(255,255,255,0.05); padding:0.1rem 0.35rem; border-radius:3px; border:1px solid ${isOnline ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'};">${icon} ${m.naam}</span>`;
+                }).join(" ");
                 const grpScore = typeof grp.averagePoints === "number" ? grp.averagePoints : (grp.leden.length > 0 ? Math.round((grp.totalPoints || 0) / grp.leden.length) : 0);
                 const memberCount = grp.leden.length;
                 const rawSum = grp.sumPoints || grp.totalPoints || 0;
@@ -2374,7 +2381,7 @@
                       </div>
                     </div>
                     <div class="group-war-location">${curTxt}</div>
-                    <div class="group-war-members">Leden: ${membersStr || 'Nog geen leden'}</div>
+                    <div class="group-war-members" style="display:flex; flex-wrap:wrap; gap:0.25rem; align-items:center;">Leden: ${membersHtml || 'Nog geen leden'}</div>
                   </div>
                 `;
               }).join("")}
@@ -2397,7 +2404,12 @@
                     <div class="player-lb-left">
                       <span class="player-lb-rank">${medal}</span>
                       <div>
-                        <div class="player-lb-name">${p.naam}</div>
+                        <div class="player-lb-name" style="display:flex; align-items:center; gap:0.4rem;">
+                          <span>${p.unlocked ? '🟢' : '⏳'} ${p.naam}</span>
+                          <span style="font-size:0.65rem; font-family:'JetBrains Mono',monospace; font-weight:800; color:${p.unlocked ? '#6ee7b7' : '#f59e0b'}; padding:0.05rem 0.35rem; border-radius:3px; background:${p.unlocked ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${p.unlocked ? '#10b981' : 'rgba(245,158,11,0.4)'};">
+                            ${p.unlocked ? 'AANGEMELD' : 'WACHT'}
+                          </span>
+                        </div>
                         <div class="player-lb-meta">Dossier #${p.dossierNr || ""}${grpName}</div>
                       </div>
                     </div>
@@ -2432,6 +2444,21 @@
           </p>
           <div style="margin-top: 1rem; font-family:'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--hud-cyan); background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); padding: 0.4rem 0.8rem; border-radius: 4px;">
             ${state.unlockedCount || 0} / ${state.totalCount || 25} AGENTEN GEACTIVEERD
+          </div>
+          <div style="margin-top: 1.15rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.45rem;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#94a3b8; font-weight:700;">
+              STATUS AANMELDINGEN VELDAGENTEN:
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; max-width: 680px;">
+              ${(state.allPlayers || []).filter(p => !p.disabled && !p.isGamemaster && !p.isExternalTester).map(p => {
+                const ok = Boolean(p.unlocked);
+                return `
+                  <span style="font-family:'JetBrains Mono', monospace; font-size: 0.74rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid ${ok ? '#10b981' : 'rgba(255,255,255,0.12)'}; background: ${ok ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.05)'}; color: ${ok ? '#6ee7b7' : '#94a3b8'}; box-shadow: ${ok ? '0 0 10px rgba(16,185,129,0.35)' : 'none'}; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    ${ok ? '🟢' : '⏳'} ${p.naam} ${ok ? '✓' : ''}
+                  </span>
+                `;
+              }).join("")}
+            </div>
           </div>
         </div>
       `;
