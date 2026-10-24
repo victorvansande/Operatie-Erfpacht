@@ -153,10 +153,10 @@ const SPEL_CONFIG = {
       lat: 51.17674,
       lng: 4.83328,
       code: "zand1",
-      opdracht: "We hebben een mol in de jeugddienst van de stad zitten. Hij is op de hoogte, HQ heeft hem ingelicht. Bel hem op het nummer 0498 34 32 07, zeg het geheime codewoord, voer zijn opdracht uit en in ruil daarvoor zal hij in de volgende jeugdraad de stad aansprakelijk stellen, zodat we ze vanbinnenuit verantwoordelijk stellen en hun daden onthullen.",
+      opdracht: "We hebben een mol in de jeugddienst van de stad zitten. Hij is op de hoogte, HQ heeft hem ingelicht. Bel hem op het nummer 0486 95 87 20, zeg het geheime codewoord, voer zijn opdracht uit en in ruil daarvoor zal hij in de volgende jeugdraad de stad aansprakelijk stellen, zodat we ze vanbinnenuit verantwoordelijk stellen en hun daden onthullen.",
       bonusOpdracht: "Bonusopdracht: Neem aan de Zandpoort een undercover spionagefoto waarop jullie groep onherkenbaar gecamoufleerd opgaat in het straatbeeld terwijl jullie bellen met de mol! (De groep met het beste materiaal, de snelste tijd én volbrachte bonusopdrachten wint!)",
       vereistBewijs: [
-        "Telefonisch contact met de mol (0498 34 32 07) met het juiste codewoord",
+        "Telefonisch contact met de mol (0486 95 87 20) met het juiste codewoord",
         "Uitvoering van de geheime opdracht die de mol jullie aan de telefoon dicteert",
         "Upload hieronder jullie officiële tagmark-bewijsmateriaal voor Gamemaster HQ"
       ],
@@ -174,8 +174,8 @@ const SPEL_CONFIG = {
       },
       veldTool: {
         type: "mol_telefoon",
-        telefoonWeergave: "0498 34 32 07",
-        telefoonHref: "tel:0498343207",
+        telefoonWeergave: "0486 95 87 20",
+        telefoonHref: "tel:0486958720",
         codewoord: "DE DAKPANNEN LIGGEN LOS",
         instructie: "Bel de mol via de knop hieronder. Zodra hij opneemt, zeg je EERST het exacte codewoord hieronder zodat hij weet dat jullie door HQ gestuurd zijn!"
       }
