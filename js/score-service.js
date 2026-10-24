@@ -847,9 +847,11 @@ const ScoreService = (() => {
     let debriefingModeActive = false;
     const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
     const groupDebriefExemptions = new Map(); // normGroupId -> boolean (true = heropend / vrijgesteld)
+    let pointsResetAt = 0;
 
     for (const ev of sortedEvents) {
       if (ev.type === "reset") {
+        pointsResetAt = 0;
         unlocks.clear();
         bonuses.clear();
         photosMap.clear();
@@ -873,6 +875,14 @@ const ScoreService = (() => {
         if (ev.resetDisabled) {
           disabledPlayers.clear();
         }
+      } else if (ev.type === "reset_all_points") {
+        // Enkel de punten wissen (terug naar 0 PT), groepen, mappen, foto's en logins blijven 100% bewaard!
+        pointsResetAt = ev.ts || Date.now();
+        bonuses.clear();
+        playerAwardedTasks.clear();
+        bonusSolves.length = 0;
+        reviewedSubmissionsMap.clear();
+        hqArrivals.clear();
       } else if (ev.type === "set_groups_visibility" && ev.mode) {
         groupVisibilityMode = ev.mode;
       } else if (ev.type === "set_debriefing_mode") {
@@ -907,6 +917,9 @@ const ScoreService = (() => {
         }
         playerLocUnlocks.get(ev.playerId).add(ev.locationId);
       } else if (ev.type === "bonus" && ev.playerId) {
+        if (pointsResetAt > 0 && (ev.ts || 0) < pointsResetAt) {
+          continue; // Bonuspunten van voor de punten-reset negeren
+        }
         const delta = Number(ev.delta) || 0;
         const reason = (ev.reason || "Bonus").trim();
         const reasonLower = reason.toLowerCase();
@@ -1155,7 +1168,7 @@ const ScoreService = (() => {
       const isDisabled = disabledPlayers.has(speler.id) || isStaff;
       const unlockInfo = !isStaff && !disabledPlayers.has(speler.id) ? unlockRankMap.get(speler.id) || null : null;
       const bonusInfo = bonuses.get(speler.id) || { totalDelta: 0, history: [] };
-      const basePoints = unlockInfo ? unlockInfo.basePoints : 0;
+      const basePoints = pointsResetAt > 0 ? 0 : (unlockInfo ? unlockInfo.basePoints : 0);
       const bonusPoints = !isDisabled ? bonusInfo.totalDelta : 0;
       const totalPoints = basePoints + bonusPoints;
 
@@ -1906,6 +1919,18 @@ const ScoreService = (() => {
     });
   }
 
+  /**
+   * Zet enkel alle scores en punten terug op 0 (zowel individueel als per team).
+   * Groepsindelingen, geopende mappen, logins en geüploade foto's/video's blijven 100% BEWAARD!
+   * Hiermee kan de spelleider op het einde alle punten handmatig opnieuw toekennen.
+   */
+  async function resetAllPoints() {
+    return publishEvent({
+      type: "reset_all_points",
+      ts: Date.now()
+    });
+  }
+
   async function setAllGroups(assignments) {
     return publishEvent({
       type: "set_groups",
@@ -2497,6 +2522,7 @@ const ScoreService = (() => {
     addGroupBonusPoints,
     revokePlayerUnlock,
     resetAllScores,
+    resetAllPoints,
     setDebriefingMode,
     setGroupDebriefExemption,
     recordPlayerDebrief,

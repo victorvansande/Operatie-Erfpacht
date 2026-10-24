@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToggleReveal = document.getElementById("gm-btn-toggle-reveal");
   const btnToggleAttendance = document.getElementById("gm-btn-toggle-attendance");
   const btnResetGame = document.getElementById("gm-btn-reset-game");
+  const btnResetPoints = document.getElementById("gm-btn-reset-points");
+  const btnAwardResetPoints = document.getElementById("gm-award-reset-points-btn");
   const attendanceDrawer = document.getElementById("gm-attendance-drawer");
   const attendanceChips = document.getElementById("gm-attendance-chips");
   const attendanceCountsBadge = document.getElementById("gm-attendance-counts-badge");
@@ -2654,6 +2656,48 @@ document.addEventListener("DOMContentLoaded", () => {
           : "Groepen zijn weer verborgen voor spelers."
       );
     });
+  }
+
+  // Alleen Punten Resetten naar 0 PT (Groepen, Mappen, Logins & Bewijsstukken blijven 100% bewaard!)
+  async function handleResetPointsToZero() {
+    const ok = window.confirm(
+      "🎯 HOOFDKWARTIER // ALLE PUNTEN TERUG OP 0 ZETTEN\n\n" +
+      "Weet je 100% zeker dat je alle punten van iedereen terug op 0 wilt zetten?\n\n" +
+      "✓ Alle individuele scores gaan direct terug naar 0 PT\n" +
+      "✓ Alle groepsscores gaan direct terug naar 0 PT\n" +
+      "✓ Groepsindelingen blijven 100% INTACT\n" +
+      "✓ Alle locaties en mappen blijven OPEN voor iedereen\n" +
+      "✓ Spelers worden NIET uitgelogd\n" +
+      "✓ Alle ingezonden foto's en video's blijven bewaard zodat je ze nu handmatig kunt beoordelen\n\n" +
+      "Druk op OK om alle punten nu op 0 te zetten, of Annuleren om te stoppen."
+    );
+    if (!ok) return;
+
+    try {
+      await ScoreService.resetAllPoints();
+      localStorage.removeItem(REVIEWED_KEY);
+      localStorage.removeItem(`jb_reviewed_uploads_${SPEL_CONFIG.cloudChannel}`);
+
+      latestState = ScoreService.getState();
+      renderKPIs(latestState);
+      renderGroups(latestState);
+      renderGroupFolders(latestState);
+      renderUploadsStream(latestState);
+      if (typeof renderDebriefPanel === "function") renderDebriefPanel(latestState);
+      if (typeof renderHqArrivals === "function") renderHqArrivals(latestState);
+
+      showToast("✓ Alle punten zijn teruggezet naar 0 PT! Groepen, mappen en uploads zijn bewaard.");
+    } catch (err) {
+      console.error("Fout bij resetten van punten:", err);
+      alert("Er trad een fout op bij het resetten van de punten: " + (err.message || err));
+    }
+  }
+
+  if (btnResetPoints) {
+    btnResetPoints.addEventListener("click", handleResetPointsToZero);
+  }
+  if (btnAwardResetPoints) {
+    btnAwardResetPoints.addEventListener("click", handleResetPointsToZero);
   }
 
   // Volledig Spel Resetten (met dubbele veiligheidsbevestiging!)
