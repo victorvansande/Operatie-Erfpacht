@@ -1520,112 +1520,77 @@ const ScoreService = (() => {
   const TOPIC_GPS = `${MQTT_BASE_TOPIC}/gps`;
 
   // =========================================================================
-  // LIVE GPS AGENT TRACKER ENGINE (Realtime Veldcoördinaten via MQTT)
+  // LIVE GPS AGENT TRACKER ENGINE (PERMANENT UITGESCHAKELD & GEZUIVERD)
+  // Privacy Protocol: Het spel is beëindigd. Geen enkele agentlocatie wordt
+  // ooit nog geregistreerd, getrackt, doorgestuurd of opgeslagen.
   // =========================================================================
-  const agentGpsPositions = new Map(); // playerId -> gps object
+  const agentGpsPositions = new Map(); // Permanent leeg
   const gpsListeners = new Set();
   let gpsWatchId = null;
   let lastGpsSendTs = 0;
   let activeTrackingPlayerId = null;
   let activeTrackingPlayerName = null;
+  let mqttClient = null;
 
-  function ingestGpsPing(data) {
-    if (!data || !data.playerId || typeof data.lat !== "number" || typeof data.lng !== "number") return;
-    const existing = agentGpsPositions.get(data.playerId);
-    if (existing && existing.ts && data.ts && data.ts < existing.ts) return;
-
-    agentGpsPositions.set(data.playerId, {
-      ...data,
-      receivedAt: Date.now()
-    });
-    notifyGpsListeners();
+  function ingestGpsPing(_data) {
+    // Permanent gedeactiveerd: gooi alle inkomende GPS data direct weg
+    return;
   }
 
   function notifyGpsListeners() {
-    const list = Array.from(agentGpsPositions.values());
     gpsListeners.forEach((fn) => {
-      try { fn(list); } catch (_) {}
+      try { fn([]); } catch (_) {}
     });
   }
 
-  function startLiveGpsTracking(playerId, playerName) {
-    if (typeof window === "undefined" || !navigator.geolocation) {
-      console.warn("Geen geolocatie ondersteuning in deze browser.");
-      return false;
-    }
-
-    activeTrackingPlayerId = playerId;
-    activeTrackingPlayerName = playerName;
-
+  function startLiveGpsTracking(_playerId, _playerName) {
+    // Permanent gedeactiveerd voor privacy van alle spelers
     stopLiveGpsTracking();
-
-    const options = {
-      enableHighAccuracy: true,
-      maximumAge: 8000,
-      timeout: 15000
-    };
-
-    const handlePos = (position) => {
-      if (!position || !position.coords) return;
-      const now = Date.now();
-      // Throttle naar maximaal 1 ping per 10 seconden om batterij en mobiele data te sparen
-      if (now - lastGpsSendTs < 10000) return;
-      lastGpsSendTs = now;
-
-      const currentState = computeScoreState();
-      const pInfo = currentState.playerScoresMap.get(playerId);
-      const groupId = pInfo ? (pInfo.groupId || pInfo.adminGroupId || null) : null;
-      const groupName = pInfo ? (pInfo.groupName || pInfo.adminGroupName || null) : null;
-      const groupColor = pInfo ? (pInfo.groupColor || pInfo.adminGroupColor || "#38bdf8") : "#38bdf8";
-
-      const ping = {
-        type: "gps_ping",
-        playerId,
-        playerName: playerName || (pInfo ? pInfo.naam : playerId),
-        dossierNr: pInfo ? pInfo.dossierNr : "??",
-        groupId,
-        groupName,
-        groupColor,
-        lat: Number(position.coords.latitude.toFixed(6)),
-        lng: Number(position.coords.longitude.toFixed(6)),
-        accuracy: Math.round(position.coords.accuracy || 0),
-        heading: position.coords.heading,
-        speed: position.coords.speed,
-        ts: now
-      };
-
-      ingestGpsPing(ping);
-
-      // Realtime live broadcast naar Beamer en HQ Dashboard via MQTT WebSockets
-      if (mqttClient && mqttClient.connected) {
-        try {
-          mqttClient.publish(TOPIC_GPS, JSON.stringify(ping), { qos: 0 });
-        } catch (_) {}
-      }
-    };
-
-    const handleErr = (err) => {
-      console.warn("GPS tracking status:", err.message);
-    };
-
-    try {
-      navigator.geolocation.getCurrentPosition(handlePos, handleErr, options);
-      gpsWatchId = navigator.geolocation.watchPosition(handlePos, handleErr, options);
-      return true;
-    } catch (e) {
-      console.warn("GPS watchPosition start mislukt:", e);
-      return false;
-    }
+    return false;
   }
 
   function stopLiveGpsTracking() {
     if (gpsWatchId !== null && typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.clearWatch(gpsWatchId);
+      try {
+        navigator.geolocation.clearWatch(gpsWatchId);
+      } catch (_) {}
       gpsWatchId = null;
+    }
+    agentGpsPositions.clear();
+    notifyGpsListeners();
+  }
+
+  function purgeAllGpsLocations() {
+    stopLiveGpsTracking();
+    agentGpsPositions.clear();
+    notifyGpsListeners();
+
+    if (typeof window !== "undefined") {
+      try {
+        [localStorage, sessionStorage].forEach((storage) => {
+          if (!storage) return;
+          const keysToRemove = [];
+          for (let i = 0; i < storage.length; i++) {
+            const k = storage.key(i);
+            if (k && (k.startsWith("jb_gps_") || k.includes("gps"))) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach((k) => storage.removeItem(k));
+        });
+      } catch (_) {}
+    }
+
+    if (mqttClient && mqttClient.connected) {
+      try {
+        mqttClient.publish(TOPIC_GPS, JSON.stringify({ type: "gps_purge", purged: true, ts: Date.now() }), { qos: 1, retain: true });
+      } catch (_) {}
     }
   }
 
-  let mqttClient = null;
+  // Voer zuivering direct lokaal uit
+  purgeAllGpsLocations();
+
   let currentBrokerIdx = 0;
   let myClientId = "agt_" + Math.random().toString(16).substring(2, 10);
   let isConnecting = false;
@@ -1741,7 +1706,10 @@ const ScoreService = (() => {
         isConnecting = false;
         updateSyncStatus("connected");
 
-        mqttClient.subscribe([TOPIC_EVENTS, TOPIC_STATE, TOPIC_REQ, TOPIC_GPS], { qos: 1 }, (err) => {
+        // Voer bij elke verbinding een purge uit van alle eventuele GPS-pings op de broker
+        purgeAllGpsLocations();
+
+        mqttClient.subscribe([TOPIC_EVENTS, TOPIC_STATE, TOPIC_REQ], { qos: 1 }, (err) => {
           if (!err) {
             broadcastStateRequest();
             flushOutbox();
@@ -1776,11 +1744,8 @@ const ScoreService = (() => {
             if (data && data.from !== myClientId && eventsMap.size > 0) {
               publishCurrentStateSnapshot();
             }
-          } else if (topic === TOPIC_GPS) {
-            if (data && data.playerId && typeof data.lat === "number" && typeof data.lng === "number") {
-              ingestGpsPing(data);
-            }
           }
+          // TOPIC_GPS wordt permanent genegeerd (privacybescherming spelers)
         } catch (err) {
           console.warn("Fout bij verwerken realtime MQTT pakket:", err);
         }
@@ -2514,12 +2479,13 @@ const ScoreService = (() => {
     getState: computeScoreState,
     startLiveGpsTracking,
     stopLiveGpsTracking,
+    purgeAllGpsLocations,
     onGpsPositionChange: (cb) => {
       gpsListeners.add(cb);
-      try { cb(Array.from(agentGpsPositions.values())); } catch (_) {}
+      try { cb([]); } catch (_) {}
       return () => gpsListeners.delete(cb);
     },
-    getLiveAgentPositions: () => Array.from(agentGpsPositions.values()),
+    getLiveAgentPositions: () => [],
     ingestGpsPing,
     getOrderedLocationsForGroup,
     recordUnlock,

@@ -2013,59 +2013,16 @@
       }, 5500);
     }
 
-    // 5B. Live GPS Agent Tracking Markers op Satelliet Kaart
+    // 5B. Live GPS Agent Tracking Markers op Satelliet Kaart (PERMANENT UITGESCHAKELD & GEZUIVERD)
     let liveAgentMarkers = new Map();
 
-    function renderLiveAgentMarkers(positions) {
-      if (!warMap || typeof L === "undefined") return;
-      if (!Array.isArray(positions)) return;
-
-      positions.forEach((pos) => {
-        if (!pos || typeof pos.lat !== "number" || typeof pos.lng !== "number") return;
-        const isVicce = pos.playerId === "vicce" || pos.isGamemaster;
-        const isRevealed = Boolean(latestState && latestState.groupsRevealed);
-        const color = isVicce ? "#f59e0b" : (isRevealed && pos.groupColor ? pos.groupColor : "#38bdf8");
-        const coreLabel = isVicce ? "★" : (pos.dossierNr ? `#${pos.dossierNr}` : "●");
-        const tagLabel = isVicce ? "★ VICCE (HQ)" : (pos.playerName || `Agent #${pos.dossierNr || ""}`);
-
-        const icon = L.divIcon({
-          className: "",
-          html: `
-            <div class="live-agent-pin ${isVicce ? 'is-hq' : ''}" style="--agent-color: ${color};">
-              <div class="live-agent-pin-ring"></div>
-              <div class="live-agent-pin-core">${coreLabel}</div>
-              <div class="live-agent-pin-tag">${tagLabel}</div>
-            </div>
-          `,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
+    function renderLiveAgentMarkers(_positions) {
+      if (liveAgentMarkers && liveAgentMarkers.size > 0 && warMap) {
+        liveAgentMarkers.forEach((m) => {
+          try { warMap.removeLayer(m); } catch (_) {}
         });
-
-        const popupContent = `
-          <div style="font-family:'JetBrains Mono',monospace; min-width:140px; color:#e2e8f0; font-size:0.8rem;">
-            <strong style="color:${color}; font-size:0.9rem;">${isVicce ? "★ VICCE (HQ COMMANDO)" : (pos.playerName || "Veldagent")}</strong>
-            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">
-              ${isVicce ? "Gamemaster / Hoofdkwartier" : (isRevealed && pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
-            </div>
-            <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">
-              GPS Nauwkeurigheid: ±${pos.accuracy || 8}m<br>
-              Tijdstip: ${new Date(pos.ts || Date.now()).toLocaleTimeString("nl-BE")}
-            </div>
-          </div>
-        `;
-
-        if (liveAgentMarkers.has(pos.playerId)) {
-          const m = liveAgentMarkers.get(pos.playerId);
-          m.setLatLng([pos.lat, pos.lng]);
-          m.setIcon(icon);
-          m.setPopupContent(popupContent);
-        } else {
-          const m = L.marker([pos.lat, pos.lng], { icon, zIndexOffset: isVicce ? 1000 : 500 })
-            .addTo(warMap)
-            .bindPopup(popupContent);
-          liveAgentMarkers.set(pos.playerId, m);
-        }
-      });
+        liveAgentMarkers.clear();
+      }
     }
 
     // 6. Render Sectoren Balk onder de kaart

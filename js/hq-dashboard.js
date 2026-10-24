@@ -326,138 +326,34 @@ document.addEventListener("DOMContentLoaded", () => {
   initRadarMap();
 
   // 3B. Live GPS Agent Tracking Markers op Gamemaster HQ Radar-Kaart
+  // PERMANENT UITGESCHAKELD & GEZUIVERD
   let gmAgentMarkers = new Map();
   let latestGpsPositionsList = [];
 
-  function renderGmRadarAgentMarkers(positions) {
-    if (!mapInstance || typeof L === "undefined") return;
-    if (Array.isArray(positions)) {
-      latestGpsPositionsList = positions;
-    }
-
-    const state = latestState || (typeof ScoreService !== "undefined" ? ScoreService.getState() : null);
-    if (!state) return;
-
-    const disabledSet = state.disabledSet || new Set();
-    const allPlayers = SPEL_CONFIG.spelers.filter((s) => !s.isGamemaster && !s.isExternalTester);
-
-    const posMap = new Map();
-    latestGpsPositionsList.forEach((p) => {
-      if (p && p.playerId && typeof p.lat === "number" && typeof p.lng === "number") {
-        posMap.set(p.playerId, p);
-      }
-    });
-
-    let liveCount = 0;
-
-    allPlayers.forEach((sp, idx) => {
-      const pInfo = state.playerScoresMap ? state.playerScoresMap.get(sp.id) : null;
-      const isDisabled = disabledSet.has(sp.id);
-      if (isDisabled) {
-        if (gmAgentMarkers.has(sp.id)) {
-          mapInstance.removeLayer(gmAgentMarkers.get(sp.id));
-          gmAgentMarkers.delete(sp.id);
-        }
-        return;
-      }
-
-      const pGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId) : null;
-      const groupColor = pInfo ? (pInfo.adminGroupColor || pInfo.groupColor || "#38bdf8") : "#38bdf8";
-      const groupName = pInfo ? (pInfo.adminGroupName || pInfo.groupName || "Geen team") : "Geen team";
-
-      let lat = null;
-      let lng = null;
-      let isLiveGps = false;
-      let accuracy = 0;
-      let lastTs = null;
-
-      if (posMap.has(sp.id)) {
-        const pGps = posMap.get(sp.id);
-        lat = pGps.lat;
-        lng = pGps.lng;
-        isLiveGps = true;
-        accuracy = pGps.accuracy || 8;
-        lastTs = pGps.ts || Date.now();
-        liveCount++;
-      } else {
-        // Geen GPS? Plot op huidige sector van team met een nette deterministische cirkel-offset
-        const grp = (state.adminGroupsList || []).find((g) => g.id === pGroup);
-        const curLoc = grp ? (grp.currentLocation || (grp.orderedLocations && grp.orderedLocations[0])) : null;
-        if (curLoc && curLoc.lat && curLoc.lng) {
-          const angle = (idx / allPlayers.length) * 2 * Math.PI;
-          lat = curLoc.lat + Math.cos(angle) * 0.00032;
-          lng = curLoc.lng + Math.sin(angle) * 0.00032;
-        } else if (SPEL_CONFIG.headquarters) {
-          const angle = (idx / allPlayers.length) * 2 * Math.PI;
-          lat = SPEL_CONFIG.headquarters.lat + Math.cos(angle) * 0.00028;
-          lng = SPEL_CONFIG.headquarters.lng + Math.sin(angle) * 0.00028;
-        }
-      }
-
-      if (lat === null || lng === null) return;
-
-      const coreLabel = `#${sp.dossierNr}`;
-      const icon = L.divIcon({
-        className: "live-agent-pin-wrap",
-        html: `
-          <div class="live-agent-pin ${isLiveGps ? 'is-live-gps' : 'is-team-cluster'}" style="--agent-color: ${groupColor};">
-            <div class="live-agent-pin-ring" style="${!isLiveGps ? 'animation:none; opacity:0.25;' : ''}"></div>
-            <div class="live-agent-pin-core" style="background:${groupColor}; color:#000; font-weight:900;">${coreLabel}</div>
-            <div class="live-agent-pin-tag" style="border-color:${groupColor};">${isLiveGps ? '🛰️' : '📍'} ${sp.naam}</div>
-          </div>
-        `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+  function renderGmRadarAgentMarkers(_positions) {
+    if (gmAgentMarkers.size > 0 && mapInstance) {
+      gmAgentMarkers.forEach((m) => {
+        try { mapInstance.removeLayer(m); } catch (_) {}
       });
-
-      const popup = `
-        <div style="font-family: var(--font-mono, monospace); font-size: 0.8rem; color: #e2e8f0; min-width: 160px;">
-          <strong style="color: ${groupColor}; font-size: 0.92rem;">#${sp.dossierNr} ${sp.naam}</strong>
-          <div style="color: #94a3b8; font-size: 0.76rem; margin-top: 2px;">
-            Team: <strong style="color:#fff;">${groupName}</strong>
-          </div>
-          <div style="color: ${isLiveGps ? '#10b981' : '#f59e0b'}; font-size: 0.72rem; margin-top: 4px; font-weight:700;">
-            ${isLiveGps ? `🟢 LIVE GPS (±${accuracy}m)` : `📍 Berekende Team Positie`}
-          </div>
-          ${isLiveGps ? `<div style="color: #64748b; font-size: 0.68rem;">Laatste update: ${new Date(lastTs).toLocaleTimeString("nl-BE")}</div>` : ''}
-          <div style="color: var(--accent); font-size: 0.72rem; margin-top: 4px;">
-            Behaalde punten: <strong>${pInfo ? pInfo.totalPoints : 0} PT</strong>
-          </div>
-        </div>
-      `;
-
-      if (gmAgentMarkers.has(sp.id)) {
-        const m = gmAgentMarkers.get(sp.id);
-        m.setLatLng([lat, lng]);
-        m.setIcon(icon);
-        m.setPopupContent(popup);
-      } else {
-        const m = L.marker([lat, lng], { icon, zIndexOffset: isLiveGps ? 700 : 400 })
-          .addTo(mapInstance)
-          .bindPopup(popup);
-        gmAgentMarkers.set(sp.id, m);
-      }
-    });
+      gmAgentMarkers.clear();
+    }
+    latestGpsPositionsList = [];
 
     const badge = document.getElementById("gm-radar-tracking-badge");
     if (badge) {
-      badge.textContent = `🛰️ ${liveCount} / ${allPlayers.length} Live GPS Pings`;
-      badge.style.color = liveCount > 0 ? "#10b981" : "#38bdf8";
-      badge.style.borderColor = liveCount > 0 ? "#10b981" : "rgba(56,189,248,0.3)";
+      badge.textContent = "🛰️ GPS Tracking Definitief Beëindigd";
+      badge.style.color = "#94a3b8";
+      badge.style.borderColor = "rgba(148,163,184,0.3)";
     }
 
-    renderRadarAgentsList(state, posMap);
+    const state = latestState || (typeof ScoreService !== "undefined" ? ScoreService.getState() : null);
+    renderRadarAgentsList(state, new Map());
   }
 
   // Focus op een speler vanaf de lijst
-  window.gmFocusAgent = (playerId) => {
-    if (!mapInstance || !gmAgentMarkers.has(playerId)) return;
-    const m = gmAgentMarkers.get(playerId);
-    mapInstance.setView(m.getLatLng(), 17, { animate: true });
-    m.openPopup();
-  };
+  window.gmFocusAgent = (_playerId) => {};
 
-  function renderRadarAgentsList(state, posMap) {
+  function renderRadarAgentsList(state, _posMap) {
     const listEl = document.getElementById("gm-radar-agents-list");
     if (!listEl) return;
     const allPlayers = SPEL_CONFIG.spelers.filter((s) => !s.isGamemaster && !s.isExternalTester);
@@ -465,30 +361,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     listEl.innerHTML = allPlayers
       .map((sp) => {
-        const pInfo = state.playerScoresMap ? state.playerScoresMap.get(sp.id) : null;
+        const pInfo = state && state.playerScoresMap ? state.playerScoresMap.get(sp.id) : null;
         const isDisabled = disabledSet.has(sp.id);
         if (isDisabled) return "";
 
-        const pGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId) : null;
         const groupColor = pInfo ? (pInfo.adminGroupColor || pInfo.groupColor || "#38bdf8") : "#38bdf8";
-        const hasGps = posMap && posMap.has(sp.id);
-        const curGps = hasGps ? posMap.get(sp.id) : null;
-
-        const grp = (state.adminGroupsList || []).find((g) => g.id === pGroup);
-        const curLoc = grp ? (grp.currentLocation || (grp.orderedLocations && grp.orderedLocations[0])) : null;
-        const locationLabel = hasGps
-          ? `🟢 Live GPS (±${curGps.accuracy || 8}m)`
-          : curLoc ? `📍 ${curLoc.naam}` : "HQ Kapucijnenstr";
 
         return `
-          <div style="background:rgba(15,23,42,0.85); border:1px solid #1e293b; border-radius:6px; padding:0.35rem 0.6rem; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.72rem; cursor:pointer;" onclick="gmFocusAgent('${sp.id}')" title="Klik om direct in te zoomen op ${sp.naam}">
+          <div style="background:rgba(15,23,42,0.85); border:1px solid #1e293b; border-radius:6px; padding:0.35rem 0.6rem; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.72rem;">
             <div style="display:flex; align-items:center; gap:0.45rem;">
               <span style="width:8px; height:8px; border-radius:50%; background:${groupColor}; flex-shrink:0;"></span>
               <strong style="color:#fff;">#${sp.dossierNr} ${sp.naam}</strong>
             </div>
             <div style="display:flex; align-items:center; gap:0.4rem;">
-              <span style="color:${hasGps ? '#10b981' : '#f59e0b'}; font-size:0.68rem;">${locationLabel}</span>
-              <span style="color:#38bdf8; font-size:0.65rem;">🔎 Zoek</span>
+              <span style="color:#94a3b8; font-size:0.68rem;">🔒 Spel Beëindigd</span>
             </div>
           </div>
         `;
@@ -681,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; color: #f59e0b;">
               👑 COMMANDANT HOOFDKWARTIER
             </span>
-            ${gpsPos ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #10b981; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🛰️ GPS LIVE (±${gpsPos.accuracy || 5}m)</span>` : '<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #94a3b8;">Kapucijnenstraat 7</span>'}
+            <span style="font-family: var(--font-mono); font-size: 0.62rem; color: #94a3b8;">Kapucijnenstraat 7</span>
           </div>
           <div style="font-size: 0.72rem; color: #cbd5e1; font-style: italic;">
             Blijft in HQ &bull; telt niet mee in groepsverdeling of klassement.
@@ -747,9 +633,7 @@ document.addEventListener("DOMContentLoaded", () => {
         transition: all 0.15s ease;
       `;
 
-      const gpsBadge = gpsPos
-        ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #10b981; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🛰️ GPS ±${gpsPos.accuracy || 8}m</span>`
-        : "";
+      const gpsBadge = "";
 
       const debriefBadge = isDebriefed
         ? `<span style="font-family: var(--font-mono); font-size: 0.62rem; color: #f59e0b; background: rgba(245,158,11,0.22); border: 1px solid rgba(245,158,11,0.6); padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 800;">🔒 AFGEMELD &amp; VERZEGELD</span>`
