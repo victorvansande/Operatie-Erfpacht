@@ -2729,9 +2729,9 @@
       const panelTitle = document.getElementById("war-right-panel-title");
       if (!container || !state) return;
 
-      const isRevealed = Boolean(state.groupsRevealed);
-      // Haal alle groepen op (bevat enkel groepen indien officieel onthuld)
-      const groups = state.groups || [];
+      // Haal alle actieve groepen op (altijd direct zichtbaar voor live stand)
+      const groups = (state.groups && state.groups.length > 0) ? state.groups : (state.adminGroupsList || []);
+      const isRevealed = Boolean(state.groupsRevealed) || groups.length > 0;
 
       // ========================================================
       // SCENARIO 1: GROEPEN ZIJN OFFICIEEL ONTHULD DOOR VICTOR OP HQ
