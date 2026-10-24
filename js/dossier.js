@@ -115,11 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       return true;
     }
-    return (
-      localStorage.getItem(
-        `jb_loc_unlocked_${SPEL_CONFIG.cloudChannel}_${playerId}_${locId}`
-      ) === "true"
-    );
+    return false;
   }
 
   async function unlockLocationForTeam(locId) {
@@ -2801,7 +2797,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateLocationFolderState(folder, loc, stepNr) {
     const revStep = (latestPlayerInfo && latestPlayerInfo.groupRevealedStepCount) || 1;
-    const isRevealed = (stepNr === 1) || (stepNr <= revStep) || isLocationUnlocked(loc.id);
+    // STRIKTE CONTROLE: Enkel stap 1 is standaard open! Latere stappen zijn pas zichtbaar als HQ ze onthult!
+    const isRevealed = (stepNr === 1) || (stepNr <= revStep);
 
     const lockedView = folder.querySelector(".loc-locked-view");
     const unlockedView = folder.querySelector(".loc-unlocked-view");

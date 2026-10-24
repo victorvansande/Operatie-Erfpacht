@@ -2202,6 +2202,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================================
   const groupCountSelect = document.getElementById("gm-group-count-select");
   const btnManualGroups = document.getElementById("gm-btn-manual-groups");
+  const btnLockAllStep1 = document.getElementById("gm-btn-lock-all-step1");
   const manualGroupsModal = document.getElementById("gm-manual-groups-modal");
   const manualModalTitle = document.getElementById("gm-manual-modal-title");
   const btnFormat6 = document.getElementById("gm-btn-format-6");
@@ -2456,6 +2457,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (btnCancelManualGroups) {
     btnCancelManualGroups.addEventListener("click", closeManualGroupsModal);
+  }
+
+  if (btnLockAllStep1) {
+    btnLockAllStep1.addEventListener("click", async () => {
+      const ok = window.confirm(
+        "🔒 BEVESTIGING: ALLE GROEPEN TERUGZETTEN OP ENKEL STAP 1\n\n" +
+        "Dit vergrendelt onmiddellijk stappen 2 t.e.m. 6 voor alle groepen op alle schermen en gsm's.\n" +
+        "Alleen de allereerste startlocatie blijft open voor elk team.\n\n" +
+        "Weet je het zeker?"
+      );
+      if (!ok) return;
+
+      btnLockAllStep1.disabled = true;
+      btnLockAllStep1.textContent = "Vergrendelen...";
+      const activeGroups = getActiveGroupsMeta();
+      for (const g of activeGroups) {
+        await ScoreService.setGroupRevealedStep(g.id, 1);
+      }
+      btnLockAllStep1.disabled = false;
+      btnLockAllStep1.textContent = "🔒 Alleen Stap 1 Openen";
+      showToast("🔒 Alle groepen staan nu op enkel stap 1! Stappen 2 t.e.m. 6 zijn vergrendeld.");
+    });
   }
 
   if (btnAutoFillEven) {

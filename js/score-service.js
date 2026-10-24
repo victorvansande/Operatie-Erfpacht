@@ -29,16 +29,55 @@ const ScoreService = (() => {
     "#06b6d4"
   ];
 
-  // Vertaal eventuele oude groepsnamen automatisch naar de nieuwe kleurnamen
+  // Vertaal eventuele alternatieve of oude groepsnamen altijd naar de 6 officiële kleurnamen
   const LEGACY_GROUP_MAP = {
+    "groep-1": "Groep Blauw",
+    "groep 1": "Groep Blauw",
+    "groep1": "Groep Blauw",
+    "1": "Groep Blauw",
     "team alpha": "Groep Blauw",
+    "groep alpha": "Groep Blauw",
+    "alpha": "Groep Blauw",
+
+    "groep-2": "Groep Rood",
+    "groep 2": "Groep Rood",
+    "groep2": "Groep Rood",
+    "2": "Groep Rood",
     "team bravo": "Groep Rood",
+    "groep bravo": "Groep Rood",
+    "bravo": "Groep Rood",
+
+    "groep-3": "Groep Geel",
+    "groep 3": "Groep Geel",
+    "groep3": "Groep Geel",
+    "3": "Groep Geel",
     "team charlie": "Groep Geel",
+    "groep charlie": "Groep Geel",
+    "charlie": "Groep Geel",
+
+    "groep-4": "Groep Groen",
+    "groep 4": "Groep Groen",
+    "groep4": "Groep Groen",
+    "4": "Groep Groen",
     "team delta": "Groep Groen",
+    "groep delta": "Groep Groen",
+    "delta": "Groep Groen",
+
+    "groep-5": "Groep Paars",
+    "groep 5": "Groep Paars",
+    "groep5": "Groep Paars",
+    "5": "Groep Paars",
     "team echo": "Groep Paars",
+    "groep echo": "Groep Paars",
+    "echo": "Groep Paars",
+
+    "groep-6": "Groep Oranje",
+    "groep 6": "Groep Oranje",
+    "groep6": "Groep Oranje",
+    "6": "Groep Oranje",
     "team foxtrot": "Groep Oranje",
-    "team golf": "Groep Roze",
-    "team hotel": "Groep Cyaan"
+    "groep foxtrot": "Groep Oranje",
+    "foxtrot": "Groep Oranje"
   };
 
   function normalizeGroupId(rawGroupId) {
@@ -46,6 +85,27 @@ const ScoreService = (() => {
     const trimmed = String(rawGroupId).trim();
     const mapped = LEGACY_GROUP_MAP[trimmed.toLowerCase()];
     return mapped || trimmed;
+  }
+
+  function getGroupIndex(groupId) {
+    if (!groupId) return 0;
+    const norm = normalizeGroupId(groupId).toLowerCase();
+    const groups = SPEL_CONFIG.standaardGroepen || [];
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      if (
+        (g.id && g.id.toLowerCase() === norm) ||
+        (g.naam && g.naam.toLowerCase() === norm)
+      ) {
+        return i;
+      }
+    }
+    const m = norm.match(/\d+/);
+    if (m) {
+      const nr = parseInt(m[0], 10);
+      if (nr >= 1 && nr <= groups.length) return nr - 1;
+    }
+    return 0;
   }
 
   function getGroupColor(groupId, indexFallback = 0) {
@@ -65,8 +125,14 @@ const ScoreService = (() => {
   }
 
   /**
-   * Geeft de 6 locaties terug in een unieke doorschuif-volgorde per groep,
-   * zodat Groep 1 bij Zandpoort start, Groep 2 bij Begijnhof, Groep 3 bij Bovenpoort, enz.
+   * Geeft de 6 locaties terug in een unieke, gegarandeerde rotatie-volgorde per groep:
+   * Groep 1 (Blauw)  -> start op Zandpoort (stap 1)
+   * Groep 2 (Rood)   -> start op Begijnhof (stap 1)
+   * Groep 3 (Geel)   -> start op Bovenpoort (stap 1)
+   * Groep 4 (Groen)  -> start op Stadspark (stap 1)
+   * Groep 5 (Paars)  -> start op Kerkplein (stap 1)
+   * Groep 6 (Oranje) -> start op Nieuw Lokaal (stap 1)
+   * Teammaten krijgen ALTIJD 100% exact dezelfde volgorde en startpunt!
    */
   function getOrderedLocationsForGroup(groupId) {
     const baseLocs = SPEL_CONFIG.locaties || [];
@@ -75,20 +141,7 @@ const ScoreService = (() => {
       return baseLocs.map((loc, idx) => ({ ...loc, stepNr: idx + 1 }));
     }
 
-    const norm = normalizeGroupId(groupId);
-    let grpIdx = (SPEL_CONFIG.standaardGroepen || []).findIndex(
-      (g) =>
-        (g.id && g.id.toLowerCase() === norm.toLowerCase()) ||
-        g.naam.toLowerCase() === norm.toLowerCase()
-    );
-    if (grpIdx < 0) {
-      let hash = 0;
-      for (let i = 0; i < norm.length; i++) {
-        hash = norm.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      grpIdx = Math.abs(hash);
-    }
-
+    const grpIdx = getGroupIndex(groupId);
     const offset = grpIdx % baseLocs.length;
     const rotated = [
       ...baseLocs.slice(offset),
@@ -1009,10 +1062,10 @@ const ScoreService = (() => {
         : null;
       const configuredGroupColor = getGroupColor(configuredGroupId);
 
-      // Spelers zien hun groep PAS zodra groupsRevealed === true!
-      const visibleGroupId = groupsRevealed ? configuredGroupId : null;
-      const visibleGroupName = groupsRevealed ? configuredGroupName : null;
-      const visibleGroupColor = groupsRevealed ? configuredGroupColor : null;
+      // Spelers zien hun groep en unieke route direct zodra ze ingedeeld zijn!
+      const visibleGroupId = configuredGroupId;
+      const visibleGroupName = configuredGroupName;
+      const visibleGroupColor = configuredGroupColor;
       const playerPhotos = photosByPlayer.get(speler.id) || [];
 
       return {
@@ -1122,14 +1175,7 @@ const ScoreService = (() => {
       grp.revealedStepCount = revealedCount;
 
       const sharedLocs = new Set();
-      grp.leden.forEach((member) => {
-        const mSet = playerLocUnlocks.get(member.id);
-        if (mSet) {
-          mSet.forEach((locId) => sharedLocs.add(locId));
-        }
-      });
-
-      // Zorg dat alle locaties tot en met revealedStepCount direct in sharedLocs zitten!
+      // STRIKTE CONTROLE: Enkel locaties tot en met revealedStepCount (standaard stap 1) zitten in sharedLocs!
       (grp.orderedLocations || []).forEach((loc) => {
         loc.isRevealed = loc.stepNr <= revealedCount;
         if (loc.isRevealed) {
