@@ -268,24 +268,26 @@
       font-size: 0.78rem;
     }
 
-    /* 6-Stappen Route Tracker per groep */
+    /* 6-Stappen Route Tracker per groep (1 nette verticale rij per sector, NOOIT overlap) */
     .gm-route-steps {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.45rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
     }
 
     .gm-step-pill {
       background: rgba(7, 10, 14, 0.85);
       border: 1px solid #1e293b;
       border-radius: 6px;
-      padding: 0.45rem 0.6rem;
+      padding: 0.45rem 0.65rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.74rem;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .gm-step-pill.step-done {
@@ -529,8 +531,8 @@
     }
 
     @media (max-width: 768px) {
-      .gm-route-steps {
-        grid-template-columns: 1fr;
+      .gm-step-pill {
+        font-size: 0.72rem;
       }
     }
 

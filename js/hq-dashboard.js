@@ -49,6 +49,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const locationOccupancyEl = document.getElementById("gm-location-occupancy");
   const playerCodesListEl = document.getElementById("gm-player-codes-list");
 
+  // Groepsformaat & Meta (5 of 6 groepen)
+  let targetGroupCount = parseInt(localStorage.getItem("jb_target_group_count") || "6", 10);
+  if (targetGroupCount !== 5 && targetGroupCount !== 6) targetGroupCount = 6;
+
+  function getActiveGroupsMeta() {
+    return (SPEL_CONFIG.standaardGroepen || [])
+      .slice(0, targetGroupCount)
+      .map((g) => ({
+        id: g.id || g.naam,
+        naam: g.naam,
+        kleur: g.kleur || "#38bdf8"
+      }));
+  }
+
   // Mastercode Modal (leiding2026)
   const authModal = document.getElementById("gm-auth-modal");
   const authForm = document.getElementById("gm-auth-form");
@@ -615,6 +629,7 @@ document.addEventListener("DOMContentLoaded", () => {
     attendanceChips.innerHTML = "";
 
     const all = state.allPlayers || [];
+    const activeGroupsMeta = getActiveGroupsMeta();
     const activeCount = all.filter((p) => !p.disabled && !p.isGamemaster && !p.isExternalTester).length;
     const inactiveCount = all.filter((p) => p.disabled && !p.isGamemaster && !p.isExternalTester).length;
 
@@ -707,6 +722,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isOff = p.disabled;
       const isUnlocked = p.unlocked;
       const isDebriefed = p.debriefed;
+      const curGroupId = p.adminGroupId || p.groupId || "";
       const gpsPos = liveGpsPositions.find((g) => g.playerId === p.id);
       const hasOnTimeBonus = Boolean(
         p.bonusHistory && p.bonusHistory.some((b) => b.reason && b.reason.includes("Op tijd"))
@@ -760,6 +776,17 @@ document.addEventListener("DOMContentLoaded", () => {
             ${hasOnTimeBonus ? `<span style="color: #10b981; font-weight: 800; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.65rem;">⏰ +20</span>` : ''}
             ${hasOutfitBonus ? `<span style="color: #d8b4fe; font-weight: 800; background: rgba(168,85,247,0.18); border: 1px solid rgba(168,85,247,0.5); padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.65rem;">🕶️ +20</span>` : ''}
           </div>
+        </div>
+        <!-- Directe Groepstoewijzing Dropdown per speler -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.35rem; background: rgba(2,6,23,0.7); padding: 0.25rem 0.45rem; border-radius: 5px; border: 1.5px solid rgba(56,189,248,0.4);">
+          <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8; font-weight: 800;">GROEP:</span>
+          <select class="gm-player-card-group-select" data-player-id="${p.id}" data-player-name="${p.naam}" style="flex:1; max-width:185px; margin-bottom:0; padding:0.25rem 0.45rem; font-size:0.76rem; font-family:var(--font-mono); font-weight:800; background:#070a0e; color:#38bdf8; border:1px solid #38bdf8; border-radius:4px; cursor:pointer;">
+            <option value="" ${!curGroupId ? 'selected' : ''}>❌ Geen groep (Niet ingedeeld)</option>
+            ${activeGroupsMeta.map((g) => {
+              const isSelected = curGroupId && (curGroupId.toLowerCase() === g.id.toLowerCase() || curGroupId.toLowerCase() === g.naam.toLowerCase());
+              return `<option value="${g.id}" ${isSelected ? 'selected' : ''}>● ${g.naam}</option>`;
+            }).join("")}
+          </select>
         </div>
         <div>${statusBadge}</div>
         <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
@@ -847,6 +874,17 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!window.confirm(`Weet je zeker dat je de persoonlijke code van ${p.naam} handmatig wilt ontgrendelen?`)) return;
           await ScoreService.recordUnlock(p.id);
           showToast(`✓ Code van ${p.naam} handmatig ontgrendeld!`);
+        });
+      }
+
+      const playerGrpSel = chip.querySelector(".gm-player-card-group-select");
+      if (playerGrpSel) {
+        playerGrpSel.addEventListener("change", async () => {
+          const newGid = playerGrpSel.value;
+          playerGrpSel.disabled = true;
+          await ScoreService.assignPlayerGroup(p.id, newGid);
+          const grpName = activeGroupsMeta.find((g) => g.id === newGid)?.naam || "Geen groep";
+          showToast(`✓ ${p.naam} toegewezen aan ${grpName}!`);
         });
       }
 
@@ -939,15 +977,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // Leden badges
-      const membersHtml = grp.leden
-        .map((m) => {
-          const icon = m.unlocked ? `<span style="color:var(--accent);">✓</span>` : `<span style="color:var(--amber);">⏳</span>`;
-          return `<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:0.15rem 0.45rem; border-radius:4px; font-size:0.74rem; color:#e2e8f0;">${icon} ${m.naam} <small style="color:var(--text-muted);">(${m.totalPoints})</small></span>`;
-        })
-        .join("");
+      // Leden badges met directe verplaats-knop per speler
+      const otherGroups = groups.filter((o) => o.id !== grp.id);
+      const membersHtml = grp.leden.length > 0
+        ? grp.leden
+          .map((m) => {
+            const icon = m.unlocked ? `<span style="color:var(--accent);">✓</span>` : `<span style="color:var(--amber);">⏳</span>`;
+            const otherOpts = otherGroups
+              .map((o) => `<option value="${o.id}">Naar ${o.naam}</option>`)
+              .join("");
+            return `
+              <span class="gm-member-badge" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); padding: 0.2rem 0.45rem; border-radius: 5px; font-size: 0.74rem; color: #f8fafc; display: inline-flex; align-items: center; gap: 0.35rem;">
+                ${icon} <strong>${m.naam}</strong> <small style="color:var(--text-muted);">(${m.totalPoints}pt)</small>
+                <select class="gm-quick-reassign-select" data-player-id="${m.id}" data-player-name="${m.naam}" title="Verplaats ${m.naam} naar een ander team" style="background:#070a0e; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); font-size:0.66rem; font-weight:700; border-radius:3px; padding:0.05rem 0.2rem; cursor:pointer;">
+                  <option value="" disabled selected>⇄ Verplaats</option>
+                  ${otherOpts}
+                  <option value="__unassign__">❌ Uit groep halen</option>
+                </select>
+              </span>
+            `;
+          })
+          .join("")
+        : `<span style="color:var(--text-muted); font-size:0.75rem; font-style:italic;">Nog geen spelers in deze groep</span>`;
 
-      // 6 Route-stappen in de exacte volgorde van dit team
+      // Niet-leden van deze groep voor de snelle '+ Voeg speler toe' selector
+      const allActiveAgents = (state.allPlayers || []).filter(
+        (p) => !p.disabled && !p.isGamemaster && !p.isExternalTester
+      );
+      const memberIds = new Set(grp.leden.map((m) => m.id));
+      const nonMembers = allActiveAgents.filter((p) => !memberIds.has(p.id));
+      const addPlayerHtml = nonMembers.length > 0
+        ? `
+          <div style="margin-top: 0.45rem; width: 100%;">
+            <select class="gm-quick-add-player-select" data-group-id="${grp.id}" data-group-name="${grp.naam}" style="width: 100%; background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 0.72rem; font-weight: 700; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;">
+              <option value="" selected>➕ Voeg speler toe aan ${grp.naam}...</option>
+              ${nonMembers.map((nm) => `<option value="${nm.id}">+ ${nm.naam} (${nm.adminGroupName ? 'zit nu in ' + nm.adminGroupName : 'Geen groep'})</option>`).join("")}
+            </select>
+          </div>
+        `
+        : "";
+
+      // 6 Route-stappen in de exacte volgorde van dit team (1 nette verticale rij per sector, NOOIT overlap)
       const stepsHtml = (grp.orderedLocations || [])
         .map((loc) => {
           const isOpen = grp.unlockedLocations && grp.unlockedLocations.has(loc.id);
@@ -970,15 +1040,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
           return `
             <div class="gm-step-pill ${pillClass}">
-              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:110px;">
-                <strong style="color: var(--text-muted);">${loc.stepNr}.</strong>
-                <strong>${loc.naam}</strong>
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0;">
+                <strong style="color: var(--text-muted); font-size:0.75rem;">${loc.stepNr}.</strong>
+                <strong style="color:#ffffff; font-size:0.8rem;">${loc.naam}</strong>
               </div>
-              <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
-                <span style="font-size:0.66rem;">${statusLabel}</span>
+              <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+                <span style="font-size:0.7rem; font-family:var(--font-mono);">${statusLabel}</span>
                 ${
                   !isOpen
-                    ? `<button type="button" class="gm-step-unlock-btn" data-unlock-loc="${loc.id}" title="Open dit mapje op afstand voor ${grp.naam}">Open</button>`
+                    ? `<button type="button" class="gm-step-unlock-btn" data-unlock-loc="${loc.id}" title="Open dit mapje op afstand voor ${grp.naam}">🔓 Open</button>`
                     : ""
                 }
                 <button type="button" class="gm-step-award-btn" data-group-id="${grp.id}" data-loc-id="${loc.id}" data-loc-name="${loc.naam}" data-pts="${locPts}" title="Ken direct de vaste +${locPts} PT van sector ${loc.naam} toe aan ${grp.naam}">
@@ -1010,16 +1080,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       card.innerHTML = `
         <div class="gm-group-top">
-          <div>
+          <div style="flex:1; min-width:0;">
             <div class="gm-group-title">
               <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${grp.kleur};"></span>
               <span>#${idx + 1} ${grp.naam}</span>
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.45rem;">
+            <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.45rem;">
               ${membersHtml}
             </div>
+            ${addPlayerHtml}
           </div>
-          <div class="gm-group-score-box">
+          <div class="gm-group-score-box" style="flex-shrink:0;">
             <div class="gm-group-total-pts" title="Eerlijke Teamscore (Gemiddelde per lid)">${avgPts} PT</div>
             <div style="font-size:0.68rem; color:var(--text-muted);">
               Gemiddelde/lid • ${grp.leden.length} spelers (som: ${grp.sumPoints || grp.totalPoints}) • 📷 ${(grp.photos || []).length}
@@ -1251,6 +1322,37 @@ document.addEventListener("DOMContentLoaded", () => {
               ? `🔓 Alleen-lezen opgeheven voor ${grp.naam}! Leden kunnen nu weer foto's en bewijs uploaden.`
               : `🔒 ${grp.naam} weer vergrendeld op alleen-lezen.`
           );
+        });
+      });
+
+      // Event: Speler direct toevoegen aan deze groep via snelle dropdown
+      card.querySelectorAll(".gm-quick-add-player-select").forEach((sel) => {
+        sel.addEventListener("change", async () => {
+          const pId = sel.value;
+          if (!pId) return;
+          sel.disabled = true;
+          await ScoreService.assignPlayerGroup(pId, grp.id);
+          const pName = sel.options[sel.selectedIndex]?.text || pId;
+          showToast(`✓ ${pName.replace(/^\+\s*/, "").split(" (")[0]} toegevoegd aan ${grp.naam}!`);
+        });
+      });
+
+      // Event: Speler direct verplaatsen of uit groep halen
+      card.querySelectorAll(".gm-quick-reassign-select").forEach((sel) => {
+        sel.addEventListener("change", async () => {
+          const targetGid = sel.value;
+          const pId = sel.getAttribute("data-player-id");
+          const pName = sel.getAttribute("data-player-name") || "Speler";
+          if (!targetGid || !pId) return;
+          sel.disabled = true;
+          if (targetGid === "__unassign__") {
+            await ScoreService.assignPlayerGroup(pId, "");
+            showToast(`✓ ${pName} uit groep gehaald.`);
+          } else {
+            await ScoreService.assignPlayerGroup(pId, targetGid);
+            const targetName = groups.find((g) => g.id === targetGid)?.naam || targetGid;
+            showToast(`✓ ${pName} verplaatst naar ${targetName}!`);
+          }
         });
       });
 
@@ -2086,18 +2188,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const manualGroupCountsEl = document.getElementById("gm-manual-group-counts");
   const manualPlayersListEl = document.getElementById("gm-manual-players-list");
 
-  let targetGroupCount = parseInt(localStorage.getItem("jb_target_group_count") || "6", 10);
-  if (targetGroupCount !== 5 && targetGroupCount !== 6) targetGroupCount = 6;
-
-  function getActiveGroupsMeta() {
-    return (SPEL_CONFIG.standaardGroepen || [])
-      .slice(0, targetGroupCount)
-      .map((g) => ({
-        id: g.id || g.naam,
-        naam: g.naam,
-        kleur: g.kleur || "#38bdf8"
-      }));
-  }
 
   function updateGroupFormationUI() {
     if (groupCountSelect) {
@@ -2212,15 +2302,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
     const counts = {};
     activeGroups.forEach((g) => { counts[g.id] = 0; });
+    let unassignedCount = 0;
 
     selects.forEach((sel) => {
       const val = sel.value;
       if (counts[val] !== undefined) {
         counts[val]++;
+      } else {
+        unassignedCount++;
       }
     });
 
-    manualGroupCountsEl.innerHTML = activeGroups.map((g) => {
+    const badgesHtml = activeGroups.map((g) => {
       const c = counts[g.id] || 0;
       const isGood = c >= 3 && c <= 6;
       const badgeStyle = isGood
@@ -2233,6 +2326,12 @@ document.addEventListener("DOMContentLoaded", () => {
         </span>
       `;
     }).join("");
+
+    manualGroupCountsEl.innerHTML = badgesHtml + (unassignedCount > 0 ? `
+      <span style="font-family:var(--font-mono); font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:5px; border:1px solid rgba(239,68,68,0.4); background:rgba(239,68,68,0.12); color:#fca5a5; display:inline-flex; align-items:center; gap:0.4rem;">
+        ⚠️ <strong>Onverdeeld:</strong> <span>${unassignedCount} spelers</span>
+      </span>
+    ` : "");
   }
 
   function rebuildManualPlayersDropdowns() {
@@ -2245,10 +2344,10 @@ document.addEventListener("DOMContentLoaded", () => {
         (g) => g.id.toLowerCase() === curVal.toLowerCase() || g.naam.toLowerCase() === curVal.toLowerCase()
       );
       let targetVal = curVal;
-      if (!isValid && activeGroups.length > 0) {
-        targetVal = activeGroups[0].id;
+      if (!isValid && curVal !== "") {
+        targetVal = activeGroups[0]?.id || "";
       }
-      sel.innerHTML = activeGroups.map((g) => {
+      sel.innerHTML = `<option value="">❌ Geen groep (Niet ingedeeld)</option>` + activeGroups.map((g) => {
         const selected =
           targetVal &&
           (targetVal.toLowerCase() === g.id.toLowerCase() ||
@@ -2284,7 +2383,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDisabled = disabledSet.has(s.id);
         const curGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId || "") : "";
 
-        const optionsHtml = activeGroups.map((g) => {
+        const optionsHtml = `<option value="" ${!curGroup ? 'selected' : ''}>❌ Geen groep (Niet ingedeeld)</option>` + activeGroups.map((g) => {
           const selected =
             curGroup &&
             (curGroup.toLowerCase() === g.id.toLowerCase() ||
@@ -2364,8 +2463,8 @@ document.addEventListener("DOMContentLoaded", () => {
       selects.forEach((sel) => {
         const pId = sel.getAttribute("data-player-id");
         const gId = sel.value;
-        if (pId && gId) {
-          assignments[pId] = gId;
+        if (pId) {
+          assignments[pId] = gId || "";
         }
       });
 
