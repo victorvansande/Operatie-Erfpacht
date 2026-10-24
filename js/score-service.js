@@ -2162,8 +2162,8 @@ const ScoreService = (() => {
    */
   async function addGroupBonusPoints(groupId, delta, reason = "Team bonus") {
     const state = computeScoreState();
-    const grp = (state.adminGroupsList || state.groupsList).find(
-      (g) => g.id === groupId
+    const grp = (state.adminGroupsList || state.groupsList || []).find(
+      (g) => g.id === groupId || normalizeGroupId(g.id) === normalizeGroupId(groupId)
     );
     if (!grp) return state;
     for (const lid of grp.leden) {

@@ -963,7 +963,10 @@ document.addEventListener("DOMContentLoaded", () => {
       card.style.setProperty("--grp-color", grp.kleur || "var(--accent)");
 
       const avgPts =
-        grp.leden.length > 0 ? Math.round(grp.totalPoints / grp.leden.length) : 0;
+        typeof grp.averagePoints === "number"
+          ? Math.round(grp.averagePoints)
+          : (grp.leden.length > 0 ? Math.round((grp.sumPoints || grp.totalPoints || 0) / grp.leden.length) : 0);
+      const totalSumPts = grp.sumPoints || (grp.leden || []).reduce((acc, m) => acc + (m.totalPoints || 0), 0);
 
       // Waar zit deze groep nu?
       const cur = grp.currentLocation;
