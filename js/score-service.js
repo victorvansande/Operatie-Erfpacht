@@ -759,6 +759,7 @@ const ScoreService = (() => {
     let groupVisibilityMode = "hide"; // "hide" (standaard verborgen tot leiding onthult), "show" (leiding onthult aan iedereen)
     let debriefingModeActive = false;
     const debriefedPlayersMap = new Map(); // playerId -> { ts, eventId }
+    const groupDebriefExemptions = new Map(); // normGroupId -> boolean (true = heropend / vrijgesteld)
 
     for (const ev of sortedEvents) {
       if (ev.type === "reset") {
@@ -774,6 +775,7 @@ const ScoreService = (() => {
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
         debriefedPlayersMap.clear();
+        groupDebriefExemptions.clear();
         if (ev.resetGroups) {
           playerGroups.clear();
           groupCustomNames.clear();
@@ -785,6 +787,15 @@ const ScoreService = (() => {
         groupVisibilityMode = ev.mode;
       } else if (ev.type === "set_debriefing_mode") {
         debriefingModeActive = Boolean(ev.active);
+      } else if (ev.type === "set_group_debrief_exemption" && ev.groupId) {
+        const normG = normalizeGroupId(ev.groupId);
+        if (normG) {
+          if (ev.exempt) {
+            groupDebriefExemptions.set(normG, true);
+          } else {
+            groupDebriefExemptions.delete(normG);
+          }
+        }
       } else if (ev.type === "player_debrief" && ev.playerId) {
         debriefedPlayersMap.set(ev.playerId, {
           playerId: ev.playerId,
@@ -1027,7 +1038,8 @@ const ScoreService = (() => {
         active: Boolean(unlockInfo) || bonusPoints !== 0,
         // Debriefing & checkout status op het einde van de missie:
         debriefed: Boolean(debriefedPlayersMap.has(speler.id)),
-        debriefedAt: debriefedPlayersMap.get(speler.id) ? debriefedPlayersMap.get(speler.id).ts : null
+        debriefedAt: debriefedPlayersMap.get(speler.id) ? debriefedPlayersMap.get(speler.id).ts : null,
+        isDebriefExempt: Boolean(configuredGroupId && groupDebriefExemptions.get(normalizeGroupId(configuredGroupId)))
       };
     });
 
@@ -1039,13 +1051,16 @@ const ScoreService = (() => {
       if (!p.adminGroupId) return;
       if (!adminGroupsMap.has(p.adminGroupId)) {
         const orderedLocs = getOrderedLocationsForGroup(p.adminGroupId);
+        const normG = normalizeGroupId(p.adminGroupId);
         adminGroupsMap.set(p.adminGroupId, {
           id: p.adminGroupId,
+          normId: normG,
           naam: p.adminGroupName,
           kleur: p.adminGroupColor,
           leden: [],
           totalPoints: 0,
           unlockedCount: 0,
+          isDebriefExempt: Boolean(groupDebriefExemptions.get(normG)),
           orderedLocations: orderedLocs,
           startLocationName: orderedLocs.length > 0 ? orderedLocs[0].naam : ""
         });
@@ -1244,6 +1259,7 @@ const ScoreService = (() => {
       nextRank,
       nextPoints,
       debriefingActive: debriefingModeActive,
+      groupDebriefExemptions,
       debriefedCount: enabledPlayerScores.filter((p) => p.debriefed).length,
       debriefedPlayersMap,
       reviewedSubmissionsMap,
@@ -2248,6 +2264,16 @@ const ScoreService = (() => {
     });
   }
 
+  async function setGroupDebriefExemption(groupId, exempt = true) {
+    const normG = normalizeGroupId(groupId);
+    return publishEvent({
+      type: "set_group_debrief_exemption",
+      groupId: normG,
+      exempt: Boolean(exempt),
+      ts: Date.now()
+    });
+  }
+
   async function recordPlayerDebrief(playerId, enteredCode) {
     const sp = SPEL_CONFIG.spelers.find((s) => s.id === playerId);
     if (!sp) return { success: false, reason: "Speler niet gevonden in dossierregister." };
@@ -2306,6 +2332,7 @@ const ScoreService = (() => {
     revokePlayerUnlock,
     resetAllScores,
     setDebriefingMode,
+    setGroupDebriefExemption,
     recordPlayerDebrief,
     setAllGroups,
     assignPlayerGroup,

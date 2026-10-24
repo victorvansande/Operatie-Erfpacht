@@ -2974,28 +2974,78 @@ document.addEventListener("DOMContentLoaded", () => {
     const isDebriefedLocally = localStorage.getItem(`jb_debriefed_${playerId}`) === "true";
     const isDebriefedCloud = Boolean(info && info.debriefed);
     const isDebriefed = isDebriefedLocally || isDebriefedCloud;
+    const isExempt = Boolean(info && info.isDebriefExempt);
 
-    // 1. Spel is NIET beëindigd door de leiding:
-    if (!state.debriefingActive) {
+    // 1. Spel is NIET beëindigd door de leiding, OF deze groep is specifiek heropend:
+    if (!state.debriefingActive || isExempt) {
       const lockModal = document.getElementById("jb-debrief-mandatory-lock");
       if (lockModal) lockModal.remove();
       const banner = document.getElementById("jb-platform-closed-banner");
       if (banner) banner.remove();
       if (contentEl) contentEl.classList.remove("is-read-only-platform");
+
+      restoreUploadCapabilities();
+
+      if (state.debriefingActive && isExempt) {
+        showGroupReopenedBanner(speler, info);
+      } else {
+        const reopenBanner = document.getElementById("jb-platform-reopened-banner");
+        if (reopenBanner) reopenBanner.remove();
+      }
       return;
     }
 
-    // 2. Spel IS beëindigd maar deze speler heeft zijn/haar code nog NIET ingegeven:
+    // 2. Als groep niet heropend is: verwijder de heropen-banner
+    const reopenBanner = document.getElementById("jb-platform-reopened-banner");
+    if (reopenBanner) reopenBanner.remove();
+
+    // 3. Spel IS beëindigd maar deze speler heeft zijn/haar code nog NIET ingegeven:
     if (!isDebriefed) {
       showMandatoryDebriefLock(speler, info);
       return;
     }
 
-    // 3. Speler heeft de code al ingegeven:
+    // 4. Speler heeft de code al ingegeven:
     // Toon het dossier in READ-ONLY modus met duidelijke HQ-afsluitingsbanner
     const lockModal = document.getElementById("jb-debrief-mandatory-lock");
     if (lockModal) lockModal.remove();
     applyReadOnlyPlatformLock(speler, info);
+  }
+
+  function restoreUploadCapabilities() {
+    if (contentEl) {
+      contentEl.querySelectorAll(".photo-upload-form, input[type='file'], .btn-upload, .upload-btn, .riddle-form, .bonus-solve-form, .camera-btn").forEach((el) => {
+        el.style.display = "";
+      });
+      contentEl.querySelectorAll("input, button.loc-unlock-btn, .riddle-submit").forEach((el) => {
+        el.disabled = false;
+      });
+    }
+  }
+
+  function showGroupReopenedBanner(speler, info) {
+    let banner = document.getElementById("jb-platform-reopened-banner");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "jb-platform-reopened-banner";
+      banner.style.cssText =
+        "background: linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(15,23,42,0.96) 100%); border: 2px solid #10b981; box-shadow: 0 0 25px rgba(16,185,129,0.35); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: center;";
+      banner.innerHTML = `
+        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: #10b981; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 0.3rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; display: inline-block;"></span>
+          HQ VRIJGAVE // TIJDELIJKE UPLOAD TOESTEMMING
+        </div>
+        <div style="font-size: 1.05rem; font-weight: 900; color: #ffffff; line-height: 1.35; margin-bottom: 0.35rem;">
+          🔓 HQ heeft het platform tijdelijk heropend voor jullie team!
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
+          Je kunt nu alsnog ontbrekend bewijsmateriaal of foto's uploaden. Zodra je klaar bent, vergrendelt HQ het dossier definitief.
+        </div>
+      `;
+      if (contentEl && contentEl.firstChild) {
+        contentEl.insertBefore(banner, contentEl.firstChild);
+      }
+    }
   }
 
   function showMandatoryDebriefLock(speler, info) {

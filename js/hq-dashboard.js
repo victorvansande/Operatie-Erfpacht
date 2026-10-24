@@ -1020,6 +1020,23 @@ document.addEventListener("DOMContentLoaded", () => {
             Zend
           </button>
         </form>
+
+        <!-- Debriefing / Alleen-lezen Groep Uitzondering (zichtbaar wanneer debriefing actief is) -->
+        ${state.debriefingActive ? `
+          <div style="margin-top:0.65rem; padding:0.55rem 0.75rem; background:${grp.isDebriefExempt ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.12)'}; border:1.5px solid ${grp.isDebriefExempt ? '#10b981' : 'rgba(239,68,68,0.35)'}; border-radius:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <span style="font-family:var(--font-mono); font-size:0.72rem; font-weight:800; color:${grp.isDebriefExempt ? '#6ee7b7' : '#fca5a5'}; display:block;">
+                ${grp.isDebriefExempt ? '🔓 TIJDELIJK HEROPEND (Kan uploaden)' : '🔒 ALLEEN-LEZEN (Vergrendeld)'}
+              </span>
+              <span style="font-size:0.68rem; color:#94a3b8;">
+                ${grp.isDebriefExempt ? 'Leden kunnen bewijsmateriaal & foto\'s uploaden.' : 'Spelers kunnen niets meer uploaden of aanpassen.'}
+              </span>
+            </div>
+            <button type="button" class="gm-btn-toggle-debrief-exempt" data-group-id="${grp.id}" data-exempt="${grp.isDebriefExempt ? 'true' : 'false'}" style="font-family:var(--font-mono); font-size:0.72rem; font-weight:800; padding:0.35rem 0.7rem; border-radius:4px; cursor:pointer; border:1px solid; ${grp.isDebriefExempt ? 'background:#ef4444; border-color:#ef4444; color:#fff;' : 'background:#10b981; border-color:#10b981; color:#020617;'}">
+              ${grp.isDebriefExempt ? '🔒 Vergrendel Weer (Alleen-Lezen)' : '🔓 Hef Alleen-Lezen Op (Laat Uploaden)'}
+            </button>
+          </div>
+        ` : ''}
       `;
 
       // Event: Onthul de volgende locatie voor deze groep en stuur een directe alert pop-up
@@ -1162,6 +1179,22 @@ document.addEventListener("DOMContentLoaded", () => {
           showToast(`Bericht verzonden naar het Message Board van ${grp.naam}!`);
         });
       }
+
+      // Event: Debriefing Alleen-lezen opheffen / hervergrendelen voor specifiek deze groep
+      card.querySelectorAll(".gm-btn-toggle-debrief-exempt").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const isExempt = btn.getAttribute("data-exempt") === "true";
+          const nextState = !isExempt;
+          btn.disabled = true;
+          await ScoreService.setGroupDebriefExemption(grp.id, nextState);
+          showToast(
+            nextState
+              ? `🔓 Alleen-lezen opgeheven voor ${grp.naam}! Leden kunnen nu weer foto's en bewijs uploaden.`
+              : `🔒 ${grp.naam} weer vergrendeld op alleen-lezen.`
+          );
+        });
+      });
 
       groupsContainer.appendChild(card);
     });
@@ -1838,7 +1871,158 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Verdeel aanwezigen in groepen (met bevestiging)
+  // =========================================================================
+  // TOON INLOG QR-CODE MODAL (VOOR SPELERS ZONDER NFC)
+  // =========================================================================
+  const btnShowQr = document.getElementById("gm-btn-show-qr");
+  const gmQrModal = document.getElementById("gm-qr-modal");
+  const btnCloseQr = document.getElementById("gm-btn-close-qr");
+  const btnDismissQr = document.getElementById("gm-btn-dismiss-qr");
+  let gmQrInstance = null;
+
+  function getPlatformBaseUrl() {
+    if (window.location.protocol === "file:") {
+      return "https://victorvansande.github.io/Operatie-Erfpacht/";
+    }
+    const raw = window.location.href.split("hq-dashboard")[0];
+    return raw.endsWith("/") ? raw : raw + "/";
+  }
+
+  function openGmQrModal() {
+    if (!gmQrModal) return;
+    gmQrModal.style.display = "flex";
+    const targetUrl = getPlatformBaseUrl();
+    const linkEl = document.getElementById("gm-qr-url-link");
+    if (linkEl) {
+      linkEl.href = targetUrl;
+      linkEl.textContent = targetUrl;
+    }
+    const targetDiv = document.getElementById("gm-qrcode-target");
+    if (targetDiv && !gmQrInstance) {
+      targetDiv.innerHTML = "";
+      try {
+        if (typeof QRCode !== "undefined") {
+          gmQrInstance = new QRCode(targetDiv, {
+            text: targetUrl,
+            width: 240,
+            height: 240,
+            colorDark: "#020617",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        } else {
+          throw new Error("No QRCode lib");
+        }
+      } catch (_) {
+        const img = document.createElement("img");
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(targetUrl)}&ecc=H`;
+        img.alt = "Inlog QR Code";
+        img.style.cssText = "width: 240px; height: 240px; display: block;";
+        targetDiv.appendChild(img);
+      }
+    }
+  }
+
+  function closeGmQrModal() {
+    if (gmQrModal) gmQrModal.style.display = "none";
+  }
+
+  if (btnShowQr) btnShowQr.addEventListener("click", openGmQrModal);
+  if (btnCloseQr) btnCloseQr.addEventListener("click", closeGmQrModal);
+  if (btnDismissQr) btnDismissQr.addEventListener("click", closeGmQrModal);
+
+  // =========================================================================
+  // GROEPSINDELING & FORMATIE CONTROLLER (5 OF 6 GROEPEN)
+  // =========================================================================
+  const groupCountSelect = document.getElementById("gm-group-count-select");
+  const btnManualGroups = document.getElementById("gm-btn-manual-groups");
+  const manualGroupsModal = document.getElementById("gm-manual-groups-modal");
+  const manualModalTitle = document.getElementById("gm-manual-modal-title");
+  const btnFormat6 = document.getElementById("gm-btn-format-6");
+  const btnFormat5 = document.getElementById("gm-btn-format-5");
+  const btnCloseManualGroups = document.getElementById("gm-btn-close-manual-groups");
+  const btnCancelManualGroups = document.getElementById("gm-btn-cancel-manual-groups");
+  const btnSaveManualGroups = document.getElementById("gm-btn-save-manual-groups");
+  const btnAutoFillEven = document.getElementById("gm-btn-auto-fill-even");
+  const manualGroupCountsEl = document.getElementById("gm-manual-group-counts");
+  const manualPlayersListEl = document.getElementById("gm-manual-players-list");
+
+  let targetGroupCount = parseInt(localStorage.getItem("jb_target_group_count") || "6", 10);
+  if (targetGroupCount !== 5 && targetGroupCount !== 6) targetGroupCount = 6;
+
+  function getActiveGroupsMeta() {
+    return (SPEL_CONFIG.standaardGroepen || [])
+      .slice(0, targetGroupCount)
+      .map((g) => ({
+        id: g.id || g.naam,
+        naam: g.naam,
+        kleur: g.kleur || "#38bdf8"
+      }));
+  }
+
+  function updateGroupFormationUI() {
+    if (groupCountSelect) {
+      groupCountSelect.value = String(targetGroupCount);
+    }
+    if (manualModalTitle) {
+      manualModalTitle.textContent = `👥 Stel de ${targetGroupCount} Groepen Handmatig Samen`;
+    }
+    if (btnFormat6 && btnFormat5) {
+      if (targetGroupCount === 6) {
+        btnFormat6.style.background = "#38bdf8";
+        btnFormat6.style.color = "#020617";
+        btnFormat6.style.borderColor = "#38bdf8";
+        btnFormat6.style.fontWeight = "800";
+        btnFormat5.style.background = "rgba(255,255,255,0.06)";
+        btnFormat5.style.color = "#94a3b8";
+        btnFormat5.style.borderColor = "rgba(255,255,255,0.15)";
+        btnFormat5.style.fontWeight = "600";
+      } else {
+        btnFormat5.style.background = "#38bdf8";
+        btnFormat5.style.color = "#020617";
+        btnFormat5.style.borderColor = "#38bdf8";
+        btnFormat5.style.fontWeight = "800";
+        btnFormat6.style.background = "rgba(255,255,255,0.06)";
+        btnFormat6.style.color = "#94a3b8";
+        btnFormat6.style.borderColor = "rgba(255,255,255,0.15)";
+        btnFormat6.style.fontWeight = "600";
+      }
+    }
+  }
+
+  function setTargetGroupCount(count, syncModal = true) {
+    targetGroupCount = (count === 5) ? 5 : 6;
+    localStorage.setItem("jb_target_group_count", String(targetGroupCount));
+    updateGroupFormationUI();
+    if (syncModal && manualPlayersListEl) {
+      rebuildManualPlayersDropdowns();
+      updateManualGroupsCounts();
+    }
+  }
+
+  if (groupCountSelect) {
+    groupCountSelect.addEventListener("change", () => {
+      const val = parseInt(groupCountSelect.value, 10);
+      setTargetGroupCount(val === 5 ? 5 : 6);
+      showToast(`Formaat ingesteld op ${targetGroupCount} groepen!`);
+    });
+  }
+
+  if (btnFormat6) {
+    btnFormat6.addEventListener("click", () => {
+      setTargetGroupCount(6);
+      showToast("Groepsindeling gezet op 6 groepen (Standaard).");
+    });
+  }
+
+  if (btnFormat5) {
+    btnFormat5.addEventListener("click", () => {
+      setTargetGroupCount(5);
+      showToast("Groepsindeling gezet op 5 groepen (Minder opkomst).");
+    });
+  }
+
+  // Verdeel aanwezigen automatisch in groepen (5 of 6)
   if (btnRandomGroups) {
     btnRandomGroups.addEventListener("click", async () => {
       const presentPlayers = SPEL_CONFIG.spelers.filter((s) => {
@@ -1851,10 +2035,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (groupCountSelect) {
+        targetGroupCount = parseInt(groupCountSelect.value, 10) || targetGroupCount;
+      }
+      const activeGroups = getActiveGroupsMeta();
+      const groupNames = activeGroups.map((g) => g.naam);
+
       const ok = window.confirm(
-        `🎲 BEVESTIGING: WILLEKEURIGE GROEPSVERDELING (6 LOCATIES)\n\n` +
-        `Weet je zeker dat je de ${presentPlayers.length} aanwezige spelers willekeurig wilt verdelen over de 6 groepen (4 à 5 spelers per team)?\n\n` +
-        `✓ Elk van de 6 groepen start direct op een unieke locatie in Herentals!\n` +
+        `🎲 BEVESTIGING: WILLEKEURIGE GROEPSVERDELING (${targetGroupCount} GROEPEN)\n\n` +
+        `Weet je zeker dat je de ${presentPlayers.length} aanwezige spelers gelijkmatig wilt verdelen over ${targetGroupCount} groepen (${groupNames.join(", ")})?\n\n` +
+        (targetGroupCount === 5
+          ? `✓ 5 teams starten elk op een andere sector (stap 1..6 doorgeschoven rotatie).\n✓ 1 sector is op elk moment onbemand en groepen schuiven telkens door!\n`
+          : `✓ Elk van de 6 groepen start direct op een unieke sector in Herentals!\n`) +
         `⚠️ Let op: dit overschrijft eventuele eerder gemaakte groepsindelingen direct!`
       );
       if (!ok) return;
@@ -1865,46 +2057,22 @@ document.addEventListener("DOMContentLoaded", () => {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      // Maximaal 6 groepen zodat elk team op 1 van de 6 unieke locaties start
-      const maxLocs = (SPEL_CONFIG.locaties || []).length || 6;
-      const numGroups = Math.min(maxLocs, Math.max(1, Math.min(shuffled.length, 6)));
-      const defaultNames = (SPEL_CONFIG.standaardGroepen || []).map(
-        (g) => g.id || g.naam
-      );
       const assignments = {};
       shuffled.forEach((sp, i) => {
-        assignments[sp.id] =
-          defaultNames[i % numGroups] || `Groep ${(i % numGroups) + 1}`;
+        assignments[sp.id] = activeGroups[i % targetGroupCount].id;
       });
 
       await ScoreService.setAllGroups(assignments);
-      showToast(`✓ ${shuffled.length} spelers verdeeld op HQ (blijft verborgen op beamer tot je op 'Onthul' klikt)!`);
+      showToast(`✓ ${shuffled.length} spelers verdeeld over ${targetGroupCount} groepen (blijft verborgen op beamer tot je op 'Onthul' klikt)!`);
     });
   }
 
-  // =========================================================================
-  // MANUELE GROEPSINDELING CONTROLLER (HQ COMMANDO)
-  // =========================================================================
-  const btnManualGroups = document.getElementById("gm-btn-manual-groups");
-  const manualGroupsModal = document.getElementById("gm-manual-groups-modal");
-  const btnCloseManualGroups = document.getElementById("gm-btn-close-manual-groups");
-  const btnCancelManualGroups = document.getElementById("gm-btn-cancel-manual-groups");
-  const btnSaveManualGroups = document.getElementById("gm-btn-save-manual-groups");
-  const btnAutoFillEven = document.getElementById("gm-btn-auto-fill-even");
-  const manualGroupCountsEl = document.getElementById("gm-manual-group-counts");
-  const manualPlayersListEl = document.getElementById("gm-manual-players-list");
-
-  const GROUPS_META = (SPEL_CONFIG.standaardGroepen || []).map((g) => ({
-    id: g.id || g.naam,
-    naam: g.naam,
-    kleur: g.kleur || "#38bdf8"
-  }));
-
   function updateManualGroupsCounts() {
     if (!manualGroupCountsEl || !manualPlayersListEl) return;
+    const activeGroups = getActiveGroupsMeta();
     const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
     const counts = {};
-    GROUPS_META.forEach((g) => { counts[g.id] = 0; });
+    activeGroups.forEach((g) => { counts[g.id] = 0; });
 
     selects.forEach((sel) => {
       const val = sel.value;
@@ -1913,7 +2081,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    manualGroupCountsEl.innerHTML = GROUPS_META.map((g) => {
+    manualGroupCountsEl.innerHTML = activeGroups.map((g) => {
       const c = counts[g.id] || 0;
       const isGood = c >= 3 && c <= 6;
       const badgeStyle = isGood
@@ -1928,12 +2096,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }).join("");
   }
 
+  function rebuildManualPlayersDropdowns() {
+    if (!manualPlayersListEl) return;
+    const activeGroups = getActiveGroupsMeta();
+    const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
+    selects.forEach((sel) => {
+      const curVal = sel.value;
+      const isValid = activeGroups.some(
+        (g) => g.id.toLowerCase() === curVal.toLowerCase() || g.naam.toLowerCase() === curVal.toLowerCase()
+      );
+      let targetVal = curVal;
+      if (!isValid && activeGroups.length > 0) {
+        targetVal = activeGroups[0].id;
+      }
+      sel.innerHTML = activeGroups.map((g) => {
+        const selected =
+          targetVal &&
+          (targetVal.toLowerCase() === g.id.toLowerCase() ||
+            targetVal.toLowerCase() === g.naam.toLowerCase())
+            ? "selected"
+            : "";
+        return `<option value="${g.id}" ${selected}>● ${g.naam}</option>`;
+      }).join("");
+    });
+  }
+
   function openManualGroupsModal() {
     if (!manualGroupsModal || !manualPlayersListEl) return;
     manualGroupsModal.style.display = "flex";
 
     const state = latestState || ScoreService.getState();
     const disabledSet = (state && state.disabledSet) || new Set();
+
+    // Als er al actieve groepen zijn in de state en er zijn er exact 5, sync naar 5 groepen modus
+    if (state.adminGroupsList && state.adminGroupsList.length === 5) {
+      targetGroupCount = 5;
+    } else if (state.adminGroupsList && state.adminGroupsList.length === 6) {
+      targetGroupCount = 6;
+    }
+    updateGroupFormationUI();
+
+    const activeGroups = getActiveGroupsMeta();
 
     manualPlayersListEl.innerHTML = SPEL_CONFIG.spelers
       .filter((s) => !s.isGamemaster && !s.isExternalTester)
@@ -1942,7 +2145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDisabled = disabledSet.has(s.id);
         const curGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId || "") : "";
 
-        const optionsHtml = GROUPS_META.map((g) => {
+        const optionsHtml = activeGroups.map((g) => {
           const selected =
             curGroup &&
             (curGroup.toLowerCase() === g.id.toLowerCase() ||
@@ -1997,16 +2200,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!manualPlayersListEl) return;
       const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
       const disabledSet = (latestState && latestState.disabledSet) || new Set();
+      const activeGroups = getActiveGroupsMeta();
       let activeIdx = 0;
       selects.forEach((sel) => {
         const pId = sel.getAttribute("data-player-id");
         if (disabledSet.has(pId)) return;
-        const targetGroup = GROUPS_META[activeIdx % GROUPS_META.length];
+        const targetGroup = activeGroups[activeIdx % activeGroups.length];
         sel.value = targetGroup.id;
         activeIdx++;
       });
       updateManualGroupsCounts();
-      showToast("🎲 Spelers gelijkmatig verdeeld over de 6 groepen!");
+      showToast(`🎲 Spelers gelijkmatig verdeeld over de ${targetGroupCount} groepen!`);
     });
   }
 
@@ -2030,7 +2234,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSaveManualGroups.disabled = false;
       btnSaveManualGroups.textContent = "💾 Sla Groepsindeling Op & Activeer";
       closeManualGroupsModal();
-      showToast("✅ Groepsindeling succesvol opgeslagen en gesynchroniseerd naar alle schermen!");
+      showToast(`✅ Groepsindeling (${targetGroupCount} teams) succesvol opgeslagen en gesynchroniseerd naar alle schermen!`);
     });
   }
 
@@ -2194,6 +2398,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToggleDebrief = document.getElementById("gm-btn-toggle-debrief");
   const debriefStatusPill = document.getElementById("gm-debrief-status-pill");
   const debriefCountSub = document.getElementById("gm-debrief-count-sub");
+  const debriefGroupOverrides = document.getElementById("gm-debrief-group-overrides");
+  const debriefGroupPills = document.getElementById("gm-debrief-group-pills");
 
   function renderDebriefStatus(state) {
     if (!state) return;
@@ -2222,6 +2428,43 @@ document.addEventListener("DOMContentLoaded", () => {
       btnToggleDebrief.style.background = isActive ? "rgba(239, 68, 68, 0.2)" : "rgba(245, 158, 11, 0.2)";
       btnToggleDebrief.style.borderColor = isActive ? "#ef4444" : "var(--amber)";
       btnToggleDebrief.style.color = isActive ? "#fca5a5" : "#fde047";
+    }
+
+    if (debriefGroupOverrides) {
+      debriefGroupOverrides.style.display = isActive ? "block" : "none";
+    }
+
+    if (debriefGroupPills && isActive) {
+      const groups = (state.adminGroupsList && state.adminGroupsList.length > 0)
+        ? state.adminGroupsList
+        : (SPEL_CONFIG.standaardGroepen || []);
+
+      debriefGroupPills.innerHTML = groups.map((g) => {
+        const normG = (g.id || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const isExempt = Boolean(g.isDebriefExempt || (state.groupDebriefExemptions && state.groupDebriefExemptions.get(normG)));
+        return `
+          <div style="background: ${isExempt ? "rgba(16,185,129,0.14)" : "rgba(255,255,255,0.04)"}; border: 1.5px solid ${isExempt ? "#10b981" : "rgba(255,255,255,0.12)"}; border-radius: 6px; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.45rem; min-width: 0;">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${g.kleur || '#38bdf8'}; flex-shrink: 0;"></span>
+              <strong style="font-size: 0.8rem; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${g.naam}</strong>
+            </div>
+            <button type="button" class="gm-btn-pill-debrief-exempt" data-group-id="${g.id}" data-exempt="${isExempt ? 'true' : 'false'}" style="font-family: var(--font-mono); font-size: 0.68rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; border: 1px solid; white-space: nowrap; ${isExempt ? 'background: #ef4444; border-color: #ef4444; color: #fff;' : 'background: #10b981; border-color: #10b981; color: #020617;'}">
+              ${isExempt ? '🔒 Vergrendel Weer' : '🔓 Hef Alleen-Lezen Op'}
+            </button>
+          </div>
+        `;
+      }).join("");
+
+      debriefGroupPills.querySelectorAll(".gm-btn-pill-debrief-exempt").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const gId = btn.getAttribute("data-group-id");
+          const isExempt = btn.getAttribute("data-exempt") === "true";
+          const nextState = !isExempt;
+          btn.disabled = true;
+          await ScoreService.setGroupDebriefExemption(gId, nextState);
+          showToast(nextState ? `🔓 Alleen-lezen opgeheven voor ${gId}! Leden kunnen nu weer uploaden.` : `🔒 ${gId} weer vergrendeld.`);
+        });
+      });
     }
   }
 

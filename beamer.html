@@ -1266,6 +1266,10 @@
         <div class="war-clock-time" id="war-live-clock">--:--:--</div>
       </div>
 
+      <button type="button" class="war-btn" id="btn-qr-toggle" onclick="openQrModal()" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.16); font-weight: 800; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);" title="Toon grote Toegangs-QR code op het beamerscherm voor wie niet via NFC kan inloggen (Q)">
+        📲 Inlog QR
+      </button>
+
       <button type="button" class="war-btn" id="btn-rules-toggle" onclick="openRulesModal()" title="Toon de officiële spelregels op het beamerscherm (F2 of R)">
         📜 Spelregels
       </button>
@@ -1588,7 +1592,63 @@
     </div>
   </div>
 
+  <!-- MODAL: INLOGGEN QR CODE VOOR VELDAGENTEN -->
+  <div id="beamer-qr-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.95); backdrop-filter: blur(10px); z-index: 99999; align-items: center; justify-content: center; padding: 2rem;" onclick="closeQrModal(event)">
+    <div class="qr-modal-box" onclick="event.stopPropagation()" style="background: #090e18; border: 2.5px solid var(--hud-cyan); border-radius: 16px; max-width: 620px; width: 100%; max-height: 94vh; overflow-y: auto; padding: 2rem 2.25rem; box-shadow: 0 0 60px rgba(56, 189, 248, 0.45); font-family: 'Space Grotesk', sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center;">
+      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 0.85rem; margin-bottom: 1.25rem;">
+        <div style="text-align: left;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--hud-cyan); font-weight: 800; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.45rem;">
+            <span class="spotlight-pulse-dot" style="background: var(--hud-cyan); box-shadow: 0 0 8px var(--hud-cyan);"></span>
+            HQ INLOG ASSISTENT // GEEN NFC BESCHIKBAAR
+          </div>
+          <h2 style="font-size: 1.35rem; color: #fff; margin: 0.2rem 0 0; font-weight: 900;">
+            📲 Scan om het Spelplatform te Openen
+          </h2>
+        </div>
+        <button type="button" onclick="closeQrModal()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 1.4rem; cursor: pointer; border-radius: 6px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;" title="Sluiten (Escape of Q)">&times;</button>
+      </div>
+
+      <p style="font-size: 0.92rem; color: #cbd5e1; margin: 0 0 1.15rem 0; line-height: 1.45;">
+        Lukte het inloggen via de fysieke NFC-tag niet? Richt je smartphone-camera op onderstaande QR-code om direct naar de startpagina te gaan:
+      </p>
+
+      <!-- De Witte QR Container voor optimaal contrast en direct scannen van veraf -->
+      <div style="background: #ffffff; padding: 1.25rem; border-radius: 14px; box-shadow: 0 0 35px rgba(255, 255, 255, 0.2); display: inline-flex; justify-content: center; align-items: center; margin-bottom: 1.15rem; border: 4px solid #38bdf8;">
+        <div id="beamer-qrcode-target" style="display: flex; justify-content: center; align-items: center; min-width: 280px; min-height: 280px;"></div>
+      </div>
+
+      <!-- URL weergave -->
+      <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 8px; padding: 0.55rem 1rem; margin-bottom: 1.15rem; width: 100%; box-sizing: border-box;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--hud-amber); margin-bottom: 0.15rem;">DIRECTE LINK // INLOGGEN:</div>
+        <a id="beamer-qr-url-link" href="#" target="_blank" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #38bdf8; font-weight: 800; word-break: break-all; text-decoration: none;">
+          https://victorvansande.github.io/Operatie-Erfpacht/
+        </a>
+      </div>
+
+      <!-- 3 Stappen -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.55rem; width: 100%; margin-bottom: 1.25rem; text-align: left;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.55rem 0.65rem;">
+          <div style="color: var(--hud-cyan); font-weight: 900; font-size: 0.8rem; margin-bottom: 0.15rem;">STAP 1 📷</div>
+          <div style="color: #94a3b8; font-size: 0.72rem; line-height: 1.35;">Richt je camera op de QR code.</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.55rem 0.65rem;">
+          <div style="color: var(--hud-amber); font-weight: 900; font-size: 0.8rem; margin-bottom: 0.15rem;">STAP 2 🌐</div>
+          <div style="color: #94a3b8; font-size: 0.72rem; line-height: 1.35;">Tik op de link om de website te laden.</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.55rem 0.65rem;">
+          <div style="color: var(--hud-green); font-weight: 900; font-size: 0.8rem; margin-bottom: 0.15rem;">STAP 3 🔑</div>
+          <div style="color: #94a3b8; font-size: 0.72rem; line-height: 1.35;">Kies jouw naam en geef je code in!</div>
+        </div>
+      </div>
+
+      <button type="button" class="war-btn" style="background: var(--hud-cyan); color: #000; font-weight: 800; border-color: var(--hud-cyan); padding: 0.6rem 1.6rem; font-size: 0.88rem;" onclick="closeQrModal()">
+        ✓ Sluiten &amp; Terug naar Radar (Druk Q of Esc)
+      </button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="js/qrcode.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/mqtt.min.js"></script>
   <script src="js/score-service.js"></script>
@@ -1761,6 +1821,62 @@
       if (modal) modal.style.display = "none";
     }
 
+    // QR Code Modal voor Veldagenten zonder NFC
+    let beamerQrInstance = null;
+
+    function getPlatformBaseUrl() {
+      if (window.location.protocol === "file:") {
+        return "https://victorvansande.github.io/Operatie-Erfpacht/";
+      }
+      const raw = window.location.href.split("beamer")[0];
+      return raw.endsWith("/") ? raw : raw + "/";
+    }
+
+    function openQrModal() {
+      const modal = document.getElementById("beamer-qr-modal");
+      if (!modal) return;
+      modal.style.display = "flex";
+
+      const targetUrl = getPlatformBaseUrl();
+      const linkEl = document.getElementById("beamer-qr-url-link");
+      if (linkEl) {
+        linkEl.href = targetUrl;
+        linkEl.textContent = targetUrl;
+      }
+
+      const targetDiv = document.getElementById("beamer-qrcode-target");
+      if (targetDiv && !beamerQrInstance) {
+        targetDiv.innerHTML = "";
+        try {
+          if (typeof QRCode !== "undefined") {
+            beamerQrInstance = new QRCode(targetDiv, {
+              text: targetUrl,
+              width: 280,
+              height: 280,
+              colorDark: "#020617",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.H
+            });
+          } else {
+            throw new Error("QRCode lib not available");
+          }
+        } catch (_) {
+          // Fallback via online QR generator
+          const img = document.createElement("img");
+          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(targetUrl)}&ecc=H`;
+          img.alt = "Operatie Erfpacht Inlog QR Code";
+          img.style.cssText = "width: 280px; height: 280px; display: block;";
+          targetDiv.appendChild(img);
+        }
+      }
+    }
+
+    function closeQrModal(e) {
+      if (e && e.target && e.target.closest && e.target.closest(".qr-modal-box") && e.target.tagName !== "BUTTON") return;
+      const modal = document.getElementById("beamer-qr-modal");
+      if (modal) modal.style.display = "none";
+    }
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "F2" || ((e.key === "r" || e.key === "R") && !["INPUT", "TEXTAREA"].includes((document.activeElement || {}).tagName))) {
         e.preventDefault();
@@ -1769,9 +1885,21 @@
           modal.style.display = modal.style.display === "flex" ? "none" : "flex";
         }
       }
+      if ((e.key === "q" || e.key === "Q") && !["INPUT", "TEXTAREA"].includes((document.activeElement || {}).tagName)) {
+        e.preventDefault();
+        const modal = document.getElementById("beamer-qr-modal");
+        if (modal) {
+          if (modal.style.display === "flex") {
+            closeQrModal();
+          } else {
+            openQrModal();
+          }
+        }
+      }
       if (e.key === "Escape") {
         closeRulesModal();
         closeClockModal();
+        closeQrModal();
       }
     });
 
@@ -2196,7 +2324,9 @@
         if (tabsWrap) tabsWrap.style.display = "flex";
 
         if (currentTab === "teams") {
-          if (panelTitle) panelTitle.textContent = "🏆 TEAMS LEADERBOARD (6)";
+          if (panelTitle) panelTitle.textContent = `🏆 TEAMS LEADERBOARD (${groups.length})`;
+          const tabTeamsBtn = document.getElementById("tab-teams-btn");
+          if (tabTeamsBtn) tabTeamsBtn.textContent = `🏆 Teams Stand (${groups.length})`;
           const sortedGroups = [...groups].sort((a, b) => {
             const aScore = typeof a.averagePoints === "number" ? a.averagePoints : (a.totalPoints || 0);
             const bScore = typeof b.averagePoints === "number" ? b.averagePoints : (b.totalPoints || 0);

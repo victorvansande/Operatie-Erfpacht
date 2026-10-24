@@ -648,17 +648,27 @@
           ⚡ FASE 1: SPELLEIDING SNELTOETSEN
         </span>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.35rem; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.2rem 0.5rem;">
+            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8; font-weight: 700;">Formaat:</span>
+            <select id="gm-group-count-select" class="admin-input" style="margin-bottom: 0; padding: 0.2rem 0.4rem; font-size: 0.75rem; font-family: var(--font-mono); font-weight: 800; color: #38bdf8; background: #070a0e; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; cursor: pointer;">
+              <option value="6" selected>6 Groepen (Standaard)</option>
+              <option value="5">5 Groepen (Minder opkomst)</option>
+            </select>
+          </div>
           <button type="button" id="gm-btn-manual-groups" class="gm-btn gm-btn-primary" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); border-color: #38bdf8; color: #020617; font-weight: 800; box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);">
             👥 Handmatig Groepen Indelen
           </button>
-          <button type="button" id="gm-btn-random-groups" class="gm-btn gm-btn-secondary">
-            🎲 Willekeurig Verdelen (4-5p)
+          <button type="button" id="gm-btn-random-groups" class="gm-btn gm-btn-secondary" title="Verdeel aanwezige spelers automatisch over 5 of 6 groepen">
+            🎲 Willekeurig Verdelen
           </button>
           <button type="button" id="gm-btn-toggle-reveal" class="gm-btn gm-btn-primary">
             🚀 Onthul Groepen Nu aan Iedereen
           </button>
           <button type="button" id="gm-btn-toggle-attendance" class="gm-btn gm-btn-secondary">
             📋 Aanwezigheid &amp; PINs
+          </button>
+          <button type="button" id="gm-btn-show-qr" class="gm-btn gm-btn-secondary" style="border-color: #38bdf8; color: #38bdf8; font-weight: 700;" title="Toon grote Inlog QR-code voor spelers zonder NFC">
+            📲 Inlog QR
           </button>
           <button type="button" id="gm-btn-reset-game" class="gm-btn gm-btn-danger">
             ⚠ Spel Resetten
@@ -737,6 +747,17 @@
         <button type="button" id="gm-btn-toggle-debrief" class="gm-btn gm-btn-warning" style="flex: 0 1 auto; max-width: 100%; white-space: normal; height: auto; min-height: 42px; padding: 0.65rem 1.15rem; font-size: 0.84rem; text-align: center; word-break: break-word; box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);">
           🚨 Activeer Einde Spel &amp; Debriefing
         </button>
+      </div>
+
+      <!-- Per-Groep Alleen-Lezen Uitzonderingen / Heropenen -->
+      <div id="gm-debrief-group-overrides" style="margin-top: 1rem; border-top: 1px dashed rgba(245, 158, 11, 0.3); padding-top: 0.75rem; display: none;">
+        <div style="font-family: var(--font-mono); font-size: 0.73rem; color: var(--amber); font-weight: 800; margin-bottom: 0.35rem;">
+          ⚙️ GROEPSUITZONDERINGEN // ALLEEN-LEZEN OPHEFFEN PER GROEP:
+        </div>
+        <p style="font-size: 0.78rem; color: #94a3b8; margin: 0 0 0.65rem 0; line-height: 1.4;">
+          Moet een groep nog snel een ontbrekende foto indienen of een foutje corrigeren? Klik hieronder op hun team om het platform tijdelijk enkel voor hen te heropenen. Klik nadien op <strong>Vergrendel Weer</strong>.
+        </p>
+        <div id="gm-debrief-group-pills" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.55rem;"></div>
       </div>
     </section>
 
@@ -935,11 +956,26 @@
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
         <div>
           <div class="live-toast-tag" style="color: #38bdf8;">&gt;_ COMMANDO // GROEPSINDELING BEHEER</div>
-          <h2 style="font-size: 1.25rem; color: #fff; margin: 0.15rem 0 0;">
-            👥 Stel de 6 Groepen Handmatig Samen
+          <h2 id="gm-manual-modal-title" style="font-size: 1.25rem; color: #fff; margin: 0.15rem 0 0;">
+            👥 Stel de Groepen Handmatig Samen (5 of 6 Teams)
           </h2>
         </div>
         <button type="button" id="gm-btn-close-manual-groups" class="modal-close" style="font-size: 1.6rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Formaatkiezer: 6 of 5 Groepen -->
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.85rem; padding: 0.55rem 0.85rem; background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px;">
+        <div style="font-size: 0.82rem; color: #e2e8f0; font-family: var(--font-mono); font-weight: 700;">
+          KIES AANTAL ACTIEVE TEAMS:
+        </div>
+        <div style="display: flex; gap: 0.45rem;">
+          <button type="button" id="gm-btn-format-6" class="gm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.76rem; font-weight: 800; border-radius: 5px; cursor: pointer; border: 1px solid;">
+            6 Groepen (Standaard)
+          </button>
+          <button type="button" id="gm-btn-format-5" class="gm-btn" style="padding: 0.35rem 0.75rem; font-size: 0.76rem; font-weight: 800; border-radius: 5px; cursor: pointer; border: 1px solid;">
+            5 Groepen (Minder Volk)
+          </button>
+        </div>
       </div>
 
       <!-- Live tellers per groep -->
@@ -997,7 +1033,42 @@
     </div>
   </div>
 
+  <!-- Inlog QR Code Modal voor Spelers Zonder NFC -->
+  <div id="gm-qr-modal" class="modal-backdrop" role="dialog" aria-modal="true" style="display: none; z-index: 9999; backdrop-filter: blur(8px);">
+    <div class="modal-box" style="max-width: 520px; width: 95%; text-align: center; background: rgba(11, 16, 24, 0.98); border: 2px solid #38bdf8; box-shadow: 0 0 50px rgba(56, 189, 248, 0.35); padding: 1.5rem 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.65rem; margin-bottom: 1rem;">
+        <div style="text-align: left;">
+          <div class="live-toast-tag" style="color: #38bdf8;">&gt;_ INLOGGING // GEEN NFC TAG BESCHIKBAAR</div>
+          <h2 style="font-size: 1.25rem; color: #fff; margin: 0.15rem 0 0;">
+            📲 Directe Toegang QR-Code
+          </h2>
+        </div>
+        <button type="button" id="gm-btn-close-qr" class="modal-close" style="font-size: 1.6rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 1rem; line-height: 1.45;">
+        Laat spelers met hun camera deze QR code scannen om direct het platform te openen:
+      </p>
+
+      <div style="background: #ffffff; padding: 1.15rem; border-radius: 12px; box-shadow: 0 0 30px rgba(255, 255, 255, 0.15); display: inline-flex; justify-content: center; align-items: center; margin-bottom: 1rem; border: 3px solid #38bdf8;">
+        <div id="gm-qrcode-target" style="display: flex; justify-content: center; align-items: center; min-width: 240px; min-height: 240px;"></div>
+      </div>
+
+      <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 0.45rem 0.75rem; margin-bottom: 1.15rem;">
+        <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--amber); margin-bottom: 0.1rem;">DIRECTE URL:</div>
+        <a id="gm-qr-url-link" href="#" target="_blank" style="font-family: var(--font-mono); font-size: 0.8rem; color: #38bdf8; font-weight: 700; word-break: break-all; text-decoration: none;">
+          https://victorvansande.github.io/Operatie-Erfpacht/
+        </a>
+      </div>
+
+      <button type="button" id="gm-btn-dismiss-qr" class="gm-btn gm-btn-primary" style="width: 100%; justify-content: center;">
+        ✓ Sluiten
+      </button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="js/qrcode.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/mqtt.min.js"></script>
   <script src="js/score-service.js"></script>
