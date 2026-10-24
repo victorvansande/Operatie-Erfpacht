@@ -965,10 +965,23 @@ const ScoreService = (() => {
           }
         }
 
-        // 3. Fallback: unieke taaktekst
+        // 3. Fallback: unieke taaktekst (alleen voor specifieke taken, NOOIT voor handmatige aanpassingen/vrije invoer)
         if (!taskKey) {
-          const cleanReason = reasonLower.replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
-          taskKey = `task_${cleanReason}`;
+          const isManualOrGeneric =
+            reasonLower.includes("handmatig") ||
+            reasonLower.includes("custom") ||
+            reasonLower.includes("correctie") ||
+            reasonLower.includes("aanpassing") ||
+            reasonLower.includes("vrij") ||
+            reasonLower.includes("team bonus") ||
+            reasonLower === "bonus" ||
+            reasonLower.includes("straf");
+          if (!isManualOrGeneric) {
+            const cleanReason = reasonLower.replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
+            if (cleanReason.length > 0) {
+              taskKey = `task_${cleanReason}`;
+            }
+          }
         }
 
         if (!playerAwardedTasks.has(ev.playerId)) {
