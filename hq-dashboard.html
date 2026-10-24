@@ -324,6 +324,30 @@
       background: rgba(16, 185, 129, 0.2);
     }
 
+    .gm-step-award-btn {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      height: 24px;
+      padding: 0 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .gm-step-award-btn:hover {
+      background: #10b981;
+      color: #020617;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
     .gm-bonus-bar {
       background: rgba(7, 10, 14, 0.75);
       border: 1px solid #1e293b;
@@ -624,8 +648,11 @@
           ⚡ FASE 1: SPELLEIDING SNELTOETSEN
         </span>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+          <button type="button" id="gm-btn-manual-groups" class="gm-btn gm-btn-primary" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); border-color: #38bdf8; color: #020617; font-weight: 800; box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);">
+            👥 Handmatig Groepen Indelen
+          </button>
           <button type="button" id="gm-btn-random-groups" class="gm-btn gm-btn-secondary">
-            🎲 Verdeel Aanwezigen (4p)
+            🎲 Willekeurig Verdelen (4-5p)
           </button>
           <button type="button" id="gm-btn-toggle-reveal" class="gm-btn gm-btn-primary">
             🚀 Onthul Groepen Nu aan Iedereen
@@ -691,23 +718,23 @@
     </section>
 
     <!-- FASE 3: EINDE SPEL & DEBRIEFING CONTROLE KAART -->
-    <section class="gm-panel-card" style="margin-bottom: 1.4rem; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.45);">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem;">
+    <section class="gm-panel-card" style="margin-bottom: 1.4rem; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.45); overflow: hidden; box-sizing: border-box; max-width: 100%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.65rem; max-width: 100%;">
         <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--amber); font-weight: 800; letter-spacing: 0.05em;">
           🏁 FASE 3: EINDE SPEL // AFMELDDESK &amp; DEBRIEFING
         </span>
-        <span id="gm-debrief-status-pill" style="font-family: var(--font-mono); font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid rgba(255,255,255,0.15);">
+        <span id="gm-debrief-status-pill" style="font-family: var(--font-mono); font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 4px; background: rgba(255,255,255,0.08); color: #94a3b8; border: 1px solid rgba(255,255,255,0.15); max-width: 100%; word-break: break-word;">
           DEBRIEFING INACTIEF (SPEL BEZIG)
         </span>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.85rem;">
-        <div style="font-size: 0.84rem; color: #cbd5e1; max-width: 650px; line-height: 1.45;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.85rem; width: 100%; max-width: 100%;">
+        <div style="font-size: 0.84rem; color: #cbd5e1; flex: 1 1 280px; min-width: 240px; max-width: 100%; line-height: 1.45;">
           Activeer dit <strong>pas helemaal op het einde</strong> wanneer alle groepen terug in HQ zijn. Spelers krijgen dan op hun gsm de vraag om hun persoonlijke code in te voeren om hun dossier definitief te verzegelen en hun bedanking / eervol ontslag te zien.
           <div id="gm-debrief-count-sub" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); margin-top: 0.35rem; font-weight: 700;">
             Voortgang: 0 / 27 veldagenten afgemeld &amp; verzegeld
           </div>
         </div>
-        <button type="button" id="gm-btn-toggle-debrief" class="gm-btn gm-btn-warning" style="height: 42px; font-size: 0.85rem; padding: 0 1.35rem; box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);">
+        <button type="button" id="gm-btn-toggle-debrief" class="gm-btn gm-btn-warning" style="flex: 0 1 auto; max-width: 100%; white-space: normal; height: auto; min-height: 42px; padding: 0.65rem 1.15rem; font-size: 0.84rem; text-align: center; word-break: break-word; box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);">
           🚨 Activeer Einde Spel &amp; Debriefing
         </button>
       </div>
@@ -795,14 +822,33 @@
 
       <!-- Rechts: Live Radar-Kaart + Spiekbriefje van alle Codes -->
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-        <!-- Radar-kaart met groepsposities -->
+        <!-- Radar-kaart met groepsposities en individuele veldagenten -->
         <div class="gm-panel-card">
-          <div class="live-toast-tag">&gt;_ LIVE POSITIE-RADAR HERENTALS</div>
-          <h3 style="font-size: 1.05rem; color: #fff; margin: 0.1rem 0 0.65rem;">
-            Waar bevinden de groepen zich nu?
-          </h3>
-          <div id="gm-radar-map" style="width: 100%; height: 290px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden;"></div>
-          <div id="gm-location-occupancy" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.45rem;">
+            <div>
+              <div class="live-toast-tag">&gt;_ LIVE POSITIE-RADAR HERENTALS</div>
+              <h3 style="font-size: 1.05rem; color: #fff; margin: 0.1rem 0 0;">
+                Individuele Veldagenten &amp; Groepsposities
+              </h3>
+            </div>
+            <span id="gm-radar-tracking-badge" style="font-family: var(--font-mono); font-size: 0.72rem; color: #38bdf8; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700;">
+              🛰️ 0 / 27 Live GPS Pings
+            </span>
+          </div>
+          <div id="gm-radar-map" style="width: 100%; height: 320px; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden;"></div>
+
+          <!-- Tabjes: Sectoren Bezetting vs Individuele Agenten Lijst -->
+          <div style="display: flex; gap: 0.4rem; margin-top: 0.75rem; margin-bottom: 0.5rem;">
+            <button type="button" id="gm-radar-tab-sectors" class="gm-view-tab active" style="font-size: 0.74rem; padding: 0.25rem 0.6rem;">
+              📍 Sectoren Bezetting
+            </button>
+            <button type="button" id="gm-radar-tab-agents" class="gm-view-tab" style="font-size: 0.74rem; padding: 0.25rem 0.6rem;">
+              👥 Individuele Agenten (27)
+            </button>
+          </div>
+
+          <div id="gm-location-occupancy" style="display: flex; flex-direction: column; gap: 0.35rem;"></div>
+          <div id="gm-radar-agents-list" style="display: none; flex-direction: column; gap: 0.35rem; max-height: 250px; overflow-y: auto;"></div>
         </div>
 
         <!-- Spiekbriefje voor Gamemaster Vicce -->
@@ -818,47 +864,49 @@
             <div>💻 <strong>OVERRIDE STADSPARK HACK:</strong> <span style="color: #fff;">2200</span> (of automatische 1-klik hack)</div>
           </div>
 
-          <table class="gm-cheat-table">
-            <thead>
-              <tr>
-                <th>Locatie</th>
-                <th>Map-Code</th>
-                <th>Vereist Bewijs op HQ</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Begijnhof</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">begijn2</code></td>
-                <td>Video Avondlied (Heer aanspreken)</td>
-              </tr>
-              <tr>
-                <td><strong>Zandpoort</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">zand1</code></td>
-                <td>Bel de Mol + voer zijn opdracht uit</td>
-              </tr>
-              <tr>
-                <td><strong>Bovenpoort</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">boven3</code></td>
-                <td>Video-interview getuige voor 3e partij</td>
-              </tr>
-              <tr>
-                <td><strong>Stadspark</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">park4</code></td>
-                <td>Ondergrondse Wi-Fi Hack + groepsfoto</td>
-              </tr>
-              <tr>
-                <td><strong>Kerkplein</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">kerk5</code></td>
-                <td>Live video geldafhaling + <strong>€10 cash op HQ</strong></td>
-              </tr>
-              <tr>
-                <td><strong>Nieuw Lokaal</strong></td>
-                <td><code style="color: var(--amber); font-weight: 800;">lokaal6</code></td>
-                <td>Foto + <strong>fysiek stuk spijsrot dak op HQ</strong></td>
-              </tr>
-            </tbody>
-          </table>
+          <div style="overflow-x: auto; max-width: 100%;">
+            <table class="gm-cheat-table">
+              <thead>
+                <tr>
+                  <th>Locatie</th>
+                  <th>Map-Code</th>
+                  <th>Vereist Bewijs op HQ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Begijnhof</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">begijn2</code></td>
+                  <td>Video Avondlied (Heer aanspreken)</td>
+                </tr>
+                <tr>
+                  <td><strong>Zandpoort</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">zand1</code></td>
+                  <td>Bel de Mol + voer zijn opdracht uit</td>
+                </tr>
+                <tr>
+                  <td><strong>Bovenpoort</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">boven3</code></td>
+                  <td>Video-interview getuige voor 3e partij</td>
+                </tr>
+                <tr>
+                  <td><strong>Stadspark</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">park4</code></td>
+                  <td>Ondergrondse Wi-Fi Hack + groepsfoto</td>
+                </tr>
+                <tr>
+                  <td><strong>Kerkplein</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">kerk5</code></td>
+                  <td>Live video geldafhaling + <strong>€10 cash op HQ</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Nieuw Lokaal</strong></td>
+                  <td><code style="color: var(--amber); font-weight: 800;">lokaal6</code></td>
+                  <td>Foto + <strong>fysiek stuk spijsrot dak op HQ</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <!-- Bonusopdrachten & Intercepties Spiekbriefje -->
           <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 0.65rem 0.75rem; margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.74rem;">
@@ -880,6 +928,45 @@
       </div>
     </section>
   </main>
+
+  <!-- Manuele Groepsindeling Modal -->
+  <div id="gm-manual-groups-modal" class="modal-backdrop" role="dialog" aria-modal="true" style="display: none; z-index: 9998; backdrop-filter: blur(8px);">
+    <div class="modal-box" style="max-width: 860px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 1.35rem 1.5rem; background: rgba(11, 16, 24, 0.98); border: 1.5px solid #38bdf8; box-shadow: 0 0 40px rgba(56, 189, 248, 0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
+        <div>
+          <div class="live-toast-tag" style="color: #38bdf8;">&gt;_ COMMANDO // GROEPSINDELING BEHEER</div>
+          <h2 style="font-size: 1.25rem; color: #fff; margin: 0.15rem 0 0;">
+            👥 Stel de 6 Groepen Handmatig Samen
+          </h2>
+        </div>
+        <button type="button" id="gm-btn-close-manual-groups" class="modal-close" style="font-size: 1.6rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+
+      <!-- Live tellers per groep -->
+      <div id="gm-manual-group-counts" style="display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border-color); border-radius: 8px;"></div>
+
+      <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0 0 0.85rem; line-height: 1.45;">
+        Kies voor elke speler het gewenste team. Inactieve / afwezige spelers worden aangeduid. Klik onderaan op <strong>"Sla Groepsindeling Op &amp; Activeer"</strong> om alles direct naar de dashboards en beamer te sturen.
+      </p>
+
+      <!-- Scrollbare spelerslijst met dropdowns -->
+      <div id="gm-manual-players-list" style="overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.65rem; padding-right: 0.35rem; margin-bottom: 1rem; max-height: 52vh;"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.65rem; border-top: 1px solid var(--border-color); padding-top: 0.85rem;">
+        <button type="button" id="gm-btn-auto-fill-even" class="gm-btn gm-btn-secondary" style="font-size: 0.78rem;">
+          🎲 Gelijkmatig Verdelen (Hulp)
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" id="gm-btn-cancel-manual-groups" class="gm-btn gm-btn-secondary">
+            Annuleren
+          </button>
+          <button type="button" id="gm-btn-save-manual-groups" class="gm-btn gm-btn-primary" style="box-shadow: 0 0 16px var(--accent-glow);">
+            💾 Sla Groepsindeling Op &amp; Activeer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Mastercode Toegangscontrole Modal -->
   <div id="gm-auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" style="display: none; z-index: 9999;">

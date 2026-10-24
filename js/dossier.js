@@ -178,8 +178,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function initPlayerGpsTracking() {
     if (typeof ScoreService === "undefined" || !navigator.geolocation) return;
 
-    // Al eerder geautoriseerd in deze sessie? Direct starten!
-    if (sessionStorage.getItem(`jb_gps_granted_${playerId}`) === "true") {
+    // Al eerder geautoriseerd in deze sessie of vorige keer? Direct starten!
+    if (
+      sessionStorage.getItem(`jb_gps_granted_${playerId}`) === "true" ||
+      localStorage.getItem(`jb_gps_granted_${playerId}`) === "true"
+    ) {
       ScoreService.startLiveGpsTracking(playerId, speler ? speler.naam : playerId);
       updateGpsHeaderBadge(true);
       return;
@@ -244,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnAllow.addEventListener("click", () => {
         modal.remove();
         sessionStorage.setItem(`jb_gps_granted_${playerId}`, "true");
+        localStorage.setItem(`jb_gps_granted_${playerId}`, "true");
         const ok = ScoreService.startLiveGpsTracking(playerId, speler ? speler.naam : playerId);
         if (ok) {
           updateGpsHeaderBadge(true);
@@ -2963,134 +2967,169 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // CINEMATIC EINDE SPEL // DEBRIEFING & COMMENDATION SCREEN
+  // CINEMATIC EINDE SPEL // DEBRIEFING & READ-ONLY PLATFORM LOCKDOWN
   // =========================================================================
   function handleDebriefingState(state, info) {
     if (!state) return;
     const isDebriefedLocally = localStorage.getItem(`jb_debriefed_${playerId}`) === "true";
     const isDebriefedCloud = Boolean(info && info.debriefed);
+    const isDebriefed = isDebriefedLocally || isDebriefedCloud;
 
-    // Als speler reeds afgemeld is: toon direct het bedankingsscherm
-    if (isDebriefedLocally || isDebriefedCloud) {
-      renderCinematicThankYouScreen(speler, info);
+    // 1. Spel is NIET beëindigd door de leiding:
+    if (!state.debriefingActive) {
+      const lockModal = document.getElementById("jb-debrief-mandatory-lock");
+      if (lockModal) lockModal.remove();
+      const banner = document.getElementById("jb-platform-closed-banner");
+      if (banner) banner.remove();
+      if (contentEl) contentEl.classList.remove("is-read-only-platform");
       return;
     }
 
-    // Als spelleiding debriefing actief heeft gezet en speler is nog niet afgemeld:
-    if (state.debriefingActive) {
-      showDebriefBanner(speler, info);
-    } else {
-      const existing = document.getElementById("dossier-debrief-banner");
-      if (existing) existing.remove();
+    // 2. Spel IS beëindigd maar deze speler heeft zijn/haar code nog NIET ingegeven:
+    if (!isDebriefed) {
+      showMandatoryDebriefLock(speler, info);
+      return;
     }
+
+    // 3. Speler heeft de code al ingegeven:
+    // Toon het dossier in READ-ONLY modus met duidelijke HQ-afsluitingsbanner
+    const lockModal = document.getElementById("jb-debrief-mandatory-lock");
+    if (lockModal) lockModal.remove();
+    applyReadOnlyPlatformLock(speler, info);
   }
 
-  function showDebriefBanner(speler, info) {
-    if (document.getElementById("dossier-debrief-banner")) return;
-    const targetParent = document.querySelector(".dossier-card, main, .container");
-    if (!targetParent) return;
-
-    const banner = document.createElement("div");
-    banner.id = "dossier-debrief-banner";
-    banner.className = "debrief-banner-alert";
-    banner.innerHTML = `
-      <div class="debrief-banner-content">
-        <div class="debrief-beacon"></div>
-        <div>
-          <div class="debrief-banner-title">🚨 MISSIE BEËINDIGD DOOR HOOFDKWARTIER</div>
-          <div class="debrief-banner-desc">
-            Het spel is afgelopen! Voer jouw 4-cijferige agentencode in om je dossier definitief te verzegelen en je eervol ontslag te ontvangen.
-          </div>
-        </div>
-      </div>
-      <button type="button" id="btn-trigger-debrief-modal" class="btn-debrief-lock">
-        🔒 Dossier Verzegelen &amp; Afmelden
-      </button>
-    `;
-
-    targetParent.insertBefore(banner, targetParent.firstChild);
-
-    const btn = banner.querySelector("#btn-trigger-debrief-modal");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        showDebriefVerificationModal(speler, info);
-      });
-    }
-  }
-
-  function showDebriefVerificationModal(speler, info) {
-    const existing = document.getElementById("debrief-auth-modal");
-    if (existing) existing.remove();
+  function showMandatoryDebriefLock(speler, info) {
+    if (document.getElementById("jb-debrief-mandatory-lock")) return;
 
     const modal = document.createElement("div");
-    modal.id = "debrief-auth-modal";
-    modal.className = "modal-backdrop active";
-    modal.style.display = "flex";
+    modal.id = "jb-debrief-mandatory-lock";
+    modal.style.cssText =
+      "position:fixed; inset:0; z-index:9999999; background:rgba(3,7,18,0.98); backdrop-filter:blur(16px); display:flex; align-items:center; justify-content:center; padding:1.25rem;";
+
+    const pName = speler ? speler.naam : "";
+
     modal.innerHTML = `
-      <div class="modal-box" style="max-width: 440px; text-align: center; border-color: #ef4444; box-shadow: 0 0 35px rgba(239, 68, 68, 0.45);">
-        <div class="modal-tag" style="background: rgba(239,68,68,0.15); color: #fca5a5; border-color: #ef4444;">
-          HQ BEVEILIGINGSPROTOCOL // DOSSIER VERZEGELEN
+      <div style="background:rgba(15,23,42,0.97); border:2px solid #ef4444; border-radius:14px; max-width:460px; width:100%; padding:2rem 1.6rem; box-shadow:0 0 60px rgba(239,68,68,0.45); text-align:center; font-family:'Space Grotesk',sans-serif;">
+        <div style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#fca5a5; font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:800; padding:0.25rem 0.65rem; border-radius:5px; margin-bottom:0.85rem;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444; display:inline-block;"></span>
+          HQ AFSLUITPROTOCOL // MISSIE BEËINDIGD
         </div>
-        <h2 class="modal-title" style="color: #ffffff; font-size: 1.35rem; margin: 0.35rem 0 0.5rem;">
-          Afmelden Agent ${speler ? speler.naam : ""}
+        <h2 style="color:#ffffff; font-size:1.45rem; font-weight:900; margin:0 0 0.55rem; line-height:1.25;">
+          Operatie Erfpacht is afgelopen
         </h2>
-        <p class="modal-desc" style="font-size: 0.84rem; line-height: 1.5; margin-bottom: 1rem;">
-          Voer jouw persoonlijke 4-cijferige code in om je dossier definitief af te sluiten. Hiermee stop je je actieve verbinding en ontvang je je debriefing.
+        <p style="color:#cbd5e1; font-size:0.88rem; line-height:1.5; margin-bottom:1.35rem;">
+          Spelleider Victor heeft het spel beëindigd. Voer hieronder jouw persoonlijke <strong>4-cijferige agentencode</strong> in om af te sluiten.
         </p>
-        <form id="debrief-auth-form" autocomplete="off">
+        <form id="jb-mandatory-debrief-form" autocomplete="off">
           <input
             type="password"
-            id="debrief-code-input"
+            id="jb-mandatory-debrief-input"
             class="code-input"
-            placeholder="4-cijferige code..."
-            maxlength="8"
+            placeholder="••••"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]*"
             required
             autofocus
-            style="text-align: center; letter-spacing: 0.2em; font-size: 1.4rem;"
+            style="text-align:center; letter-spacing:0.3em; font-size:1.8rem; height:54px; width:100%; border:2px solid rgba(239,68,68,0.6); background:#070a0e; color:#fff; border-radius:8px; margin-bottom:0.65rem;"
           />
-          <div id="debrief-auth-error" class="error-msg" style="margin-top: 0.5rem;" role="alert"></div>
-          <div class="modal-actions" style="margin-top: 1.1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
-            <button type="button" id="btn-cancel-debrief" class="btn btn-secondary">Annuleren</button>
-            <button type="submit" id="btn-confirm-debrief" class="btn" style="background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 800;">
-              🔒 Verzegel Dossier
-            </button>
-          </div>
+          <div id="jb-mandatory-debrief-error" style="color:#ef4444; font-family:'JetBrains Mono',monospace; font-size:0.75rem; min-height:1.2rem; margin-bottom:0.85rem;" role="alert"></div>
+          <button type="submit" id="jb-btn-submit-mandatory-debrief" class="btn" style="width:100%; height:48px; background:#ef4444; border:1px solid #ef4444; color:#fff; font-weight:900; font-size:0.95rem; border-radius:8px; box-shadow:0 0 20px rgba(239,68,68,0.4); cursor:pointer;">
+            🔒 Sluit Platform Af &amp; Toon Dossier
+          </button>
         </form>
       </div>
     `;
 
     document.body.appendChild(modal);
 
-    const input = modal.querySelector("#debrief-code-input");
-    const errorEl = modal.querySelector("#debrief-auth-error");
-    const form = modal.querySelector("#debrief-auth-form");
-    const cancelBtn = modal.querySelector("#btn-cancel-debrief");
+    const form = modal.querySelector("#jb-mandatory-debrief-form");
+    const input = modal.querySelector("#jb-mandatory-debrief-input");
+    const errorEl = modal.querySelector("#jb-mandatory-debrief-error");
+    const submitBtn = modal.querySelector("#jb-btn-submit-mandatory-debrief");
 
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", () => modal.remove());
+    setTimeout(() => {
+      if (input) input.focus();
+    }, 100);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const entered = input.value.trim();
+      if (!entered) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Verifiëren...";
+
+      const res = await ScoreService.recordPlayerDebrief(playerId, entered);
+      if (res && res.success) {
+        modal.remove();
+        localStorage.setItem(`jb_debriefed_${playerId}`, "true");
+        playDebriefAudioFanfare();
+        applyReadOnlyPlatformLock(speler, info);
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "🔒 Sluit Platform Af & Toon Dossier";
+        errorEl.textContent = res ? res.reason : "Onjuiste code ingevoerd. Probeer opnieuw.";
+        input.select();
+      }
+    });
+  }
+
+  function applyReadOnlyPlatformLock(speler, info) {
+    if (contentEl) {
+      contentEl.classList.add("unlocked");
+      contentEl.classList.add("is-read-only-platform");
     }
 
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const entered = input.value.trim();
-        if (!entered) return;
+    // Plaats prominente melding bovenaan het dossier
+    let banner = document.getElementById("jb-platform-closed-banner");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.id = "jb-platform-closed-banner";
+      banner.style.cssText =
+        "background: linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(15,23,42,0.96) 100%); border: 2px solid #ef4444; box-shadow: 0 0 30px rgba(239,68,68,0.35); border-radius: 10px; padding: 1.15rem 1.35rem; margin-bottom: 1.5rem; text-align: center;";
 
-        const res = await ScoreService.recordPlayerDebrief(playerId, entered);
-        if (res && res.success) {
-          modal.remove();
-          localStorage.setItem(`jb_debriefed_${playerId}`, "true");
-          sessionStorage.removeItem(`dossier_unlocked_${playerId}`);
-          localStorage.removeItem(`dossier_unlocked_${playerId}`);
-          if (contentEl) contentEl.classList.remove("unlocked");
-          const banner = document.getElementById("dossier-debrief-banner");
-          if (banner) banner.remove();
+      banner.innerHTML = `
+        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: #ef4444; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; display: inline-block;"></span>
+          HQ BEVEILIGINGSLOCKDOWN // MISSIE BEËINDIGD
+        </div>
+        <div style="font-size: 1.15rem; font-weight: 900; color: #ffffff; line-height: 1.35; margin-bottom: 0.35rem;">
+          🚨 HQ sloot het platform af, meld je aan HQ en wacht op verdere instructies.
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1;">
+          Jouw persoonlijke code is bevestigd. Je dossier staat nu in alleen-lezen modus. Nieuwe uploads of aanpassingen zijn geblokkeerd.
+        </div>
+        <div style="margin-top: 0.85rem; display: flex; justify-content: center; gap: 0.65rem; flex-wrap: wrap;">
+          <button type="button" id="jb-btn-show-letter" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.4rem 0.85rem;">
+            📜 Toon Eervol Ontslag / Bedankingsbrief
+          </button>
+          <a href="../beamer.html" target="_blank" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.4rem 0.85rem; background: #f59e0b; border-color: #f59e0b; color: #000; font-weight: 800; text-decoration: none;">
+            🏆 Bekijk Einduitslag Beamer &rarr;
+          </a>
+        </div>
+      `;
 
-          playDebriefAudioFanfare();
+      if (contentEl && contentEl.firstChild) {
+        contentEl.insertBefore(banner, contentEl.firstChild);
+      }
+
+      const letterBtn = banner.querySelector("#jb-btn-show-letter");
+      if (letterBtn) {
+        letterBtn.addEventListener("click", () => {
           renderCinematicThankYouScreen(speler, info);
-        } else {
-          errorEl.textContent = res ? res.reason : "Onjuiste code ingevoerd. Probeer opnieuw.";
-          input.select();
+        });
+      }
+    }
+
+    // Blokkeer en verberg alle upload inputs en knoppen
+    if (contentEl) {
+      contentEl.querySelectorAll(".photo-upload-form, input[type='file'], .btn-upload, .upload-btn, .riddle-form, .bonus-solve-form").forEach((el) => {
+        el.style.display = "none";
+      });
+      contentEl.querySelectorAll("input, button.loc-unlock-btn, .riddle-submit").forEach((el) => {
+        if (!el.closest("#jb-platform-closed-banner") && !el.closest("#jb-cinematic-thankyou-overlay")) {
+          el.disabled = true;
         }
       });
     }
@@ -3186,9 +3225,9 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
 
           <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
-            <a href="../index.html" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem; text-decoration: none;">
-              🏠 Terug naar Portaal
-            </a>
+            <button type="button" id="btn-close-letter" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem;">
+              📂 Bekijk Mijn Dossier
+            </button>
             <a href="../beamer.html" target="_blank" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.65rem 1.25rem; text-decoration: none; background: #f59e0b; border-color: #f59e0b; color: #000; font-weight: 800;">
               🏆 Bekijk Einduitslag Beamer
             </a>
@@ -3198,6 +3237,11 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     document.body.appendChild(overlay);
+
+    const closeBtn = overlay.querySelector("#btn-close-letter");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => overlay.remove());
+    }
 
     initConfettiEngine("debrief-confetti-canvas");
   }

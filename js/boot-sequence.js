@@ -21,9 +21,22 @@
     const origOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Zorg ervoor dat het mobiele toetsenbord nooit kan openen tijdens de boot/vingerafdruk scan
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+    const preventFocusOutside = (e) => {
+      if (overlay && overlay.parentNode && e.target && !overlay.contains(e.target)) {
+        if (typeof e.target.blur === "function") e.target.blur();
+      }
+    };
+    document.addEventListener("focusin", preventFocusOutside, true);
+
     const overlay = document.createElement("div");
     overlay.id = "jb-boot-overlay";
     overlay.className = "boot-overlay";
+    overlay.setAttribute("tabindex", "-1");
+    overlay.style.touchAction = "none";
 
     overlay.innerHTML = `
       <div class="boot-box">
@@ -140,6 +153,7 @@
     }
 
     function finishBoot() {
+      document.removeEventListener("focusin", preventFocusOutside, true);
       localStorage.setItem(BOOT_KEY, "true");
       overlay.classList.add("is-exiting");
       document.body.style.overflow = origOverflow;
@@ -212,7 +226,13 @@
 
     function startScan(e) {
       if (isCompleted) return;
-      if (e) e.preventDefault();
+      if (e) {
+        if (typeof e.preventDefault === "function") e.preventDefault();
+        if (typeof e.stopPropagation === "function") e.stopPropagation();
+      }
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
       isPressed = true;
       scanStartTime = Date.now();
 
@@ -336,10 +356,37 @@
       setTimeout(finishBoot, 950);
     }
 
-    // Touch events voor mobiel (smartphones & tablets)
-    padWrap.addEventListener("touchstart", startScan, { passive: false });
-    padWrap.addEventListener("touchend", cancelScan);
-    padWrap.addEventListener("touchcancel", cancelScan);
+    // Touch events voor mobiel (smartphones & tablets) met strikte ghost-click & virtual keyboard blokkade
+    const onPadTouchStart = (e) => {
+      if (e) {
+        if (typeof e.preventDefault === "function") e.preventDefault();
+        if (typeof e.stopPropagation === "function") e.stopPropagation();
+      }
+      if (document.activeElement && typeof document.activeElement.blur === "function") {
+        document.activeElement.blur();
+      }
+      startScan(e);
+    };
+
+    const onPadTouchEnd = (e) => {
+      if (e) {
+        if (typeof e.preventDefault === "function") e.preventDefault();
+        if (typeof e.stopPropagation === "function") e.stopPropagation();
+      }
+      cancelScan();
+    };
+
+    padWrap.addEventListener("touchstart", onPadTouchStart, { passive: false });
+    padWrap.addEventListener("touchend", onPadTouchEnd, { passive: false });
+    padWrap.addEventListener("touchcancel", onPadTouchEnd, { passive: false });
+
+    overlay.addEventListener("touchstart", (e) => {
+      if (e.target.tagName !== "BUTTON" && e.target.tagName !== "A") {
+        if (document.activeElement && typeof document.activeElement.blur === "function") {
+          document.activeElement.blur();
+        }
+      }
+    }, { passive: true });
 
     // Muis events voor desktop
     padWrap.addEventListener("mousedown", startScan);

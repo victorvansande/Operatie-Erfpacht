@@ -4227,3 +4227,25 @@ a,
 }
 
 
+
+
+/* ========================================================================= */
+/* READ-ONLY PLATFORM LOCKDOWN NA DEBRIEFING                                  */
+/* ========================================================================= */
+.is-read-only-platform .photo-upload-form,
+.is-read-only-platform .loc-photo-form,
+.is-read-only-platform input[type="file"],
+.is-read-only-platform .btn-upload,
+.is-read-only-platform .upload-btn,
+.is-read-only-platform .riddle-form,
+.is-read-only-platform .bonus-solve-form,
+.is-read-only-platform .camera-btn {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.is-read-only-platform .loc-unlock-form input,
+.is-read-only-platform .riddle-input {
+  opacity: 0.5;
+  pointer-events: none;
+}

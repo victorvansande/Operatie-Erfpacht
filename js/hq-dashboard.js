@@ -140,6 +140,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const radarTabSectors = document.getElementById("gm-radar-tab-sectors");
+  const radarTabAgents = document.getElementById("gm-radar-tab-agents");
+  const radarAgentsListEl = document.getElementById("gm-radar-agents-list");
+
+  if (radarTabSectors && radarTabAgents) {
+    radarTabSectors.addEventListener("click", () => {
+      radarTabSectors.classList.add("active");
+      radarTabAgents.classList.remove("active");
+      if (locationOccupancyEl) locationOccupancyEl.style.display = "flex";
+      if (radarAgentsListEl) radarAgentsListEl.style.display = "none";
+    });
+
+    radarTabAgents.addEventListener("click", () => {
+      radarTabAgents.classList.add("active");
+      radarTabSectors.classList.remove("active");
+      if (locationOccupancyEl) locationOccupancyEl.style.display = "none";
+      if (radarAgentsListEl) radarAgentsListEl.style.display = "flex";
+    });
+  }
+
   let latestState = ScoreService.getState();
   let mapInstance = null;
 
@@ -222,6 +242,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (broadcastGroupsOptGroup && SPEL_CONFIG.standaardGroepen) {
+    broadcastGroupsOptGroup.innerHTML = SPEL_CONFIG.standaardGroepen
+      .map((g) => `<option value="group:${g.id}">👥 ${g.naam}</option>`)
+      .join("");
+  }
+
   if (broadcastPlayersOptGroup && SPEL_CONFIG.spelers) {
     broadcastPlayersOptGroup.innerHTML = SPEL_CONFIG.spelers
       .map((s) => `<option value="player:${s.id}">📁 #${s.dossierNr} ${s.naam}</option>`)
@@ -281,25 +307,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3B. Live GPS Agent Tracking Markers op Gamemaster HQ Radar-Kaart
   let gmAgentMarkers = new Map();
+  let latestGpsPositionsList = [];
 
   function renderGmRadarAgentMarkers(positions) {
     if (!mapInstance || typeof L === "undefined") return;
-    if (!Array.isArray(positions)) return;
+    if (Array.isArray(positions)) {
+      latestGpsPositionsList = positions;
+    }
 
-    positions.forEach((pos) => {
-      if (!pos || typeof pos.lat !== "number" || typeof pos.lng !== "number") return;
-      const isVicce = pos.playerId === "vicce" || pos.isGamemaster;
-      const color = isVicce ? "#f59e0b" : (pos.groupColor || "#38bdf8");
-      const coreLabel = isVicce ? "★" : (pos.dossierNr ? `#${pos.dossierNr}` : "●");
-      const tagLabel = isVicce ? "★ VICCE (HQ)" : (pos.playerName || `Agent #${pos.dossierNr || ""}`);
+    const state = latestState || (typeof ScoreService !== "undefined" ? ScoreService.getState() : null);
+    if (!state) return;
 
+    const disabledSet = state.disabledSet || new Set();
+    const allPlayers = SPEL_CONFIG.spelers.filter((s) => !s.isGamemaster && !s.isExternalTester);
+
+    const posMap = new Map();
+    latestGpsPositionsList.forEach((p) => {
+      if (p && p.playerId && typeof p.lat === "number" && typeof p.lng === "number") {
+        posMap.set(p.playerId, p);
+      }
+    });
+
+    let liveCount = 0;
+
+    allPlayers.forEach((sp, idx) => {
+      const pInfo = state.playerScoresMap ? state.playerScoresMap.get(sp.id) : null;
+      const isDisabled = disabledSet.has(sp.id);
+      if (isDisabled) {
+        if (gmAgentMarkers.has(sp.id)) {
+          mapInstance.removeLayer(gmAgentMarkers.get(sp.id));
+          gmAgentMarkers.delete(sp.id);
+        }
+        return;
+      }
+
+      const pGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId) : null;
+      const groupColor = pInfo ? (pInfo.adminGroupColor || pInfo.groupColor || "#38bdf8") : "#38bdf8";
+      const groupName = pInfo ? (pInfo.adminGroupName || pInfo.groupName || "Geen team") : "Geen team";
+
+      let lat = null;
+      let lng = null;
+      let isLiveGps = false;
+      let accuracy = 0;
+      let lastTs = null;
+
+      if (posMap.has(sp.id)) {
+        const pGps = posMap.get(sp.id);
+        lat = pGps.lat;
+        lng = pGps.lng;
+        isLiveGps = true;
+        accuracy = pGps.accuracy || 8;
+        lastTs = pGps.ts || Date.now();
+        liveCount++;
+      } else {
+        // Geen GPS? Plot op huidige sector van team met een nette deterministische cirkel-offset
+        const grp = (state.adminGroupsList || []).find((g) => g.id === pGroup);
+        const curLoc = grp ? (grp.currentLocation || (grp.orderedLocations && grp.orderedLocations[0])) : null;
+        if (curLoc && curLoc.lat && curLoc.lng) {
+          const angle = (idx / allPlayers.length) * 2 * Math.PI;
+          lat = curLoc.lat + Math.cos(angle) * 0.00032;
+          lng = curLoc.lng + Math.sin(angle) * 0.00032;
+        } else if (SPEL_CONFIG.headquarters) {
+          const angle = (idx / allPlayers.length) * 2 * Math.PI;
+          lat = SPEL_CONFIG.headquarters.lat + Math.cos(angle) * 0.00028;
+          lng = SPEL_CONFIG.headquarters.lng + Math.sin(angle) * 0.00028;
+        }
+      }
+
+      if (lat === null || lng === null) return;
+
+      const coreLabel = `#${sp.dossierNr}`;
       const icon = L.divIcon({
         className: "live-agent-pin-wrap",
         html: `
-          <div class="live-agent-pin ${isVicce ? 'is-hq' : ''}" style="--agent-color: ${color};">
-            <div class="live-agent-pin-ring"></div>
-            <div class="live-agent-pin-core">${coreLabel}</div>
-            <div class="live-agent-pin-tag">${tagLabel}</div>
+          <div class="live-agent-pin ${isLiveGps ? 'is-live-gps' : 'is-team-cluster'}" style="--agent-color: ${groupColor};">
+            <div class="live-agent-pin-ring" style="${!isLiveGps ? 'animation:none; opacity:0.25;' : ''}"></div>
+            <div class="live-agent-pin-core" style="background:${groupColor}; color:#000; font-weight:900;">${coreLabel}</div>
+            <div class="live-agent-pin-tag" style="border-color:${groupColor};">${isLiveGps ? '🛰️' : '📍'} ${sp.naam}</div>
           </div>
         `,
         iconSize: [36, 36],
@@ -307,30 +391,89 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const popup = `
-        <div style="font-family: var(--font-mono, monospace); font-size: 0.8rem; color: #e2e8f0; min-width: 140px;">
-          <strong style="color: ${color}; font-size: 0.9rem;">${isVicce ? "★ VICCE (HQ COMMANDO)" : (pos.playerName || "Veldagent")}</strong>
-          <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 2px;">
-            ${isVicce ? "Gamemaster HQ" : (pos.groupName ? `Team: <strong>${pos.groupName}</strong>` : "Individueel op pad")}
+        <div style="font-family: var(--font-mono, monospace); font-size: 0.8rem; color: #e2e8f0; min-width: 160px;">
+          <strong style="color: ${groupColor}; font-size: 0.92rem;">#${sp.dossierNr} ${sp.naam}</strong>
+          <div style="color: #94a3b8; font-size: 0.76rem; margin-top: 2px;">
+            Team: <strong style="color:#fff;">${groupName}</strong>
           </div>
-          <div style="color: #64748b; font-size: 0.7rem; margin-top: 4px;">
-            GPS Nauwkeurigheid: ±${pos.accuracy || 8}m<br>
-            Laatste update: ${new Date(pos.ts || Date.now()).toLocaleTimeString("nl-BE")}
+          <div style="color: ${isLiveGps ? '#10b981' : '#f59e0b'}; font-size: 0.72rem; margin-top: 4px; font-weight:700;">
+            ${isLiveGps ? `🟢 LIVE GPS (±${accuracy}m)` : `📍 Berekende Team Positie`}
+          </div>
+          ${isLiveGps ? `<div style="color: #64748b; font-size: 0.68rem;">Laatste update: ${new Date(lastTs).toLocaleTimeString("nl-BE")}</div>` : ''}
+          <div style="color: var(--accent); font-size: 0.72rem; margin-top: 4px;">
+            Behaalde punten: <strong>${pInfo ? pInfo.totalPoints : 0} PT</strong>
           </div>
         </div>
       `;
 
-      if (gmAgentMarkers.has(pos.playerId)) {
-        const m = gmAgentMarkers.get(pos.playerId);
-        m.setLatLng([pos.lat, pos.lng]);
+      if (gmAgentMarkers.has(sp.id)) {
+        const m = gmAgentMarkers.get(sp.id);
+        m.setLatLng([lat, lng]);
         m.setIcon(icon);
         m.setPopupContent(popup);
       } else {
-        const m = L.marker([pos.lat, pos.lng], { icon, zIndexOffset: isVicce ? 1000 : 500 })
+        const m = L.marker([lat, lng], { icon, zIndexOffset: isLiveGps ? 700 : 400 })
           .addTo(mapInstance)
           .bindPopup(popup);
-        gmAgentMarkers.set(pos.playerId, m);
+        gmAgentMarkers.set(sp.id, m);
       }
     });
+
+    const badge = document.getElementById("gm-radar-tracking-badge");
+    if (badge) {
+      badge.textContent = `🛰️ ${liveCount} / ${allPlayers.length} Live GPS Pings`;
+      badge.style.color = liveCount > 0 ? "#10b981" : "#38bdf8";
+      badge.style.borderColor = liveCount > 0 ? "#10b981" : "rgba(56,189,248,0.3)";
+    }
+
+    renderRadarAgentsList(state, posMap);
+  }
+
+  // Focus op een speler vanaf de lijst
+  window.gmFocusAgent = (playerId) => {
+    if (!mapInstance || !gmAgentMarkers.has(playerId)) return;
+    const m = gmAgentMarkers.get(playerId);
+    mapInstance.setView(m.getLatLng(), 17, { animate: true });
+    m.openPopup();
+  };
+
+  function renderRadarAgentsList(state, posMap) {
+    const listEl = document.getElementById("gm-radar-agents-list");
+    if (!listEl) return;
+    const allPlayers = SPEL_CONFIG.spelers.filter((s) => !s.isGamemaster && !s.isExternalTester);
+    const disabledSet = (state && state.disabledSet) || new Set();
+
+    listEl.innerHTML = allPlayers
+      .map((sp) => {
+        const pInfo = state.playerScoresMap ? state.playerScoresMap.get(sp.id) : null;
+        const isDisabled = disabledSet.has(sp.id);
+        if (isDisabled) return "";
+
+        const pGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId) : null;
+        const groupColor = pInfo ? (pInfo.adminGroupColor || pInfo.groupColor || "#38bdf8") : "#38bdf8";
+        const hasGps = posMap && posMap.has(sp.id);
+        const curGps = hasGps ? posMap.get(sp.id) : null;
+
+        const grp = (state.adminGroupsList || []).find((g) => g.id === pGroup);
+        const curLoc = grp ? (grp.currentLocation || (grp.orderedLocations && grp.orderedLocations[0])) : null;
+        const locationLabel = hasGps
+          ? `🟢 Live GPS (±${curGps.accuracy || 8}m)`
+          : curLoc ? `📍 ${curLoc.naam}` : "HQ Kapucijnenstr";
+
+        return `
+          <div style="background:rgba(15,23,42,0.85); border:1px solid #1e293b; border-radius:6px; padding:0.35rem 0.6rem; display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.72rem; cursor:pointer;" onclick="gmFocusAgent('${sp.id}')" title="Klik om direct in te zoomen op ${sp.naam}">
+            <div style="display:flex; align-items:center; gap:0.45rem;">
+              <span style="width:8px; height:8px; border-radius:50%; background:${groupColor}; flex-shrink:0;"></span>
+              <strong style="color:#fff;">#${sp.dossierNr} ${sp.naam}</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <span style="color:${hasGps ? '#10b981' : '#f59e0b'}; font-size:0.68rem;">${locationLabel}</span>
+              <span style="color:#38bdf8; font-size:0.65rem;">🔎 Zoek</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
   }
 
   // 4. Render KPI's & Top Controls
@@ -755,6 +898,8 @@ document.addEventListener("DOMContentLoaded", () => {
             (ph) => ph.locationId === loc.id
           );
           const isDone = isOpen && locUploads.length > 0;
+          const preset = getTaskPresetInfo(loc.id, loc.naam, "");
+          const locPts = preset.points || 100;
 
           let pillClass = "";
           let statusLabel = `🔒 ${loc.code}`;
@@ -768,17 +913,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
           return `
             <div class="gm-step-pill ${pillClass}">
-              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:110px;">
                 <strong style="color: var(--text-muted);">${loc.stepNr}.</strong>
                 <strong>${loc.naam}</strong>
               </div>
-              <div style="display:flex; align-items:center; gap:0.3rem; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:0.35rem; flex-shrink:0;">
                 <span style="font-size:0.66rem;">${statusLabel}</span>
                 ${
                   !isOpen
                     ? `<button type="button" class="gm-step-unlock-btn" data-unlock-loc="${loc.id}" title="Open dit mapje op afstand voor ${grp.naam}">Open</button>`
                     : ""
                 }
+                <button type="button" class="gm-step-award-btn" data-group-id="${grp.id}" data-loc-id="${loc.id}" data-loc-name="${loc.naam}" data-pts="${locPts}" title="Ken direct de vaste +${locPts} PT van sector ${loc.naam} toe aan ${grp.naam}">
+                  +${locPts} PT
+                </button>
               </div>
             </div>
           `;
@@ -838,19 +986,20 @@ document.addEventListener("DOMContentLoaded", () => {
           ${stepsHtml}
         </div>
 
-        <!-- 1-Klik Team Bonuspunten & Strafpunten -->
+        <!-- 1-Klik Team Bonuspunten & Strafpunten (De 7 Bonusmissies) -->
         <div class="gm-bonus-bar">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">
-            <span>⚡ 1-KLIK PUNTEN VOOR HEEL ${grp.naam.toUpperCase()}:</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-bottom:0.25rem;">
+            <span>⭐ DE 7 BONUSMISSIES TOEKENNEN AAN ${grp.naam.toUpperCase()}:</span>
           </div>
-          <div class="gm-bonus-btns">
-            <button type="button" class="gm-chip-btn" data-team-bonus="25" data-reason="Goed bewijsmateriaal">+25 Bewijs OK</button>
-            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Bonusopdracht volbracht">⭐ +50 Bonus</button>
+          <div class="gm-bonus-btns" style="display:flex; flex-wrap:wrap; gap:0.35rem;">
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="40" data-reason="Nokia Burner SMS gekraakt">📱 +40 Nokia SMS</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="60" data-reason="SMS SOS naar Vicce ontvangen">📞 +60 SOS SMS</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="50" data-reason="Speurhond K9 foto goedgekeurd">🐕 +50 Speurhond K9</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="140" data-reason="Ad Fundum Café Infiltratie">🍺 +140 Ad Fundum</button>
+            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="160" data-reason="Volksstem 6 Vreemden Koor">📢 +160 Volksstem</button>
             <button type="button" class="gm-chip-btn chip-amber gm-custom-prompt-btn" data-reason="Snack voor Vicce">🍟 Snack Vicce (Vrij)</button>
             <button type="button" class="gm-chip-btn chip-amber gm-custom-prompt-btn" data-reason="Carte Blanche Stunt">🎭 Carte Blanche (Vrij)</button>
-            <button type="button" class="gm-chip-btn chip-amber" data-team-bonus="60" data-reason="SMS SOS naar Vicce ontvangen">📱 +60 SOS SMS</button>
-            <button type="button" class="gm-chip-btn" data-team-bonus="100" data-reason="Beste materiaal / Topuitvoering">🏆 +100 Topmateriaal</button>
-            <button type="button" class="gm-chip-btn chip-danger" data-team-bonus="-25" data-reason="Strafpunten HQ">-25 Straf</button>
+            <button type="button" class="gm-chip-btn chip-danger" data-team-bonus="-25" data-reason="Strafpunten HQ">⚠️ -25 Straf</button>
             <div style="display:flex; gap:0.25rem; margin-left:auto;">
               <input type="number" class="admin-input gm-custom-pts-input" placeholder="±PT" style="margin-bottom:0; width:68px; padding:0.25rem 0.45rem; font-size:0.75rem;" />
               <button type="button" class="gm-chip-btn gm-custom-pts-btn">Geef</button>
@@ -907,6 +1056,43 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.textContent = "...";
           await ScoreService.unlockLocation(firstMember.id, locId);
           showToast(`Mapje '${locId}' op afstand geopend voor ${grp.naam}!`);
+        });
+      });
+
+      // Event: Direct de afgesproken sectorpunten toekennen aan heel dit team
+      card.querySelectorAll(".gm-step-award-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const gId = btn.getAttribute("data-group-id");
+          const lId = btn.getAttribute("data-loc-id");
+          const lName = btn.getAttribute("data-loc-name");
+          const pts = Number(btn.getAttribute("data-pts")) || 100;
+          const ok = window.confirm(
+            `🎯 SECTOR PUNTEN TOEKENNEN // ${grp.naam.toUpperCase()}\n\n` +
+            `Weet je zeker dat je +${pts} punten wilt toekennen aan heel ${grp.naam} voor sector:\n${lName}?`
+          );
+          if (!ok) return;
+          btn.disabled = true;
+          const origText = btn.textContent;
+          btn.textContent = "...";
+          await ScoreService.addGroupBonusPoints(gId, pts, `Sector ${lName} voltooid (+${pts} PT)`);
+          await ScoreService.postBoardMessage({
+            targetType: "group",
+            targetId: gId,
+            category: "alert",
+            locationId: lId,
+            locationName: lName,
+            text: `🎯 SECTOR VOLTOOID // +${pts} PUNTEN!\nHQ heeft jullie bewijs voor ${lName} goedgekeurd (+${pts} PT toegekend aan jullie team)!`
+          });
+          btn.textContent = `✓ +${pts}`;
+          btn.style.background = "rgba(16, 185, 129, 0.45)";
+          btn.style.borderColor = "#10b981";
+          btn.style.color = "#fff";
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = origText;
+          }, 3000);
+          showToast(`✓ +${pts} punten toegekend aan ${grp.naam} voor sector ${lName}!`);
         });
       });
 
@@ -1696,6 +1882,158 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // =========================================================================
+  // MANUELE GROEPSINDELING CONTROLLER (HQ COMMANDO)
+  // =========================================================================
+  const btnManualGroups = document.getElementById("gm-btn-manual-groups");
+  const manualGroupsModal = document.getElementById("gm-manual-groups-modal");
+  const btnCloseManualGroups = document.getElementById("gm-btn-close-manual-groups");
+  const btnCancelManualGroups = document.getElementById("gm-btn-cancel-manual-groups");
+  const btnSaveManualGroups = document.getElementById("gm-btn-save-manual-groups");
+  const btnAutoFillEven = document.getElementById("gm-btn-auto-fill-even");
+  const manualGroupCountsEl = document.getElementById("gm-manual-group-counts");
+  const manualPlayersListEl = document.getElementById("gm-manual-players-list");
+
+  const GROUPS_META = (SPEL_CONFIG.standaardGroepen || []).map((g) => ({
+    id: g.id || g.naam,
+    naam: g.naam,
+    kleur: g.kleur || "#38bdf8"
+  }));
+
+  function updateManualGroupsCounts() {
+    if (!manualGroupCountsEl || !manualPlayersListEl) return;
+    const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
+    const counts = {};
+    GROUPS_META.forEach((g) => { counts[g.id] = 0; });
+
+    selects.forEach((sel) => {
+      const val = sel.value;
+      if (counts[val] !== undefined) {
+        counts[val]++;
+      }
+    });
+
+    manualGroupCountsEl.innerHTML = GROUPS_META.map((g) => {
+      const c = counts[g.id] || 0;
+      const isGood = c >= 3 && c <= 6;
+      const badgeStyle = isGood
+        ? "background:rgba(16,185,129,0.15); border-color:#10b981; color:#6ee7b7;"
+        : "background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); color:#cbd5e1;";
+      return `
+        <span style="font-family:var(--font-mono); font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:5px; border:1px solid; display:inline-flex; align-items:center; gap:0.4rem; ${badgeStyle}">
+          <span style="width:9px; height:9px; border-radius:50%; background:${g.kleur};"></span>
+          <strong>${g.naam}:</strong> <span>${c} spelers</span>
+        </span>
+      `;
+    }).join("");
+  }
+
+  function openManualGroupsModal() {
+    if (!manualGroupsModal || !manualPlayersListEl) return;
+    manualGroupsModal.style.display = "flex";
+
+    const state = latestState || ScoreService.getState();
+    const disabledSet = (state && state.disabledSet) || new Set();
+
+    manualPlayersListEl.innerHTML = SPEL_CONFIG.spelers
+      .filter((s) => !s.isGamemaster && !s.isExternalTester)
+      .map((s) => {
+        const pInfo = state.playerScoresMap ? state.playerScoresMap.get(s.id) : null;
+        const isDisabled = disabledSet.has(s.id);
+        const curGroup = pInfo ? (pInfo.adminGroupId || pInfo.groupId || "") : "";
+
+        const optionsHtml = GROUPS_META.map((g) => {
+          const selected =
+            curGroup &&
+            (curGroup.toLowerCase() === g.id.toLowerCase() ||
+              curGroup.toLowerCase() === g.naam.toLowerCase())
+              ? "selected"
+              : "";
+          return `<option value="${g.id}" ${selected}>● ${g.naam}</option>`;
+        }).join("");
+
+        const statusTag = isDisabled
+          ? `<span style="color:#ef4444; font-size:0.68rem; font-weight:700;">[🔴 AFWEZIG]</span>`
+          : pInfo && pInfo.unlocked
+          ? `<span style="color:#10b981; font-size:0.68rem; font-weight:700;">[🟢 Ingelogd]</span>`
+          : `<span style="color:#f59e0b; font-size:0.68rem;">[⏳ Wacht]</span>`;
+
+        return `
+          <div style="background:rgba(15,23,42,0.9); border:1px solid var(--border-color); border-radius:8px; padding:0.65rem 0.85rem; display:flex; flex-direction:column; gap:0.35rem; ${isDisabled ? 'opacity:0.45;' : ''}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.85rem; font-weight:700; color:#fff;">#${s.dossierNr} ${s.naam}</span>
+              ${statusTag}
+            </div>
+            <select class="admin-input gm-manual-group-select" data-player-id="${s.id}" style="margin-bottom:0; padding:0.35rem 0.5rem; font-size:0.78rem; font-family:var(--font-mono); background:#070a0e;">
+              ${optionsHtml}
+            </select>
+          </div>
+        `;
+      }).join("");
+
+    manualPlayersListEl.querySelectorAll(".gm-manual-group-select").forEach((sel) => {
+      sel.addEventListener("change", updateManualGroupsCounts);
+    });
+
+    updateManualGroupsCounts();
+  }
+
+  function closeManualGroupsModal() {
+    if (manualGroupsModal) manualGroupsModal.style.display = "none";
+  }
+
+  if (btnManualGroups) {
+    btnManualGroups.addEventListener("click", openManualGroupsModal);
+  }
+  if (btnCloseManualGroups) {
+    btnCloseManualGroups.addEventListener("click", closeManualGroupsModal);
+  }
+  if (btnCancelManualGroups) {
+    btnCancelManualGroups.addEventListener("click", closeManualGroupsModal);
+  }
+
+  if (btnAutoFillEven) {
+    btnAutoFillEven.addEventListener("click", () => {
+      if (!manualPlayersListEl) return;
+      const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
+      const disabledSet = (latestState && latestState.disabledSet) || new Set();
+      let activeIdx = 0;
+      selects.forEach((sel) => {
+        const pId = sel.getAttribute("data-player-id");
+        if (disabledSet.has(pId)) return;
+        const targetGroup = GROUPS_META[activeIdx % GROUPS_META.length];
+        sel.value = targetGroup.id;
+        activeIdx++;
+      });
+      updateManualGroupsCounts();
+      showToast("🎲 Spelers gelijkmatig verdeeld over de 6 groepen!");
+    });
+  }
+
+  if (btnSaveManualGroups) {
+    btnSaveManualGroups.addEventListener("click", async () => {
+      if (!manualPlayersListEl) return;
+      btnSaveManualGroups.disabled = true;
+      btnSaveManualGroups.textContent = "Opslaan & Publiceren...";
+
+      const selects = manualPlayersListEl.querySelectorAll(".gm-manual-group-select");
+      const assignments = {};
+      selects.forEach((sel) => {
+        const pId = sel.getAttribute("data-player-id");
+        const gId = sel.value;
+        if (pId && gId) {
+          assignments[pId] = gId;
+        }
+      });
+
+      await ScoreService.setAllGroups(assignments);
+      btnSaveManualGroups.disabled = false;
+      btnSaveManualGroups.textContent = "💾 Sla Groepsindeling Op & Activeer";
+      closeManualGroupsModal();
+      showToast("✅ Groepsindeling succesvol opgeslagen en gesynchroniseerd naar alle schermen!");
+    });
+  }
+
   // Onthul / Verberg groepen aan iedereen (met duidelijke bevestiging!)
   if (btnToggleReveal) {
     btnToggleReveal.addEventListener("click", async () => {
@@ -1843,7 +2181,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateBroadcastGroupsOptions(state) {
     if (!broadcastGroupsOptGroup) return;
     const currentVal = broadcastTargetSelect ? broadcastTargetSelect.value : "";
-    const groups = state.allGroups || [];
+    const groups = (state && (state.allGroups || state.adminGroupsList || state.groupsList)) || SPEL_CONFIG.standaardGroepen || [];
     broadcastGroupsOptGroup.innerHTML = groups
       .map((g) => `<option value="group:${g.id}">👥 ${g.naam}</option>`)
       .join("");
@@ -2011,6 +2349,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderGroupFolders(state);
     renderUploadsStream(state);
     renderLocationOccupancy(state);
+    renderGmRadarAgentMarkers(latestGpsPositionsList);
     updateBroadcastGroupsOptions(state);
     renderHqArrivals(state);
     renderDebriefStatus(state);

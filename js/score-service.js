@@ -1153,12 +1153,13 @@ const ScoreService = (() => {
       });
 
       // Filter berichten die voor deze speler of zijn/haar team bestemd zijn
+      const myNormG = normalizeGroupId(p.groupId || p.adminGroupId);
       p.messages = allMessages.filter((m) => {
         if (m.targetType === "all") return true;
         if (m.targetType === "player" && m.targetId === p.id) return true;
         if (
           m.targetType === "group" &&
-          (m.targetId === p.groupId || m.targetId === p.adminGroupId)
+          (m.targetId === p.groupId || m.targetId === p.adminGroupId || (myNormG && normalizeGroupId(m.targetId) === myNormG))
         ) {
           return true;
         }
@@ -1225,6 +1226,7 @@ const ScoreService = (() => {
       allPlayers: allPlayerScores,
       enabledPlayers: enabledPlayerScores,
       disabledSet: disabledPlayers,
+      allGroups: adminGroupsList.length > 0 ? adminGroupsList : (SPEL_CONFIG.standaardGroepen || []),
       groups: adminGroupsList,
       groupsList,
       adminGroupsList,
