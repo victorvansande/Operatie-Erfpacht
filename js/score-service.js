@@ -839,6 +839,7 @@ const ScoreService = (() => {
     const messagesMap = new Map(); // eventId -> message board object
     const playerLocUnlocks = new Map(); // playerId -> Set<locationId>
     const manualCompletedLocations = new Map(); // normGroupId -> Set<locationId>
+    const playerAwardedTasks = new Map(); // playerId -> Set<taskKey> (voor strikte ontdubbeling van punten)
     const bonusSolves = []; // list of { eventId, playerId, playerName, groupId, riddleId, answer, status, reward, ts }
     const reviewedSubmissionsMap = new Map(); // targetEventId -> { eventId, label, awardedPoints, reviewedAt }
     const hqArrivals = new Map(); // groupId -> { groupId, place, points, ts }
@@ -858,6 +859,7 @@ const ScoreService = (() => {
         bonusSolves.length = 0;
         reviewedSubmissionsMap.clear();
         manualCompletedLocations.clear();
+        playerAwardedTasks.clear();
         hqArrivals.clear();
         groupVisibilityMode = "hide";
         debriefingModeActive = false;
@@ -906,12 +908,77 @@ const ScoreService = (() => {
         playerLocUnlocks.get(ev.playerId).add(ev.locationId);
       } else if (ev.type === "bonus" && ev.playerId) {
         const delta = Number(ev.delta) || 0;
+        const reason = (ev.reason || "Bonus").trim();
+        const reasonLower = reason.toLowerCase();
+
+        // Strikte ontdubbeling van punten: maximaal 1x punten per taak/sector per speler
+        let taskKey = null;
+
+        // 1. Sector locaties
+        const allLocs = [
+          { id: "zandpoort", terms: ["zandpoort"] },
+          { id: "begijnhof", terms: ["begijnhof"] },
+          { id: "bovenpoort", terms: ["bovenpoort"] },
+          { id: "stadspark", terms: ["stadspark", "park"] },
+          { id: "kerkplein", terms: ["kerkplein", "kerk", "sint-waldetrudis", "waldetrudis"] },
+          { id: "nieuw-lokaal", terms: ["nieuw lokaal", "lokaal", "tekenacademie"] }
+        ];
+        for (const loc of allLocs) {
+          if (loc.terms.some((term) => reasonLower.includes(term))) {
+            taskKey = `loc_${loc.id}`;
+            break;
+          }
+        }
+
+        // 2. De 8 bonusmissies & extra opdrachten
+        if (!taskKey) {
+          const allBonusTasks = [
+            { id: "burner_sms", terms: ["burner", "nokia", "sms gekraakt"] },
+            { id: "tap_therese", terms: ["therese", "thérèse", "sos naar vicce", "sos sms"] },
+            { id: "k9_hond", terms: ["speurhond", "k9", "hond"] },
+            { id: "flyer_bierfeesten", terms: ["bierfeesten", "geflyerd", "flyer"] },
+            { id: "ad_fundum", terms: ["ad fundum", "café de rio", "rio"] },
+            { id: "volksstem", terms: ["volksstem", "koor", "vreemden"] },
+            { id: "carte_blanche", terms: ["carte blanche"] },
+            { id: "snack_vicce", terms: ["snack"] },
+            { id: "on_time", terms: ["op tijd"] },
+            { id: "outfit", terms: ["dresscode", "zonnebril", "pet"] }
+          ];
+          for (const bTask of allBonusTasks) {
+            if (bTask.terms.some((term) => reasonLower.includes(term))) {
+              taskKey = `bonus_${bTask.id}`;
+              break;
+            }
+          }
+        }
+
+        // 3. Fallback: unieke taaktekst
+        if (!taskKey) {
+          const cleanReason = reasonLower.replace(/[^\w\s]/g, "").replace(/\s+/g, " ").trim();
+          taskKey = `task_${cleanReason}`;
+        }
+
+        if (!playerAwardedTasks.has(ev.playerId)) {
+          playerAwardedTasks.set(ev.playerId, new Set());
+        }
+        const userTasks = playerAwardedTasks.get(ev.playerId);
+
+        // Alleen positieve punten ontdubbelen (strafpunten delta < 0 blijven altijd geldig)
+        if (delta > 0 && taskKey && userTasks.has(taskKey)) {
+          // Dubbele puntengeving voor dezelfde taak/inzending genegeerd!
+          continue;
+        }
+
+        if (delta > 0 && taskKey) {
+          userTasks.add(taskKey);
+        }
+
         const cur = bonuses.get(ev.playerId) || { totalDelta: 0, history: [] };
         cur.totalDelta += delta;
         cur.history.push({
           eventId: ev.eventId,
           delta,
-          reason: ev.reason || "",
+          reason,
           ts: ev.ts
         });
         bonuses.set(ev.playerId, cur);
