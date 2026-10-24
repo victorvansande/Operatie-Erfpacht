@@ -1228,6 +1228,57 @@
       max-width: 440px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.9);
     }
+
+    /* VICTORY MODAL & OVERWINNING STYLING */
+    .war-btn-victory {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.35) 0%, rgba(5, 150, 105, 0.5) 100%);
+      border: 1.5px solid #10b981;
+      color: #6ee7b7;
+      font-weight: 900;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+      animation: pulseVictoryBtn 2.2s infinite;
+    }
+    .war-btn-victory:hover {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: #34d399;
+      color: #022c22;
+      box-shadow: 0 0 26px rgba(52, 211, 153, 0.8);
+    }
+    @keyframes pulseVictoryBtn {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 14px rgba(16, 185, 129, 0.4); }
+      50% { transform: scale(1.04); box-shadow: 0 0 26px rgba(52, 211, 153, 0.8); }
+    }
+    #beamer-victory-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.96);
+      backdrop-filter: blur(14px);
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+    .victory-modal-box {
+      background: radial-gradient(circle at 50% 10%, rgba(6, 78, 59, 0.88) 0%, rgba(2, 44, 34, 0.96) 38%, rgba(3, 7, 18, 0.99) 100%);
+      border: 2.5px solid #10b981;
+      border-radius: 18px;
+      max-width: 1200px;
+      width: 100%;
+      max-height: 94vh;
+      overflow-y: auto;
+      padding: 2.2rem 2.5rem;
+      box-shadow: 0 0 80px rgba(16, 185, 129, 0.6), inset 0 0 50px rgba(16, 185, 129, 0.2);
+      font-family: 'Space Grotesk', sans-serif;
+      position: relative;
+    }
+    #victory-confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100001;
+    }
   </style>
 </head>
 <body>
@@ -1276,6 +1327,10 @@
 
       <button type="button" class="war-btn active-sound" id="btn-audio-toggle" title="24-Stijl Afteltik Geluid aan/uit zetten">
         🔊 Geluid: AAN
+      </button>
+
+      <button type="button" class="war-btn war-btn-victory" id="btn-victory-toggle" onclick="openVictoryModal()" style="border-color: #10b981; color: #10b981; background: rgba(16, 185, 129, 0.22); font-weight: 900; box-shadow: 0 0 16px rgba(16, 185, 129, 0.45); animation: pulseVictoryBtn 2.2s infinite;" title="Toon de officiële overwinningsverklaring: Operatie Erfpacht Geslaagd! (V of W)">
+        🏆 MISSIE GESLAAGD
       </button>
 
       <button type="button" class="war-btn" id="btn-fullscreen" title="Volledig Scherm (F11 of F)">
@@ -1647,6 +1702,224 @@
     </div>
   </div>
 
+  <!-- MODAL: OPERATIE ERFPACHT OVERWINNINGSSCHERM (V OF W) -->
+  <div id="beamer-victory-modal" onclick="closeVictoryModal(event)">
+    <canvas id="victory-confetti-canvas"></canvas>
+    <div class="victory-modal-box" onclick="event.stopPropagation()">
+      
+      <!-- Top header met status, classification & sluitknop -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(16, 185, 129, 0.4); padding-bottom: 1.25rem; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.4rem;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; animation: beaconBlink 1s infinite;"></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 900; color: #6ee7b7; letter-spacing: 0.15em;">
+              OPERATIE ERFPACHT 2200 // EINDVERSLAG COMMANDOPOST
+            </span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 900; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; color: #a7f3d0; text-transform: uppercase;">
+              STATUS: 100% SUCCESVOL VOLBRACHT
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 900; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(245, 158, 11, 0.2); border: 1.5px solid #f59e0b; color: #fde047; text-transform: uppercase;">
+              ERFPACHT VERLENGD TOT 2099
+            </span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.65rem; align-items: center;">
+          <button type="button" onclick="playVictoryFanfare()" class="war-btn" style="background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fde047; font-weight: 800; font-size: 0.78rem; height: 34px;">
+            🔊 Speel Fanfare
+          </button>
+          <button type="button" onclick="closeVictoryModal()" class="close-victory-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 1.5rem; cursor: pointer; border-radius: 6px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" title="Sluiten (V of Esc)">&times;</button>
+        </div>
+      </div>
+
+      <!-- Grote Triomfantelijke Titel -->
+      <div style="text-align: center; margin-bottom: 2.2rem;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: #fbbf24; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.35rem;">
+          ✨ COMMUNIQUÉ VAN DE LEIDING &amp; COMMANDOPOST ✨
+        </div>
+        <h1 style="font-size: 2.6rem; font-weight: 900; line-height: 1.15; margin: 0 0 0.6rem; color: #ffffff; text-shadow: 0 0 35px rgba(52, 211, 153, 0.8), 0 0 70px rgba(16, 185, 129, 0.4);">
+          DE OVERWINNING IS BINNEN!<br>
+          <span style="color: #34d399;">HET LOKAAL IS EN BLIJFT VAN KSA!</span>
+        </h1>
+        <p style="font-size: 1.05rem; color: #cbd5e1; max-width: 820px; margin: 0 auto; line-height: 1.55;">
+          Door het gecoördineerde speurwerk, de veldoperaties en de infiltraties van alle groepen vanavond is de verkoop definitief verijdeld. Het stadsbestuur en de projectontwikkelaar hebben de strijd gestaakt!
+        </p>
+      </div>
+
+      <!-- HOOFDDOORBRAAK: DE DERDE KOPER HEEFT ZICH TERUGGETROKKEN -->
+      <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(185, 28, 28, 0.3) 100%); border: 2.5px solid #ef4444; border-radius: 12px; padding: 1.3rem 1.6rem; margin-bottom: 1.75rem; box-shadow: 0 0 35px rgba(239, 68, 68, 0.35);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <span style="font-size: 1.8rem;">🛑</span>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 900; color: #fca5a5; letter-spacing: 0.1em; text-transform: uppercase;">
+              OFFICIEEL BERICHT NOTARIAAT &amp; STADSBESTUUR:
+            </div>
+            <h2 style="font-size: 1.45rem; color: #ffffff; margin: 0; font-weight: 900;">
+              DE DERDE KOPER HEEFT ZIJN BOD DEFINITIEF INGETROKKEN!
+            </h2>
+          </div>
+        </div>
+        <p style="font-size: 0.95rem; color: #fecaca; line-height: 1.55; margin: 0;">
+          Geconfronteerd met onze onomstotelijke bewijslast, de torenhoge renovatieplichten en het massale protest in Herentals heeft projectontwikkelaar <strong>"Immo-Erfpacht NV"</strong> zojuist officieel en onvoorwaardelijk zijn aankoopbod ingetrokken. Er is <strong>GEEN enkele koper meer</strong>. Het terrein kan wettelijk niet meer verkocht worden!
+        </p>
+      </div>
+
+      <!-- MATRIX VAN BEWIJZEN: WAAROM WE HEBBEN GEWONNEN (PER SECTOR & BONUSOPDRACHT) -->
+      <div style="margin-bottom: 1.75rem;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 900; color: #34d399; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📂</span> DOSSIER-BEWIJZEN DIE DE OVERWINNING BEVESTIGD HEBBEN:
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 1rem;">
+          
+          <!-- Sector 1: Nieuw Lokaal (Dakpuin) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // NIEUW LOKAAL</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Het Dakpuin Was Rot &amp; Waardeloos</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Onze bouwkundige CSI-video's bewezen dat het dakgebinte doorgerot is. De commerciële verkoopwaarde zakte naar nul: Monumentenzorg legt de stad een wettelijke herstelplicht op ten gunste van de jeugdbeweging!
+            </p>
+          </div>
+
+          <!-- Sector 2: Bovenpoort (De Getuigenis) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // BOVENPOORT</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Getuigenissen: KSA Moet Blijven!</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              De video-interviews met omwonenden en historische getuigen hebben onomstotelijk bevestigd: dit terrein is sinds mensenheugenis erfpachtgoed voor de Herentalse jeugd. De claim van het schepencollege is juridisch nietig verklaard.
+            </p>
+          </div>
+
+          <!-- Sector 3: Zandpoort (De Mol) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // ZANDPOORT</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">De Mol Heeft de Stad Klemgezet</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Het telefoongesprek met codewoord <em>"DE DAKPANNEN LIGGEN LOS"</em> en de tagmark brachten onze infiltrant in actie. De mol heeft de jeugdraad ingelicht: het stadsbestuur werd vanbinnenuit buitenspel gezet!
+            </p>
+          </div>
+
+          <!-- Sector 4: Stadspark (Database Hack 2200) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // STADSPARK</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Stedelijke Database Succesvol Gehackt</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Via override code <strong>2200</strong> werd de firewall van het stadsarchief gekraakt. Het verkoopcontract werd overschreven en de verlenging van ons erfpachtcontract staat nu officieel en onomkeerbaar vast in het kadaster!
+            </p>
+          </div>
+
+          <!-- Sector 5: Kerkplein (De €10 Akte) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // KERKPLEIN</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Het €10 Contract Gerecupereerd</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Het originele erfpacht-contractblad en het officiële bewijs van de symbolische erfpachtbetaling van €10 zijn boven tafel gekomen. De stad kon niet anders dan de originele erfpachtsvoorwaarden van 1974 respecteren.
+            </p>
+          </div>
+
+          <!-- Sector 6: Begijnhof (Veldzang) -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #34d399; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(52, 211, 153, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #34d399;">SECTOR // BEGIJNHOF</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #10b981; background: rgba(16,185,129,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Het Avondlied Mobiliseerde de Buurt</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Het luide gezang en het KSA-avondlied door onze agenten op het Begijnhof brachten de buurt op de been. Honderden sympathisanten tekenden binnen het uur de steunpetitie voor ons lokaal!
+            </p>
+          </div>
+
+          <!-- Bonus: Speurhond K9 -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #fbbf24; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #fbbf24;">BONUS // K9 SPEURHONDEN</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #fbbf24; background: rgba(245,158,11,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Het Geheime Dossier Opgesnord</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Dankzij de speurhonden-inzet van onze agenten werd het geheime dossier van de projectontwikkelaar opgespoord in de struiken. Alle geheime plannen lagen op straat vóór de deadline!
+            </p>
+          </div>
+
+          <!-- Bonus: Café de Rio & Bierfeesten -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #fbbf24; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #fbbf24;">BONUS // BIERFEESTEN &amp; CAFÉ DE RIO</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #fbbf24; background: rgba(245,158,11,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Volkssteun &amp; Ad Fundum Infiltratie</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Door te flyeren op de Bierfeesten en de infiltratie in Café De Rio stond de voltallige Herentalse horeca en jeugd achter KSA. De maatschappelijke druk werd onhoudbaar voor het schepencollege!
+            </p>
+          </div>
+
+          <!-- Bonus: Volksstem Koor -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #fbbf24; border-radius: 10px; padding: 1.1rem; box-shadow: 0 0 20px rgba(245, 158, 11, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 800; color: #fbbf24;">BONUS // DE VOLKSSTEM (6 VREEMDEN)</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 900; color: #fbbf24; background: rgba(245,158,11,0.2); padding: 0.15rem 0.45rem; border-radius: 4px;">✓ VOLTOOID</span>
+            </div>
+            <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.35rem; font-weight: 800;">Burgers Zongen Mee in Protestkoor</h3>
+            <p style="font-size: 0.84rem; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              Zes willekeurige voorbijgangers zongen samen met onze veldagenten het protestlied in. De virale beelden dwongen de schepenen om live toe te geven!
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Officieel Kadastraal Zegel & Slotboodschap -->
+      <div style="background: rgba(6, 78, 59, 0.45); border: 2px dashed #10b981; border-radius: 12px; padding: 1.4rem 1.75rem; text-align: center; margin-bottom: 1.75rem;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 0.85rem; margin-bottom: 0.5rem;">
+          <svg style="width: 44px; height: 44px;" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="30" stroke="#34d399" stroke-width="2.5" fill="rgba(16,185,129,0.2)"/>
+            <path d="M20 32 L28 40 L44 24" stroke="#34d399" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div style="text-align: left;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 900; color: #fde047; text-transform: uppercase;">
+              OFFICIEEL BESLUIT GEMEENTERAAD HERENTALS // DOSSIER #2200-KSA
+            </div>
+            <div style="font-size: 1.25rem; font-weight: 900; color: #ffffff;">
+              ERFPACHTOVEREENKOMST DEFINITIEF VERLENGD TOT 2099
+            </div>
+          </div>
+        </div>
+        <p style="font-size: 0.95rem; color: #a7f3d0; margin: 0; font-weight: 700; line-height: 1.45;">
+          Kapucijnenstraat 7 &amp; Markgravenstraat 77 blijven de onbetwiste, veilige en eeuwigdurende thuishaven van KSA Herentals!<br>
+          Proficiat aan alle veldagenten en de leiding voor deze historische overwinning!
+        </p>
+      </div>
+
+      <!-- Knoppenbalk onderaan -->
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="war-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #022c22; font-weight: 900; border-color: #34d399; padding: 0.75rem 2rem; font-size: 0.95rem; box-shadow: 0 0 25px rgba(52, 211, 153, 0.5);" onclick="playVictoryFanfare()">
+          🔊 Speel Triomf Fanfare
+        </button>
+        <button type="button" class="war-btn close-victory-btn" style="background: rgba(255,255,255,0.12); color: #fff; font-weight: 800; border-color: rgba(255,255,255,0.3); padding: 0.75rem 1.6rem; font-size: 0.95rem;" onclick="closeVictoryModal()">
+          ✕ Sluiten (Terug naar Beamer HUD)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="js/qrcode.min.js"></script>
   <script src="js/config.js"></script>
@@ -1879,6 +2152,144 @@
       if (modal) modal.style.display = "none";
     }
 
+    // =========================================================================
+    // OVERWINNINGSSCHERM // OPERATIE ERFPACHT 100% GESLAAGD
+    // =========================================================================
+    let victoryAnimId = null;
+    let lastVictoryTriggerHandled = false;
+
+    function playVictoryFanfare() {
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+
+        // Triomfantelijke koperfanfare akkoordenreeks (C-majeur arpeggio met feestelijk slot)
+        const fanfareNotes = [
+          { f: 261.63, t: 0.00, d: 0.22 }, // C4
+          { f: 329.63, t: 0.20, d: 0.22 }, // E4
+          { f: 392.00, t: 0.40, d: 0.25 }, // G4
+          { f: 523.25, t: 0.65, d: 0.65 }, // C5
+          { f: 392.00, t: 1.25, d: 0.20 }, // G4
+          { f: 523.25, t: 1.45, d: 0.25 }, // C5
+          { f: 659.25, t: 1.70, d: 0.35 }, // E5
+          { f: 783.99, t: 2.05, d: 1.80 }  // G5 (triomfantelijke galm)
+        ];
+
+        fanfareNotes.forEach((n) => {
+          [
+            { type: "sawtooth", gainVal: 0.11, detune: 0 },
+            { type: "triangle", gainVal: 0.16, detune: 5 }
+          ].forEach((layer) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = layer.type;
+            osc.frequency.setValueAtTime(n.f, now + n.t);
+            osc.detune.setValueAtTime(layer.detune, now + n.t);
+
+            gain.gain.setValueAtTime(0.0001, now + n.t);
+            gain.gain.linearRampToValueAtTime(layer.gainVal, now + n.t + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + n.t + n.d);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now + n.t);
+            osc.stop(now + n.t + n.d + 0.08);
+          });
+        });
+      } catch (_) {}
+    }
+
+    function startVictoryConfetti() {
+      const canvas = document.getElementById("victory-confetti-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ["#10b981", "#34d399", "#fbbf24", "#fde047", "#38bdf8", "#f43f5e", "#ffffff"];
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height,
+          size: Math.random() * 9 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: Math.random() * 3.5 + 2,
+          speedX: (Math.random() - 0.5) * 3,
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 8,
+          shape: Math.random() > 0.4 ? "rect" : "circle"
+        });
+      }
+
+      function drawFrame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p) => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+          if (p.y > canvas.height + 25) {
+            p.y = -20;
+            p.x = Math.random() * canvas.width;
+          }
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 6;
+          if (p.shape === "rect") {
+            ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+        victoryAnimId = requestAnimationFrame(drawFrame);
+      }
+      if (victoryAnimId) cancelAnimationFrame(victoryAnimId);
+      drawFrame();
+    }
+
+    function stopVictoryConfetti() {
+      if (victoryAnimId) {
+        cancelAnimationFrame(victoryAnimId);
+        victoryAnimId = null;
+      }
+    }
+
+    function openVictoryModal() {
+      initAudio();
+      playVictoryFanfare();
+      const modal = document.getElementById("beamer-victory-modal");
+      if (!modal) return;
+      modal.style.display = "flex";
+      startVictoryConfetti();
+    }
+
+    function closeVictoryModal(e) {
+      if (e && e.target && e.target.closest && e.target.closest(".victory-modal-box") && e.target.tagName !== "BUTTON" && !e.target.classList.contains("close-victory-btn")) return;
+      const modal = document.getElementById("beamer-victory-modal");
+      if (modal) {
+        modal.style.display = "none";
+        stopVictoryConfetti();
+      }
+    }
+
+    function toggleVictoryModal() {
+      const modal = document.getElementById("beamer-victory-modal");
+      if (!modal) return;
+      if (modal.style.display === "flex") {
+        closeVictoryModal();
+      } else {
+        openVictoryModal();
+      }
+    }
+
     window.addEventListener("keydown", (e) => {
       if (e.key === "F2" || ((e.key === "r" || e.key === "R") && !["INPUT", "TEXTAREA"].includes((document.activeElement || {}).tagName))) {
         e.preventDefault();
@@ -1898,10 +2309,15 @@
           }
         }
       }
+      if ((e.key === "v" || e.key === "V" || e.key === "w" || e.key === "W") && !["INPUT", "TEXTAREA"].includes((document.activeElement || {}).tagName)) {
+        e.preventDefault();
+        toggleVictoryModal();
+      }
       if (e.key === "Escape") {
         closeRulesModal();
         closeClockModal();
         closeQrModal();
+        closeVictoryModal();
       }
     });
 
@@ -2505,6 +2921,17 @@
           renderAgentsStatus(state);
           renderSectorsBar(state);
           renderLeaderboardContent(state);
+
+          // Check of HQ leiding het overwinningsscherm heeft geactiveerd via live broadcast
+          if (state && state.allMessages) {
+            const vicMsg = state.allMessages.find(
+              (m) => m.category === "victory" || (m.text && m.text.includes("VICTORY_SCREEN_TRIGGER"))
+            );
+            if (vicMsg && !lastVictoryTriggerHandled) {
+              lastVictoryTriggerHandled = true;
+              openVictoryModal();
+            }
+          }
         });
 
         if (typeof ScoreService.onGpsPositionChange === "function") {

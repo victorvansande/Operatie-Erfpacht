@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnResetGame = document.getElementById("gm-btn-reset-game");
   const btnResetPoints = document.getElementById("gm-btn-reset-points");
   const btnAwardResetPoints = document.getElementById("gm-award-reset-points-btn");
+  const btnTriggerVictory = document.getElementById("gm-btn-trigger-victory");
   const attendanceDrawer = document.getElementById("gm-attendance-drawer");
   const attendanceChips = document.getElementById("gm-attendance-chips");
   const attendanceCountsBadge = document.getElementById("gm-attendance-counts-badge");
@@ -2698,6 +2699,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (btnAwardResetPoints) {
     btnAwardResetPoints.addEventListener("click", handleResetPointsToZero);
+  }
+
+  // Toon Overwinning op Beamer via realtime trigger
+  if (btnTriggerVictory) {
+    btnTriggerVictory.addEventListener("click", async () => {
+      const ok = window.confirm(
+        "🏆 OVERWINNINGSSCHERM ACTIVEREN OP DE BEAMER\n\n" +
+        "Weet je zeker dat je het grote triomfantelijke Overwinningsscherm nu op de beamer wilt tonen?\n\n" +
+        "• Schermvullend feestelijk overwinningsverslag op de beamer\n" +
+        "• De terugtrekking van de 3e koper & redding van het KSA lokaal\n" +
+        "• Triomf-fanfare en confetti"
+      );
+      if (!ok) return;
+
+      btnTriggerVictory.disabled = true;
+      await ScoreService.postBoardMessage({
+        targetType: "all",
+        category: "victory",
+        text: "VICTORY_SCREEN_TRIGGER"
+      });
+      btnTriggerVictory.disabled = false;
+      showToast("🏆 Signaal verzonden! Het Overwinningsscherm staat nu live op de beamer.");
+    });
   }
 
   // Volledig Spel Resetten (met dubbele veiligheidsbevestiging!)
