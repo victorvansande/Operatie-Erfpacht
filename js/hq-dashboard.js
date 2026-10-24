@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const attendanceDrawer = document.getElementById("gm-attendance-drawer");
   const attendanceChips = document.getElementById("gm-attendance-chips");
   const attendanceCountsBadge = document.getElementById("gm-attendance-counts-badge");
+  const btnAwardAllOnTime = document.getElementById("gm-award-all-ontime-btn");
+  const btnAwardAllOutfit = document.getElementById("gm-award-all-outfit-btn");
   const enableAllPlayersBtn = document.getElementById("gm-enable-all-players-btn");
   const collapseAttendanceBtn = document.getElementById("gm-collapse-attendance-btn");
   const kpiCardAttendance = document.getElementById("gm-kpi-card-attendance");
@@ -706,6 +708,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const isUnlocked = p.unlocked;
       const isDebriefed = p.debriefed;
       const gpsPos = liveGpsPositions.find((g) => g.playerId === p.id);
+      const hasOnTimeBonus = Boolean(
+        p.bonusHistory && p.bonusHistory.some((b) => b.reason && b.reason.includes("Op tijd"))
+      );
+      const hasOutfitBonus = Boolean(
+        p.bonusHistory && p.bonusHistory.some((b) => b.reason && (b.reason.includes("Vermomming") || b.reason.includes("Outfit") || b.reason.includes("pet")))
+      );
 
       chip.className = `gm-attend-chip ${isOff ? "is-off" : isUnlocked ? "is-unlocked" : "is-active"}`;
       chip.style.cssText = `
@@ -746,8 +754,23 @@ document.addEventListener("DOMContentLoaded", () => {
           <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #94a3b8;">PIN / CODE:</span>
           <span style="font-family: var(--font-mono); font-size: 0.9rem; font-weight: 900; color: #fde047; letter-spacing: 0.08em;">${p.code || "----"}</span>
         </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.35rem; font-family: var(--font-mono); font-size: 0.73rem; background: rgba(0,0,0,0.25); padding: 0.2rem 0.45rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06);">
+          <span style="color: #94a3b8;">Score: <strong style="color: #fff; font-size: 0.82rem;">${p.totalPoints || 0} PT</strong></span>
+          <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+            ${hasOnTimeBonus ? `<span style="color: #10b981; font-weight: 800; background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.5); padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.65rem;">⏰ +20</span>` : ''}
+            ${hasOutfitBonus ? `<span style="color: #d8b4fe; font-weight: 800; background: rgba(168,85,247,0.18); border: 1px solid rgba(168,85,247,0.5); padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.65rem;">🕶️ +20</span>` : ''}
+          </div>
+        </div>
         <div>${statusBadge}</div>
         <div style="display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.25rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; width: 100%;">
+            <button type="button" class="btn-ontime-toggle" style="height: 26px; padding: 0 0.3rem; font-size: 0.68rem; font-weight: 800; border-radius: 4px; cursor: pointer; border: 1px solid ${hasOnTimeBonus ? '#10b981' : 'var(--amber)'}; background: ${hasOnTimeBonus ? 'rgba(16, 185, 129, 0.22)' : 'rgba(245, 158, 11, 0.15)'}; color: ${hasOnTimeBonus ? '#6ee7b7' : '#fde047'}; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; white-space: nowrap;" title="Ken direct +20 PT toe voor op tijd aanwezig zijn op HQ">
+              ${hasOnTimeBonus ? '✓ Op Tijd (+20)' : '⏰ +20 Op Tijd'}
+            </button>
+            <button type="button" class="btn-outfit-toggle" style="height: 26px; padding: 0 0.3rem; font-size: 0.68rem; font-weight: 800; border-radius: 4px; cursor: pointer; border: 1px solid ${hasOutfitBonus ? '#a855f7' : '#c084fc'}; background: ${hasOutfitBonus ? 'rgba(168, 85, 247, 0.25)' : 'rgba(168, 85, 247, 0.12)'}; color: ${hasOutfitBonus ? '#e9d5ff' : '#d8b4fe'}; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; white-space: nowrap;" title="Ken direct +20 PT toe voor vermomming in orde (pet &amp; zonnebril)">
+              ${hasOutfitBonus ? '✓ Outfit (+20)' : '🕶️ +20 Outfit'}
+            </button>
+          </div>
           <button type="button" class="btn-toggle-active" style="width: 100%; height: 28px; padding: 0 0.5rem; font-size: 0.72rem; font-weight: 700; border-radius: 5px; cursor: pointer; border: 1px solid ${isOff ? "var(--accent)" : "rgba(239, 68, 68, 0.6)"}; background: ${isOff ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.18)"}; color: ${isOff ? "#6ee7b7" : "#fca5a5"}; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;">
             ${isOff ? "✅ Zet Aanwezig" : "❌ Zet Inactief"}
           </button>
@@ -766,6 +789,40 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       `;
+
+      const ontimeBtn = chip.querySelector(".btn-ontime-toggle");
+      if (ontimeBtn) {
+        ontimeBtn.addEventListener("click", async () => {
+          if (hasOnTimeBonus) {
+            const ok = window.confirm(`Wil je de 'Op tijd' bonus van +20 PT intrekken voor ${p.naam}?`);
+            if (!ok) return;
+            ontimeBtn.disabled = true;
+            await ScoreService.addBonusPoints(p.id, -20, "Op tijd bonus gecorrigeerd (-20 PT)");
+            showToast(`Op tijd bonus ingetrokken voor ${p.naam}.`);
+          } else {
+            ontimeBtn.disabled = true;
+            await ScoreService.addBonusPoints(p.id, 20, "Op tijd aanwezig HQ (+20 PT)");
+            showToast(`⏰ +20 PT 'Op tijd' bonus toegekend aan ${p.naam}!`);
+          }
+        });
+      }
+
+      const outfitBtn = chip.querySelector(".btn-outfit-toggle");
+      if (outfitBtn) {
+        outfitBtn.addEventListener("click", async () => {
+          if (hasOutfitBonus) {
+            const ok = window.confirm(`Wil je de 'Outfit / Vermomming' bonus van +20 PT intrekken voor ${p.naam}?`);
+            if (!ok) return;
+            outfitBtn.disabled = true;
+            await ScoreService.addBonusPoints(p.id, -20, "Vermomming bonus gecorrigeerd (-20 PT)");
+            showToast(`Outfit bonus ingetrokken voor ${p.naam}.`);
+          } else {
+            outfitBtn.disabled = true;
+            await ScoreService.addBonusPoints(p.id, 20, "Vermomming in orde (pet & zonnebril) (+20 PT)");
+            showToast(`🕶️ +20 PT 'Outfit / Vermomming' bonus toegekend aan ${p.naam}!`);
+          }
+        });
+      }
 
       chip.querySelector(".btn-toggle-active").addEventListener("click", async () => {
         const actionStr = isOff ? "AANWEZIG (ACTIEF)" : "INACTIEF (AFWEZIG)";
@@ -1868,6 +1925,80 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await ScoreService.setDisabledPlayers([]);
       showToast(`✓ Alle ${SPEL_CONFIG.spelers.length} spelers staan weer op AANWEZIG (actief)!`);
+    });
+  }
+
+  // Ken in 1 klik de 'Op Tijd' bonus (+20 PT) toe aan alle aanwezige actieve spelers
+  if (btnAwardAllOnTime) {
+    btnAwardAllOnTime.addEventListener("click", async () => {
+      const state = latestState || ScoreService.getState();
+      const all = state.allPlayers || [];
+      const eligible = all.filter((p) => {
+        if (p.disabled || p.isGamemaster || p.isExternalTester) return false;
+        const hasBonus = Boolean(
+          p.bonusHistory && p.bonusHistory.some((b) => b.reason && b.reason.includes("Op tijd"))
+        );
+        return !hasBonus;
+      });
+
+      if (eligible.length === 0) {
+        alert("Alle actieve aanwezige spelers hebben de 'Op tijd' bonus (+20 PT) al ontvangen!");
+        return;
+      }
+
+      const ok = window.confirm(
+        `⏰ BEVESTIGING: OP TIJD BONUS (+20 PT) VOOR IEDEREEN\n\n` +
+        `Weet je zeker dat je +20 PT 'Op tijd' bonus wilt toekennen aan alle ${eligible.length} aanwezige spelers die hem nog niet hebben gekregen?\n\n` +
+        `✓ Dit werkt ook voor spelers die nog NIET zijn ingelogd!\n` +
+        `✓ Zodra ze inloggen, telt deze +20 PT direct op bovenop hun startpunten.`
+      );
+      if (!ok) return;
+
+      btnAwardAllOnTime.disabled = true;
+      btnAwardAllOnTime.textContent = "Toekennen...";
+      for (const p of eligible) {
+        await ScoreService.addBonusPoints(p.id, 20, "Op tijd aanwezig HQ (+20 PT)");
+      }
+      btnAwardAllOnTime.disabled = false;
+      btnAwardAllOnTime.textContent = "⏰ Geef Iedereen +20 PT Op Tijd";
+      showToast(`🎉 +20 PT 'Op tijd' bonus toegekend aan alle ${eligible.length} aanwezigen!`);
+    });
+  }
+
+  // Ken in 1 klik de 'Outfit / Vermomming' bonus (+20 PT) toe aan alle aanwezige actieve spelers
+  if (btnAwardAllOutfit) {
+    btnAwardAllOutfit.addEventListener("click", async () => {
+      const state = latestState || ScoreService.getState();
+      const all = state.allPlayers || [];
+      const eligible = all.filter((p) => {
+        if (p.disabled || p.isGamemaster || p.isExternalTester) return false;
+        const hasBonus = Boolean(
+          p.bonusHistory && p.bonusHistory.some((b) => b.reason && (b.reason.includes("Vermomming") || b.reason.includes("Outfit") || b.reason.includes("pet")))
+        );
+        return !hasBonus;
+      });
+
+      if (eligible.length === 0) {
+        alert("Alle actieve aanwezige spelers hebben de 'Outfit / Vermomming' bonus (+20 PT) al ontvangen!");
+        return;
+      }
+
+      const ok = window.confirm(
+        `🕶️ BEVESTIGING: OUTFIT / VERMOMMING BONUS (+20 PT) VOOR IEDEREEN\n\n` +
+        `Weet je zeker dat je +20 PT 'Outfit / Vermomming' bonus (pet & zonnebril) wilt toekennen aan alle ${eligible.length} aanwezige spelers die hem nog niet hebben gekregen?\n\n` +
+        `✓ Dit werkt ook voor spelers die nog NIET zijn ingelogd!\n` +
+        `✓ Zodra ze inloggen, telt deze +20 PT direct op bovenop hun startpunten.`
+      );
+      if (!ok) return;
+
+      btnAwardAllOutfit.disabled = true;
+      btnAwardAllOutfit.textContent = "Toekennen...";
+      for (const p of eligible) {
+        await ScoreService.addBonusPoints(p.id, 20, "Vermomming in orde (pet & zonnebril) (+20 PT)");
+      }
+      btnAwardAllOutfit.disabled = false;
+      btnAwardAllOutfit.textContent = "🕶️ Geef Iedereen +20 PT Outfit";
+      showToast(`🎉 +20 PT 'Outfit / Vermomming' bonus toegekend aan alle ${eligible.length} aanwezigen!`);
     });
   }
 
